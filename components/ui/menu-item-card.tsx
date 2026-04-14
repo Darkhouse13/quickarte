@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils/cn";
 
 type MenuItemCardProps = {
@@ -9,6 +11,8 @@ type MenuItemCardProps = {
   badge?: string;
   isLast?: boolean;
   onClick?: () => void;
+  onAdd?: () => void;
+  quantity?: number;
   className?: string;
 };
 
@@ -21,13 +25,32 @@ export function MenuItemCard({
   badge,
   isLast = false,
   onClick,
+  onAdd,
+  quantity = 0,
   className,
 }: MenuItemCardProps) {
+  const handleClick = onAdd ?? onClick;
+  const interactive = Boolean(handleClick);
+  const hasBadge = quantity > 0;
+
   return (
     <article
-      onClick={onClick}
+      onClick={handleClick}
+      role={onAdd ? "button" : undefined}
+      tabIndex={onAdd ? 0 : undefined}
+      onKeyDown={
+        onAdd
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onAdd();
+              }
+            }
+          : undefined
+      }
       className={cn(
-        "p-6 flex gap-4 hover:bg-black/[0.02] transition-colors cursor-pointer group relative",
+        "p-6 flex gap-4 hover:bg-black/[0.02] transition-colors group relative",
+        interactive ? "cursor-pointer" : "",
         !isLast && "border-b border-outline",
         className,
       )}
@@ -55,15 +78,31 @@ export function MenuItemCard({
         ) : null}
       </div>
       {image ? (
-        <div className="w-[80px] h-[80px] border border-ink flex-shrink-0 bg-outline">
+        <div className="relative w-[80px] h-[80px] border border-ink flex-shrink-0 bg-outline">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={image.src}
             alt={image.alt}
             className="w-full h-full object-cover brutalist-img"
           />
+          {hasBadge ? <QuantityBadge quantity={quantity} /> : null}
+        </div>
+      ) : hasBadge ? (
+        <div className="relative w-[80px] flex-shrink-0">
+          <QuantityBadge quantity={quantity} />
         </div>
       ) : null}
     </article>
+  );
+}
+
+function QuantityBadge({ quantity }: { quantity: number }) {
+  return (
+    <span
+      className="absolute -top-2 -right-2 min-w-6 h-6 px-1.5 bg-accent text-base flex items-center justify-center font-mono font-bold text-[12px] border-2 border-base leading-none"
+      aria-label={`${quantity} in cart`}
+    >
+      {quantity}
+    </span>
   );
 }

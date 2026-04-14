@@ -28,6 +28,7 @@ export default async function StorefrontPage({ params }: Props) {
       id: category.id,
       label: category.name,
       items: category.products.map((product) => ({
+        productId: product.id,
         name: product.name,
         description: product.description ?? "",
         price: Number(product.price),
@@ -40,7 +41,7 @@ export default async function StorefrontPage({ params }: Props) {
 
   return (
     <main className="w-full max-w-[480px] mx-auto bg-base min-h-screen relative flex flex-col border-x border-outline/50 shadow-2xl shadow-black/5">
-      <StorefrontMenu business={fixture} />
+      <StorefrontMenu business={fixture} locale={locale} />
     </main>
   );
 }
