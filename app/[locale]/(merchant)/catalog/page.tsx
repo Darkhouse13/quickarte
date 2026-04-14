@@ -1,11 +1,7 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { setRequestLocale } from "next-intl/server";
-import { db } from "@/lib/db";
-import { businesses } from "@/lib/db/schema";
 import { getAllProductsByBusinessId } from "@/lib/catalog/queries";
-import { DEMO_BUSINESS_SLUG } from "@/lib/catalog/constants";
+import { requireBusiness } from "@/lib/auth/get-business";
 import { SectionHeader } from "@/components/ui/section-header";
 import { BottomBar } from "@/components/ui/bottom-bar";
 import { ProductAvailabilityToggle } from "@/components/merchant/product-availability-toggle";
@@ -17,12 +13,7 @@ export default async function CatalogIndexPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const business = await db.query.businesses.findFirst({
-    where: eq(businesses.slug, DEMO_BUSINESS_SLUG),
-    columns: { id: true },
-  });
-  if (!business) notFound();
-
+  const { business } = await requireBusiness();
   const menu = await getAllProductsByBusinessId(business.id);
   const productCount = menu.reduce((n, c) => n + c.products.length, 0);
 

@@ -1,9 +1,5 @@
-import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { setRequestLocale } from "next-intl/server";
-import { db } from "@/lib/db";
-import { businesses } from "@/lib/db/schema";
-import { DEMO_BUSINESS_SLUG } from "@/lib/catalog/constants";
+import { requireBusiness } from "@/lib/auth/get-business";
 import { getOrdersByBusinessId } from "@/lib/ordering/queries";
 import { OrdersBoard } from "@/components/merchant/order-row";
 
@@ -13,12 +9,7 @@ export default async function OrdersPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const business = await db.query.businesses.findFirst({
-    where: eq(businesses.slug, DEMO_BUSINESS_SLUG),
-    columns: { id: true },
-  });
-  if (!business) notFound();
-
+  const { business } = await requireBusiness();
   const orders = await getOrdersByBusinessId(business.id);
   const pending = orders.filter((o) => o.status === "pending");
   const confirmed = orders.filter((o) => o.status === "confirmed");

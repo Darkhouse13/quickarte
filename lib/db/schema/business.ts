@@ -15,7 +15,9 @@ import { promoCodes } from "./growth";
 export const businessTypeEnum = pgEnum("business_type", [
   "restaurant",
   "cafe",
+  "hotel",
   "retail",
+  "other",
 ]);
 
 export const businesses = pgTable("businesses", {
@@ -26,6 +28,8 @@ export const businesses = pgTable("businesses", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   type: businessTypeEnum("type").notNull().default("cafe"),
+  city: text("city"),
+  address: text("address"),
   logo: text("logo"),
   cover: text("cover"),
   currency: text("currency").notNull().default("MAD"),

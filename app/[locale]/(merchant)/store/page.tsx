@@ -1,11 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { getBusinessBySlug } from "@/lib/catalog/queries";
-import {
-  DEMO_BUSINESS_SLUG,
-  DEMO_BUSINESS_LOCATION,
-} from "@/lib/catalog/constants";
+import { requireBusiness } from "@/lib/auth/get-business";
 import { generateQRDataURL } from "@/lib/utils/qr";
 import { SectionHeader } from "@/components/ui/section-header";
 import { CopyButton } from "@/components/ui/copy-button";
@@ -14,7 +9,9 @@ import { QRDisplay } from "@/components/merchant/qr-display";
 const BUSINESS_TYPE_LABEL: Record<string, string> = {
   restaurant: "Restaurant",
   cafe: "Café",
+  hotel: "Hôtel",
   retail: "Commerce",
+  other: "Autre",
 };
 
 type Props = { params: Promise<{ locale: string }> };
@@ -23,8 +20,7 @@ export default async function StorePage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const business = await getBusinessBySlug(DEMO_BUSINESS_SLUG);
-  if (!business) notFound();
+  const { business } = await requireBusiness();
 
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
@@ -34,6 +30,9 @@ export default async function StorePage({ params }: Props) {
   const storefrontHref = `/${locale}/${business.slug}`;
   const qrDataUrl = await generateQRDataURL(publicUrl);
   const typeLabel = BUSINESS_TYPE_LABEL[business.type] ?? business.type;
+  const locationLabel =
+    [business.city, business.address].filter(Boolean).join(" · ") ||
+    "Non renseignée";
 
   return (
     <>
@@ -52,7 +51,7 @@ export default async function StorePage({ params }: Props) {
                 {business.name}
               </h2>
               <p className="font-mono text-xs text-ink/60 uppercase tracking-widest">
-                {DEMO_BUSINESS_LOCATION}
+                {locationLabel}
               </p>
             </div>
 
@@ -90,7 +89,7 @@ export default async function StorePage({ params }: Props) {
           <dl className="flex flex-col divide-y divide-outline">
             <InfoRow label="Nom" value={business.name} />
             <InfoRow label="Type" value={typeLabel} />
-            <InfoRow label="Emplacement" value={DEMO_BUSINESS_LOCATION} />
+            <InfoRow label="Emplacement" value={locationLabel} />
             <InfoRow label="Slug" value={business.slug} mono />
             <div className="flex items-center justify-between px-6 py-5">
               <span className="font-mono text-[11px] uppercase tracking-widest text-ink/40">

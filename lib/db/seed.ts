@@ -2,7 +2,6 @@ import { config } from "dotenv";
 config({ path: ".env" });
 
 async function main() {
-  // Dynamic imports so dotenv loads before lib/db reads process.env
   const { eq } = await import("drizzle-orm");
   const { db, pool } = await import("./index");
   const {
@@ -13,47 +12,44 @@ async function main() {
     products,
   } = await import("./schema");
   const { cafeDesArts } = await import("../catalog/fixtures");
+  const { auth } = await import("../auth/server");
 
   console.log("→ Seeding Quickarte demo data…");
 
-  const ownerPhone = "+212600000000";
-  const existingOwner = await db.query.users.findFirst({
-    where: eq(users.phone, ownerPhone),
+  const email = "karim@cafedesarts.ma";
+  const password = "quickarte123";
+  const name = "Karim";
+
+  const existing = await db.query.users.findFirst({
+    where: eq(users.email, email),
+    columns: { id: true },
   });
-
-  const owner =
-    existingOwner ??
-    (
-      await db
-        .insert(users)
-        .values({
-          phone: ownerPhone,
-          email: "karim@cafedesarts.ma",
-          name: "Karim",
-          role: "owner",
-        })
-        .returning()
-    )[0];
-
-  if (!owner) throw new Error("Failed to upsert owner");
-  console.log(`  owner: ${owner.name} (${owner.id})`);
-
-  const existingBusiness = await db.query.businesses.findFirst({
-    where: eq(businesses.slug, cafeDesArts.slug),
-  });
-
-  if (existingBusiness) {
-    console.log(`  existing business found, deleting (cascade)…`);
-    await db.delete(businesses).where(eq(businesses.id, existingBusiness.id));
+  if (existing) {
+    console.log(`  existing demo user found, deleting (cascade)…`);
+    await db.delete(users).where(eq(users.id, existing.id));
   }
+
+  const signUp = await auth.api.signUpEmail({
+    body: { email, password, name },
+  });
+  const ownerId = signUp.user.id;
+
+  await db
+    .update(users)
+    .set({ role: "owner", name })
+    .where(eq(users.id, ownerId));
+
+  console.log(`  owner: ${name} (${ownerId})`);
 
   const [business] = await db
     .insert(businesses)
     .values({
-      ownerId: owner.id,
+      ownerId,
       name: cafeDesArts.name,
       slug: cafeDesArts.slug,
-      type: "restaurant",
+      type: "cafe",
+      city: "Casablanca",
+      address: "Quartier Gauthier",
       currency: "MAD",
       timezone: "Africa/Casablanca",
       locale: "fr",
@@ -107,7 +103,7 @@ async function main() {
     }
   }
   console.log(`  products: ${productCount}`);
-  console.log("✓ Seed complete");
+  console.log(`✓ Seed complete. Login: ${email} / ${password}`);
 
   await pool.end();
 }

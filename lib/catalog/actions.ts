@@ -4,27 +4,14 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { businesses, categories, products } from "@/lib/db/schema";
+import { categories, products } from "@/lib/db/schema";
+import { requireBusiness } from "@/lib/auth/get-business";
 import { createProductSchema } from "./schemas";
-import { DEMO_BUSINESS_SLUG } from "./constants";
 
 export type ActionState =
   | { status: "idle" }
   | { status: "error"; message: string; fieldErrors?: Record<string, string[]> }
   | { status: "success" };
-
-async function getDemoBusinessIdOrThrow(): Promise<string> {
-  const row = await db.query.businesses.findFirst({
-    where: eq(businesses.slug, DEMO_BUSINESS_SLUG),
-    columns: { id: true },
-  });
-  if (!row) {
-    throw new Error(
-      `Demo business "${DEMO_BUSINESS_SLUG}" not found. Run \`npm run db:seed\`.`,
-    );
-  }
-  return row.id;
-}
 
 export async function createProduct(
   _prev: ActionState,
@@ -47,13 +34,12 @@ export async function createProduct(
     };
   }
 
-  const businessId = await getDemoBusinessIdOrThrow();
+  const { business } = await requireBusiness();
 
-  // Ensure category belongs to this business (defense-in-depth)
   const category = await db.query.categories.findFirst({
     where: and(
       eq(categories.id, parsed.data.categoryId),
-      eq(categories.businessId, businessId),
+      eq(categories.businessId, business.id),
     ),
     columns: { id: true },
   });
@@ -65,7 +51,7 @@ export async function createProduct(
   }
 
   await db.insert(products).values({
-    businessId,
+    businessId: business.id,
     categoryId: parsed.data.categoryId,
     name: parsed.data.name,
     description: parsed.data.description ?? null,
@@ -75,7 +61,7 @@ export async function createProduct(
   });
 
   revalidatePath("/catalog");
-  revalidatePath(`/${DEMO_BUSINESS_SLUG}`);
+  revalidatePath(`/${business.slug}`);
   redirect("/catalog");
 }
 
@@ -83,24 +69,24 @@ export async function updateProductAvailability(
   productId: string,
   available: boolean,
 ): Promise<void> {
-  const businessId = await getDemoBusinessIdOrThrow();
+  const { business } = await requireBusiness();
   await db
     .update(products)
     .set({ available, updatedAt: new Date() })
     .where(
-      and(eq(products.id, productId), eq(products.businessId, businessId)),
+      and(eq(products.id, productId), eq(products.businessId, business.id)),
     );
   revalidatePath("/catalog");
-  revalidatePath(`/${DEMO_BUSINESS_SLUG}`);
+  revalidatePath(`/${business.slug}`);
 }
 
 export async function deleteProduct(productId: string): Promise<void> {
-  const businessId = await getDemoBusinessIdOrThrow();
+  const { business } = await requireBusiness();
   await db
     .delete(products)
     .where(
-      and(eq(products.id, productId), eq(products.businessId, businessId)),
+      and(eq(products.id, productId), eq(products.businessId, business.id)),
     );
   revalidatePath("/catalog");
-  revalidatePath(`/${DEMO_BUSINESS_SLUG}`);
+  revalidatePath(`/${business.slug}`);
 }

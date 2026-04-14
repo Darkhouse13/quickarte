@@ -1,10 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { setRequestLocale } from "next-intl/server";
-import { db } from "@/lib/db";
-import { businesses } from "@/lib/db/schema";
-import { DEMO_BUSINESS_SLUG } from "@/lib/catalog/constants";
+import { requireBusiness } from "@/lib/auth/get-business";
 import { getOrderStats, getRecentOrders } from "@/lib/ordering/queries";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StatCard } from "@/components/ui/stat-card";
@@ -16,8 +12,6 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { formatDashboardDate, formatOrderTime } from "@/lib/utils/date";
 
-const MERCHANT_NAME = "Karim";
-
 type Props = {
   params: Promise<{ locale: string }>;
 };
@@ -26,11 +20,7 @@ export default async function MerchantHomePage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const business = await db.query.businesses.findFirst({
-    where: eq(businesses.slug, DEMO_BUSINESS_SLUG),
-    columns: { id: true, name: true },
-  });
-  if (!business) notFound();
+  const { session, business } = await requireBusiness();
 
   const [stats, recentOrders] = await Promise.all([
     getOrderStats(business.id),
@@ -38,6 +28,8 @@ export default async function MerchantHomePage({ params }: Props) {
   ]);
 
   const today_date = formatDashboardDate();
+  const merchantName =
+    session.user.name?.trim().split(/\s+/)[0] ?? "Marchand";
   const revenueLabel = stats.todayRevenue.toLocaleString("fr-FR", {
     maximumFractionDigits: 0,
   });
@@ -47,7 +39,7 @@ export default async function MerchantHomePage({ params }: Props) {
       <header className="pt-8 px-6 pb-6 border-b-4 border-outline bg-base sticky top-0 z-20 flex flex-col gap-1">
         <div className="flex justify-between items-baseline">
           <h1 className="font-sans text-xl font-normal text-ink">
-            Bonjour, {MERCHANT_NAME}
+            Bonjour, {merchantName}
           </h1>
           <span className="font-mono text-sm tracking-tighter text-ink font-bold">
             {today_date}
@@ -94,7 +86,7 @@ export default async function MerchantHomePage({ params }: Props) {
             />
             <ActionCard
               label="Voir ma boutique"
-              href={`/${locale}/${DEMO_BUSINESS_SLUG}`}
+              href={`/${locale}/${business.slug}`}
               accent="ink"
               isLast
             />

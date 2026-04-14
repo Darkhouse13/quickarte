@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { businesses, orderItems, orders, products } from "@/lib/db/schema";
 import { placeOrderSchema } from "./schemas";
-import { DEMO_BUSINESS_SLUG } from "@/lib/catalog/constants";
+import { requireBusiness } from "@/lib/auth/get-business";
 
 export type PlaceOrderResult =
   | {
@@ -133,35 +133,22 @@ export async function placeOrder(
   };
 }
 
-async function getDemoBusinessIdOrThrow(): Promise<string> {
-  const row = await db.query.businesses.findFirst({
-    where: eq(businesses.slug, DEMO_BUSINESS_SLUG),
-    columns: { id: true },
-  });
-  if (!row) {
-    throw new Error(
-      `Demo business "${DEMO_BUSINESS_SLUG}" not found. Run \`npm run db:seed\`.`,
-    );
-  }
-  return row.id;
-}
-
 export async function confirmOrder(orderId: string): Promise<void> {
-  const businessId = await getDemoBusinessIdOrThrow();
+  const { business } = await requireBusiness();
   await db
     .update(orders)
     .set({ status: "confirmed", updatedAt: new Date() })
-    .where(and(eq(orders.id, orderId), eq(orders.businessId, businessId)));
+    .where(and(eq(orders.id, orderId), eq(orders.businessId, business.id)));
   revalidatePath("/orders");
   revalidatePath("/home");
 }
 
 export async function completeOrder(orderId: string): Promise<void> {
-  const businessId = await getDemoBusinessIdOrThrow();
+  const { business } = await requireBusiness();
   await db
     .update(orders)
     .set({ status: "completed", updatedAt: new Date() })
-    .where(and(eq(orders.id, orderId), eq(orders.businessId, businessId)));
+    .where(and(eq(orders.id, orderId), eq(orders.businessId, business.id)));
   revalidatePath("/orders");
   revalidatePath("/home");
 }
