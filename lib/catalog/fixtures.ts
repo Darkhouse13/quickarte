@@ -17,6 +17,7 @@ export type StorefrontFixture = {
   slug: string;
   name: string;
   location: string;
+  description?: string;
   sections: MenuSection[];
 };
 

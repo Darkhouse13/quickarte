@@ -64,6 +64,19 @@ export function StorefrontMenu({ business, locale }: Props) {
         </div>
       </header>
 
+      {business.description ? (
+        <section className="px-6 py-6 border-b-4 border-outline bg-base">
+          <div className="flex items-start gap-4">
+            <span className="font-mono text-[9px] uppercase tracking-widest text-ink/40 font-bold pt-1 leading-none">
+              A propos
+            </span>
+            <p className="text-[15px] leading-snug text-ink/80 font-sans">
+              {business.description}
+            </p>
+          </div>
+        </section>
+      ) : null}
+
       <nav className="sticky top-[102px] z-10">
         <CategoryPills
           categories={business.sections.map((s) => ({

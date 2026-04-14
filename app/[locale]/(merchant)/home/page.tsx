@@ -1,5 +1,11 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { setRequestLocale } from "next-intl/server";
+import { db } from "@/lib/db";
+import { businesses } from "@/lib/db/schema";
+import { DEMO_BUSINESS_SLUG } from "@/lib/catalog/constants";
+import { getOrderStats, getRecentOrders } from "@/lib/ordering/queries";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { ActionCard } from "@/components/ui/action-card";
@@ -8,43 +14,9 @@ import {
   type OrderStatus,
 } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils/cn";
-import { formatDashboardDate } from "@/lib/utils/date";
+import { formatDashboardDate, formatOrderTime } from "@/lib/utils/date";
 
-type RecentOrder = {
-  id: string;
-  name: string;
-  time: string;
-  total: number;
-  status: OrderStatus;
-};
-
-const today = {
-  merchantName: "Karim",
-  businessName: "Café des Arts",
-  orders: 42,
-  revenue: "1,450",
-  pending: 5,
-};
-
-const recentOrders: RecentOrder[] = [
-  {
-    id: "1",
-    name: "Youssef B.",
-    time: "14:32",
-    total: 85,
-    status: "pending",
-  },
-  { id: "2", name: "Sara M.", time: "14:28", total: 120, status: "pending" },
-  { id: "3", name: "Mehdi T.", time: "14:15", total: 45, status: "confirmed" },
-  {
-    id: "4",
-    name: "Amina R.",
-    time: "13:50",
-    total: 210,
-    status: "confirmed",
-  },
-  { id: "5", name: "Omar K.", time: "13:10", total: 65, status: "completed" },
-];
+const MERCHANT_NAME = "Karim";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -53,21 +25,36 @@ type Props = {
 export default async function MerchantHomePage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
+
+  const business = await db.query.businesses.findFirst({
+    where: eq(businesses.slug, DEMO_BUSINESS_SLUG),
+    columns: { id: true, name: true },
+  });
+  if (!business) notFound();
+
+  const [stats, recentOrders] = await Promise.all([
+    getOrderStats(business.id),
+    getRecentOrders(business.id, 5),
+  ]);
+
   const today_date = formatDashboardDate();
+  const revenueLabel = stats.todayRevenue.toLocaleString("fr-FR", {
+    maximumFractionDigits: 0,
+  });
 
   return (
     <>
       <header className="pt-8 px-6 pb-6 border-b-4 border-outline bg-base sticky top-0 z-20 flex flex-col gap-1">
         <div className="flex justify-between items-baseline">
           <h1 className="font-sans text-xl font-normal text-ink">
-            Bonjour, {today.merchantName}
+            Bonjour, {MERCHANT_NAME}
           </h1>
           <span className="font-mono text-sm tracking-tighter text-ink font-bold">
             {today_date}
           </span>
         </div>
         <p className="font-mono text-xs text-ink/50 uppercase tracking-widest mt-1">
-          {today.businessName}
+          {business.name}
         </p>
       </header>
 
@@ -75,18 +62,18 @@ export default async function MerchantHomePage({ params }: Props) {
         <section className="border-b-4 border-outline bg-base">
           <SectionHeader index={1} title="Aujourd'hui" />
           <div className="grid grid-cols-3 divide-x divide-outline">
-            <StatCard label="Commandes" value={today.orders} />
+            <StatCard label="Commandes" value={stats.todayOrderCount} />
             <StatCard
               label="Revenu"
               unit="MAD"
-              value={today.revenue}
+              value={revenueLabel}
               valueClassName="text-2xl"
             />
             <StatCard
               label="En attente"
-              value={today.pending}
+              value={stats.pendingCount}
               tone="accent"
-              indicator
+              indicator={stats.pendingCount > 0}
             />
           </div>
         </section>
@@ -97,7 +84,7 @@ export default async function MerchantHomePage({ params }: Props) {
             <ActionCard
               label="Gérer les commandes"
               href="/orders"
-              badge={today.pending}
+              badge={stats.pendingCount > 0 ? stats.pendingCount : undefined}
               accent="accent"
             />
             <ActionCard
@@ -107,7 +94,7 @@ export default async function MerchantHomePage({ params }: Props) {
             />
             <ActionCard
               label="Voir ma boutique"
-              href={`/${locale}/cafe-des-arts`}
+              href={`/${locale}/${DEMO_BUSINESS_SLUG}`}
               accent="ink"
               isLast
             />
@@ -116,29 +103,50 @@ export default async function MerchantHomePage({ params }: Props) {
 
         <section>
           <SectionHeader index={3} title="Dernières Commandes" />
-          <div className="flex flex-col">
-            {recentOrders.map((order) => (
-              <OrderRow key={order.id} order={order} />
-            ))}
-          </div>
+          {recentOrders.length === 0 ? (
+            <p className="px-6 py-10 text-center font-sans text-sm text-ink/50">
+              Aucune commande récente
+            </p>
+          ) : (
+            <div className="flex flex-col">
+              {recentOrders.map((order) => (
+                <RecentOrderRow
+                  key={order.id}
+                  id={order.id}
+                  name={order.customerName}
+                  time={formatOrderTime(order.createdAt)}
+                  total={Number(order.total)}
+                  status={order.status as OrderStatus}
+                />
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </>
   );
 }
 
-function OrderRow({ order }: { order: RecentOrder }) {
-  const isLive = order.status === "pending";
-  const isDone = order.status === "completed";
+type RecentOrderRowProps = {
+  id: string;
+  name: string;
+  time: string;
+  total: number;
+  status: OrderStatus;
+};
+
+function RecentOrderRow({ name, time, total, status }: RecentOrderRowProps) {
+  const isLive = status === "pending";
+  const isDone = status === "completed";
   const barColor = isLive ? "bg-accent" : isDone ? "bg-outline" : "bg-ink";
 
   return (
     <Link
-      href={`/orders/${order.id}`}
+      href="/orders"
       className={cn(
         "p-4 px-6 border-b border-outline flex justify-between items-center hover:bg-black/[0.02] transition-colors cursor-pointer group relative",
-        order.status === "confirmed" && "bg-black/[0.01]",
-        order.status === "completed" && "opacity-70",
+        status === "confirmed" && "bg-black/[0.01]",
+        isDone && "opacity-70",
       )}
     >
       <div
@@ -154,7 +162,7 @@ function OrderRow({ order }: { order: RecentOrder }) {
             isDone && "text-ink/80",
           )}
         >
-          {order.name}
+          {name}
         </span>
         <span
           className={cn(
@@ -162,7 +170,7 @@ function OrderRow({ order }: { order: RecentOrder }) {
             isDone ? "text-ink/40" : "text-ink/50",
           )}
         >
-          {order.time}
+          {time}
         </span>
       </div>
       <div
@@ -172,7 +180,7 @@ function OrderRow({ order }: { order: RecentOrder }) {
         )}
       >
         <span className="font-mono text-[15px] font-bold leading-none">
-          {order.total}{" "}
+          {total.toFixed(0)}{" "}
           <span
             className={cn(
               "text-[10px] font-normal",
@@ -182,7 +190,7 @@ function OrderRow({ order }: { order: RecentOrder }) {
             MAD
           </span>
         </span>
-        <StatusBadge status={order.status} />
+        <StatusBadge status={status} />
       </div>
     </Link>
   );

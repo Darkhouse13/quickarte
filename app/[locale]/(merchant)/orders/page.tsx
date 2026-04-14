@@ -1,23 +1,50 @@
+import { notFound } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { setRequestLocale } from "next-intl/server";
-import { SectionHeader } from "@/components/ui/section-header";
+import { db } from "@/lib/db";
+import { businesses } from "@/lib/db/schema";
+import { DEMO_BUSINESS_SLUG } from "@/lib/catalog/constants";
+import { getOrdersByBusinessId } from "@/lib/ordering/queries";
+import { OrdersBoard } from "@/components/merchant/order-row";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export default async function OrdersPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
+
+  const business = await db.query.businesses.findFirst({
+    where: eq(businesses.slug, DEMO_BUSINESS_SLUG),
+    columns: { id: true },
+  });
+  if (!business) notFound();
+
+  const orders = await getOrdersByBusinessId(business.id);
+  const pending = orders.filter((o) => o.status === "pending");
+  const confirmed = orders.filter((o) => o.status === "confirmed");
+  const completed = orders
+    .filter((o) => o.status === "completed")
+    .slice(0, 10);
+
+  const totalActive = pending.length + confirmed.length;
+
   return (
     <>
-      <header className="pt-8 px-6 pb-6 border-b-4 border-outline bg-base sticky top-0 z-20">
+      <header className="pt-8 px-6 pb-6 border-b-4 border-outline bg-base sticky top-0 z-20 flex justify-between items-baseline">
         <h1 className="font-mono font-bold text-2xl tracking-tighter uppercase leading-none">
           Commandes
         </h1>
+        <span className="font-mono text-[10px] uppercase tracking-widest text-ink/50 font-bold">
+          {totalActive} {totalActive === 1 ? "active" : "actives"}
+        </span>
       </header>
+
       <div className="flex-1">
-        <SectionHeader index={1} title="À venir" />
-        <p className="p-6 text-sm text-ink/60">
-          Gestion des commandes — à implémenter.
-        </p>
+        <OrdersBoard
+          pending={pending}
+          confirmed={confirmed}
+          completed={completed}
+        />
       </div>
     </>
   );
