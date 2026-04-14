@@ -1,0 +1,75 @@
+{
+  "app": {
+    "name": "Quickarte",
+    "currency": "MAD"
+  },
+  "nav": {
+    "home": "Accueil",
+    "catalog": "Catalogue",
+    "orders": "Commandes",
+    "customers": "Clients",
+    "store": "Boutique"
+  },
+  "status": {
+    "pending": "En attente",
+    "confirmed": "Confirmée",
+    "completed": "Terminée",
+    "cancelled": "Annulée"
+  },
+  "storefront": {
+    "viewOrder": "View Order",
+    "items": "{count, plural, =0 {0 ARTICLE} one {# ARTICLE} other {# ARTICLES}}",
+    "popular": "Popular"
+  },
+  "merchant": {
+    "greeting": "Bonjour, {name}",
+    "sections": {
+      "today": "Aujourd'hui",
+      "quickActions": "Actions Rapides",
+      "recentOrders": "Dernières Commandes"
+    },
+    "stats": {
+      "orders": "Commandes",
+      "revenue": "Revenu",
+      "pending": "En attente"
+    },
+    "actions": {
+      "manageOrders": "Gérer les commandes",
+      "editCatalog": "Modifier le catalogue",
+      "viewStore": "Voir ma boutique"
+    }
+  },
+  "form": {
+    "sections": {
+      "information": "Informations",
+      "saleDetails": "Détails de Vente",
+      "optionsVariants": "Options & Variantes"
+    },
+    "fields": {
+      "photo": "Photo",
+      "name": "Nom",
+      "description": "Description",
+      "price": "Prix",
+      "category": "Catégorie",
+      "available": "Disponible"
+    },
+    "placeholders": {
+      "name": "Nous Nous",
+      "description": "Café au lait traditionnel marocain",
+      "price": "15",
+      "selectCategory": "Sélectionner une catégorie..."
+    },
+    "hints": {
+      "optional": "Optionnel",
+      "optionsSubtitle": "Tailles, suppléments, choix…"
+    },
+    "actions": {
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "back": "Retour"
+    },
+    "title": {
+      "newItem": "Nouvel Article"
+    }
+  }
+}

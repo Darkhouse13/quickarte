@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: quickarte-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: quickarte
+      POSTGRES_USER: quickarte
+      POSTGRES_PASSWORD: quickarte
+    ports:
+      - "5433:5432"
+    volumes:
+      - quickarte_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quickarte -d quickarte"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  quickarte_pgdata:

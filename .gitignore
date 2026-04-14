@@ -1,0 +1,27 @@
+node_modules
+.next
+.next/
+out
+build
+dist
+
+.env
+.env.local
+.env*.local
+
+.DS_Store
+*.log
+npm-debug.log*
+
+next-env.d.ts
+.vercel
+
+coverage
+.turbo
+
+drizzle/
+
+# Local agent + editor artifacts
+.claude/
+*.tsbuildinfo
+tsconfig.tsbuildinfo

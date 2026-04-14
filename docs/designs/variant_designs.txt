@@ -1,0 +1,724 @@
+PROMPT 1: 
+
+"""
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Quickarte - Premium Menu</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17" vid="5"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" vid="6">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" vid="7">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet" vid="8">
+    <script vid="9">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace'],
+                    },
+                    colors: {
+                        base: '#FAFAFA',
+                        ink: '#0A0A0A',
+                        accent: '#C4653A',
+                        outline: '#E5E5E5',
+                    }
+                }
+            }
+        }
+    </script>
+    <style vid="10">
+        
+        * {
+            border-radius: 0 !important;
+        }
+        
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        
+        .brutalist-img {
+            filter: contrast(1.1) saturate(0.9);
+        }
+    </style>
+</head>
+<body class="bg-base text-ink font-sans antialiased w-full h-full min-h-screen" vid="11">
+
+    
+    <main class="w-full max-w-[480px] mx-auto bg-base min-h-screen relative flex flex-col border-x border-outline/50 shadow-2xl shadow-black/5" vid="12">
+        
+        
+        <header class="pt-8 px-6 pb-6 border-b-2 border-ink bg-base sticky top-0 z-20 flex flex-col gap-4" vid="13">
+            <div class="flex justify-between items-start" vid="14">
+                <div vid="15">
+                    <h1 class="font-mono font-bold text-2xl tracking-tighter uppercase leading-none" vid="16">Café des Arts</h1>
+                    <p class="font-mono text-xs text-ink/60 mt-2 uppercase tracking-widest" vid="17">Quartier Gauthier, Casablanca</p>
+                </div>
+                
+                <div class="w-10 h-10 bg-ink flex items-center justify-center flex-shrink-0" vid="18">
+                    <div class="w-4 h-4 border-2 border-base" vid="19"></div>
+                </div>
+            </div>
+        </header>
+
+        
+        <nav class="sticky top-[102px] z-10 bg-base border-b border-outline" vid="20">
+            <div class="flex overflow-x-auto no-scrollbar py-4 px-6 gap-3" vid="21">
+                <button class="px-5 py-2.5 bg-ink text-base border border-ink text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-colors" vid="22">
+                    Boissons Chaudes
+                </button>
+                <button class="px-5 py-2.5 bg-base text-ink border border-outline hover:border-ink text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-colors" vid="23">
+                    Petit-Déjeuner
+                </button>
+                <button class="px-5 py-2.5 bg-base text-ink border border-outline hover:border-ink text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-colors" vid="24">
+                    Jus &amp; Smoothies
+                </button>
+                <button class="px-5 py-2.5 bg-base text-ink border border-outline hover:border-ink text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-colors" vid="25">
+                    Sandwiches
+                </button>
+                <button class="px-5 py-2.5 bg-base text-ink border border-outline hover:border-ink text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-colors" vid="26">
+                    Salades
+                </button>
+            </div>
+        </nav>
+
+        
+        <div class="flex-1 pb-32" vid="27">
+            
+            
+            <section id="boissons-chaudes" class="border-b-4 border-outline" vid="28">
+                <div class="px-6 py-6 border-b border-outline bg-base/50" vid="29">
+                    <h2 class="font-mono font-bold text-lg uppercase tracking-widest text-ink/40" vid="30">01 / Boissons Chaudes</h2>
+                </div>
+                
+                <div class="flex flex-col" vid="31">
+                    
+                    <article class="p-6 border-b border-outline flex gap-4 hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="32">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="33"></div>
+                        <div class="flex-1 flex flex-col justify-center" vid="34">
+                            <div class="flex justify-between items-start gap-4" vid="35">
+                                <h3 class="text-[16px] font-bold leading-tight" vid="36">Nous Nous</h3>
+                                <span class="font-mono text-[16px] font-bold whitespace-nowrap" vid="37">15 <span class="text-xs text-ink/50" vid="38">MAD</span></span>
+                            </div>
+                            <p class="text-[14px] text-ink/60 mt-2 leading-snug max-w-[90%]" vid="39">Half espresso, half textured milk. The Moroccan classic.</p>
+                        </div>
+                    </article>
+
+                    
+                    <article class="p-6 border-b border-outline flex gap-4 hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="40">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="41"></div>
+                        <div class="flex-1 flex flex-col justify-center" vid="42">
+                            <div class="flex justify-between items-start gap-4" vid="43">
+                                <h3 class="text-[16px] font-bold leading-tight" vid="44">Café Crème</h3>
+                                <span class="font-mono text-[16px] font-bold whitespace-nowrap" vid="45">18 <span class="text-xs text-ink/50" vid="46">MAD</span></span>
+                            </div>
+                            <p class="text-[14px] text-ink/60 mt-2 leading-snug max-w-[90%]" vid="47">Smooth espresso with carefully steamed milk and microfoam.</p>
+                        </div>
+                        <div class="w-[80px] h-[80px] border border-ink flex-shrink-0 bg-outline" vid="48">
+                            <img src="https://images.unsplash.com/photo-1559525839-b184a4d698c7?auto=format&amp;fit=crop&amp;w=160&amp;q=80" alt="Café Crème" class="w-full h-full object-cover brutalist-img" vid="49">
+                        </div>
+                    </article>
+
+                    
+                    <article class="p-6 flex gap-4 hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="50">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="51"></div>
+                        <div class="flex-1 flex flex-col justify-center" vid="52">
+                            <div class="flex justify-between items-start gap-4" vid="53">
+                                <h3 class="text-[16px] font-bold leading-tight" vid="54">Thé à la Menthe</h3>
+                                <span class="font-mono text-[16px] font-bold whitespace-nowrap" vid="55">12 <span class="text-xs text-ink/50" vid="56">MAD</span></span>
+                            </div>
+                            <p class="text-[14px] text-ink/60 mt-2 leading-snug max-w-[90%]" vid="57">Gunpowder green tea, fresh spearmint, heavily sweetened.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            
+            <section id="petit-dejeuner" class="border-b-4 border-outline" vid="58">
+                <div class="px-6 py-6 border-b border-outline bg-base/50" vid="59">
+                    <h2 class="font-mono font-bold text-lg uppercase tracking-widest text-ink/40" vid="60">02 / Petit-Déjeuner</h2>
+                </div>
+                
+                <div class="flex flex-col" vid="61">
+                    
+                    <article class="p-6 border-b border-outline flex gap-4 hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="62">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="63"></div>
+                        <div class="flex-1 flex flex-col justify-center" vid="64">
+                            <div class="flex justify-between items-start gap-4" vid="65">
+                                <h3 class="text-[16px] font-bold leading-tight flex items-center gap-2" vid="66">
+                                    Msemen au Miel
+                                    <span class="bg-ink text-base text-[10px] uppercase font-mono px-1.5 py-0.5" vid="67">Popular</span>
+                                </h3>
+                                <span class="font-mono text-[16px] font-bold whitespace-nowrap" vid="68">25 <span class="text-xs text-ink/50" vid="69">MAD</span></span>
+                            </div>
+                            <p class="text-[14px] text-ink/60 mt-2 leading-snug max-w-[90%]" vid="70">Flaky, square semolina flatbread served hot with pure honey and butter.</p>
+                        </div>
+                        <div class="w-[80px] h-[80px] border border-ink flex-shrink-0 bg-outline" vid="71">
+                            <img src="https://images.unsplash.com/photo-1528207776546-32248a4f1ce4?auto=format&amp;fit=crop&amp;w=160&amp;q=80" alt="Msemen" class="w-full h-full object-cover brutalist-img" vid="72">
+                        </div>
+                    </article>
+
+                    
+                    <article class="p-6 flex gap-4 hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="73">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="74"></div>
+                        <div class="flex-1 flex flex-col justify-center" vid="75">
+                            <div class="flex justify-between items-start gap-4" vid="76">
+                                <h3 class="text-[16px] font-bold leading-tight" vid="77">Œufs au Khlii</h3>
+                                <span class="font-mono text-[16px] font-bold whitespace-nowrap" vid="78">45 <span class="text-xs text-ink/50" vid="79">MAD</span></span>
+                            </div>
+                            <p class="text-[14px] text-ink/60 mt-2 leading-snug max-w-[90%]" vid="80">Fried eggs prepared in a tajine with traditional preserved spiced meat.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            
+            <section id="jus" class="border-b-4 border-outline" vid="81">
+                <div class="px-6 py-6 border-b border-outline bg-base/50" vid="82">
+                    <h2 class="font-mono font-bold text-lg uppercase tracking-widest text-ink/40" vid="83">03 / Jus &amp; Smoothies</h2>
+                </div>
+                
+                <div class="flex flex-col" vid="84">
+                    
+                    <article class="p-6 border-b border-outline flex gap-4 hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="85">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="86"></div>
+                        <div class="flex-1 flex flex-col justify-center" vid="87">
+                            <div class="flex justify-between items-start gap-4" vid="88">
+                                <h3 class="text-[16px] font-bold leading-tight" vid="89">Jus d'Orange Pressé</h3>
+                                <span class="font-mono text-[16px] font-bold whitespace-nowrap" vid="90">22 <span class="text-xs text-ink/50" vid="91">MAD</span></span>
+                            </div>
+                            <p class="text-[14px] text-ink/60 mt-2 leading-snug max-w-[90%]" vid="92">Freshly squeezed local oranges, zero added sugar.</p>
+                        </div>
+                        <div class="w-[80px] h-[80px] border border-ink flex-shrink-0 bg-outline" vid="93">
+                            <img src="https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&amp;fit=crop&amp;w=160&amp;q=80" alt="Orange Juice" class="w-full h-full object-cover brutalist-img" vid="94">
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            
+            <section id="sandwiches" class="border-b-4 border-outline" vid="95">
+                <div class="px-6 py-6 border-b border-outline bg-base/50" vid="96">
+                    <h2 class="font-mono font-bold text-lg uppercase tracking-widest text-ink/40" vid="97">04 / Sandwiches</h2>
+                </div>
+                
+                <div class="flex flex-col" vid="98">
+                    
+                    <article class="p-6 border-b border-outline flex gap-4 hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="99">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="100"></div>
+                        <div class="flex-1 flex flex-col justify-center" vid="101">
+                            <div class="flex justify-between items-start gap-4" vid="102">
+                                <h3 class="text-[16px] font-bold leading-tight" vid="103">Bocadillo Thon</h3>
+                                <span class="font-mono text-[16px] font-bold whitespace-nowrap" vid="104">35 <span class="text-xs text-ink/50" vid="105">MAD</span></span>
+                            </div>
+                            <p class="text-[14px] text-ink/60 mt-2 leading-snug max-w-[90%]" vid="106">Crusty baguette filled with tuna, olives, boiled egg, potato, and harissa.</p>
+                        </div>
+                        <div class="w-[80px] h-[80px] border border-ink flex-shrink-0 bg-outline" vid="107">
+                            <img src="https://images.unsplash.com/photo-1553909489-cd47ce260105?auto=format&amp;fit=crop&amp;w=160&amp;q=80" alt="Bocadillo" class="w-full h-full object-cover brutalist-img" vid="108">
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            
+            <section id="salades" vid="109">
+                <div class="px-6 py-6 border-b border-outline bg-base/50" vid="110">
+                    <h2 class="font-mono font-bold text-lg uppercase tracking-widest text-ink/40" vid="111">05 / Salades</h2>
+                </div>
+                
+                <div class="flex flex-col" vid="112">
+                    
+                    <article class="p-6 border-b border-outline flex gap-4 hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="113">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="114"></div>
+                        <div class="flex-1 flex flex-col justify-center" vid="115">
+                            <div class="flex justify-between items-start gap-4" vid="116">
+                                <h3 class="text-[16px] font-bold leading-tight" vid="117">Salade Marocaine</h3>
+                                <span class="font-mono text-[16px] font-bold whitespace-nowrap" vid="118">30 <span class="text-xs text-ink/50" vid="119">MAD</span></span>
+                            </div>
+                            <p class="text-[14px] text-ink/60 mt-2 leading-snug max-w-[90%]" vid="120">Finely diced tomatoes, cucumbers, and red onions with fresh parsley vinaigrette.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+        </div>
+
+        
+        <div class="fixed bottom-0 left-0 w-full z-50 flex justify-center pointer-events-none" vid="121">
+            <div class="w-full max-w-[480px] bg-base border-t-2 border-ink p-4 pointer-events-auto" vid="122">
+                <button class="w-full bg-accent text-base px-6 py-4 flex justify-between items-center hover:bg-ink transition-colors border-2 border-transparent hover:border-base focus:outline-none focus:ring-4 focus:ring-accent/20" vid="123">
+                    <div class="flex flex-col items-start" vid="124">
+                        <span class="font-bold uppercase tracking-widest text-sm" vid="125">View Order</span>
+                        <span class="font-mono text-xs opacity-90 mt-0.5" vid="126">3 ITEMS</span>
+                    </div>
+                    <div class="flex items-center gap-3" vid="127">
+                        <span class="font-mono font-bold text-lg" vid="128">145 <span class="text-sm font-sans font-normal" vid="129">MAD</span></span>
+                        
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" vid="130">
+                            <path d="M5 12h14M12 5l7 7-7 7" vid="131"></path>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+
+</body></html>
+"""
+
+
+
+
+
+
+
+
+
+
+
+PROMPT 2: 
+
+"""
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Quickarte - Merchant Dashboard</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17" vid="5"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" vid="6">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" vid="7">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet" vid="8">
+    <script vid="9">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace'],
+                    },
+                    colors: {
+                        base: '#FAFAFA',
+                        ink: '#0A0A0A',
+                        accent: '#C4653A',
+                        outline: '#E5E5E5',
+                    }
+                }
+            }
+        }
+    </script>
+    <style vid="10">
+        * {
+            border-radius: 0 !important;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-base text-ink font-sans antialiased w-full h-full min-h-screen" vid="11">
+
+    <main class="w-full max-w-[480px] mx-auto bg-base min-h-screen relative flex flex-col border-x border-outline/50 shadow-2xl shadow-black/5 pb-24" vid="12">
+        
+        
+        <header class="pt-8 px-6 pb-6 border-b-4 border-outline bg-base sticky top-0 z-20 flex flex-col gap-1" vid="13">
+            <div class="flex justify-between items-baseline" vid="14">
+                <h1 class="font-sans text-xl font-normal text-ink" vid="15">Bonjour, Karim</h1>
+                <span class="font-mono text-sm tracking-tighter text-ink font-bold" vid="16">24 OCT 2023</span>
+            </div>
+            <p class="font-mono text-xs text-ink/50 uppercase tracking-widest mt-1" vid="17">Café des Arts</p>
+        </header>
+
+        <div class="flex-1" vid="18">
+            
+            
+            <section id="aujourd-hui" class="border-b-4 border-outline bg-base" vid="19">
+                <div class="px-6 py-6 border-b border-outline bg-base/50 flex items-center justify-between" vid="20">
+                    <h2 class="font-mono font-bold text-lg uppercase tracking-widest text-ink/40" vid="21">01 / Aujourd'hui</h2>
+                </div>
+                
+                <div class="grid grid-cols-3 divide-x divide-outline" vid="22">
+                    <div class="p-5 flex flex-col gap-3" vid="23">
+                        <span class="font-mono text-[10px] uppercase tracking-widest text-ink/60" vid="24">Commandes</span>
+                        <span class="font-mono text-3xl font-bold tracking-tighter text-ink" vid="25">42</span>
+                    </div>
+                    <div class="p-5 flex flex-col gap-3" vid="26">
+                        <span class="font-mono text-[10px] uppercase tracking-widest text-ink/60" vid="27">Revenu <span class="text-[8px]" vid="28">MAD</span></span>
+                        <span class="font-mono text-2xl font-bold tracking-tighter text-ink flex items-baseline" vid="29">1,450</span>
+                    </div>
+                    <div class="p-5 flex flex-col gap-3 bg-accent/[0.02]" vid="30">
+                        <div class="flex items-center justify-between" vid="31">
+                            <span class="font-mono text-[10px] uppercase tracking-widest text-ink/60" vid="32">En attente</span>
+                            <div class="w-2 h-2 bg-accent" vid="33"></div>
+                        </div>
+                        <span class="font-mono text-3xl font-bold tracking-tighter text-accent" vid="34">5</span>
+                    </div>
+                </div>
+            </section>
+
+            
+            <section id="actions" class="border-b-4 border-outline" vid="35">
+                <div class="px-6 py-6 border-b border-outline bg-base/50" vid="36">
+                    <h2 class="font-mono font-bold text-lg uppercase tracking-widest text-ink/40" vid="37">02 / Actions Rapides</h2>
+                </div>
+                
+                <div class="flex flex-col" vid="38">
+                    <article class="p-6 border-b border-outline flex items-center justify-between hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="39">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="40"></div>
+                        <span class="font-bold text-[16px] tracking-tight" vid="41">Gérer les commandes</span>
+                        <div class="flex items-center gap-4" vid="42">
+                            <span class="bg-accent text-base text-[10px] font-mono px-2 py-0.5 font-bold" vid="43">5</span>
+                            <span class="font-mono text-ink/30 group-hover:text-ink transition-colors text-lg" vid="44">→</span>
+                        </div>
+                    </article>
+                    
+                    <article class="p-6 border-b border-outline flex items-center justify-between hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="45">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-ink scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="46"></div>
+                        <span class="font-bold text-[16px] tracking-tight" vid="47">Modifier le catalogue</span>
+                        <div class="flex items-center gap-4" vid="48">
+                            <span class="font-mono text-ink/30 group-hover:text-ink transition-colors text-lg" vid="49">→</span>
+                        </div>
+                    </article>
+
+                    <article class="p-6 border-b border-outline flex items-center justify-between hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="50">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-ink scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="51"></div>
+                        <span class="font-bold text-[16px] tracking-tight" vid="52">Voir ma boutique</span>
+                        <div class="flex items-center gap-4" vid="53">
+                            <span class="font-mono text-ink/30 group-hover:text-ink transition-colors text-lg" vid="54">→</span>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            
+            <section id="dernieres-commandes" vid="55">
+                <div class="px-6 py-6 border-b border-outline bg-base/50 flex justify-between items-center" vid="56">
+                    <h2 class="font-mono font-bold text-lg uppercase tracking-widest text-ink/40" vid="57">03 / Dernières Commandes</h2>
+                </div>
+                
+                <div class="flex flex-col" vid="58">
+                    
+                    <div class="p-4 px-6 border-b border-outline flex justify-between items-center hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="59">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="60"></div>
+                        <div class="flex flex-col gap-1.5" vid="61">
+                            <span class="font-bold text-[15px] leading-none" vid="62">Youssef B.</span>
+                            <span class="font-mono text-[12px] text-ink/50 leading-none" vid="63">14:32</span>
+                        </div>
+                        <div class="flex flex-col items-end gap-2" vid="64">
+                            <span class="font-mono text-[15px] font-bold leading-none" vid="65">85 <span class="text-[10px] text-ink/50 font-normal" vid="66">MAD</span></span>
+                            <span class="border border-accent text-accent px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none" vid="67">En attente</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 px-6 border-b border-outline flex justify-between items-center hover:bg-black/[0.02] transition-colors cursor-pointer group relative" vid="68">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="69"></div>
+                        <div class="flex flex-col gap-1.5" vid="70">
+                            <span class="font-bold text-[15px] leading-none" vid="71">Sara M.</span>
+                            <span class="font-mono text-[12px] text-ink/50 leading-none" vid="72">14:28</span>
+                        </div>
+                        <div class="flex flex-col items-end gap-2" vid="73">
+                            <span class="font-mono text-[15px] font-bold leading-none" vid="74">120 <span class="text-[10px] text-ink/50 font-normal" vid="75">MAD</span></span>
+                            <span class="border border-accent text-accent px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none" vid="76">En attente</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 px-6 border-b border-outline flex justify-between items-center hover:bg-black/[0.02] transition-colors cursor-pointer group relative bg-black/[0.01]" vid="77">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-ink scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="78"></div>
+                        <div class="flex flex-col gap-1.5" vid="79">
+                            <span class="font-bold text-[15px] leading-none" vid="80">Mehdi T.</span>
+                            <span class="font-mono text-[12px] text-ink/50 leading-none" vid="81">14:15</span>
+                        </div>
+                        <div class="flex flex-col items-end gap-2" vid="82">
+                            <span class="font-mono text-[15px] font-bold leading-none" vid="83">45 <span class="text-[10px] text-ink/50 font-normal" vid="84">MAD</span></span>
+                            <span class="bg-ink text-base px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-ink" vid="85">Confirmée</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 px-6 border-b border-outline flex justify-between items-center hover:bg-black/[0.02] transition-colors cursor-pointer group relative bg-black/[0.01]" vid="86">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-ink scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="87"></div>
+                        <div class="flex flex-col gap-1.5" vid="88">
+                            <span class="font-bold text-[15px] leading-none" vid="89">Amina R.</span>
+                            <span class="font-mono text-[12px] text-ink/50 leading-none" vid="90">13:50</span>
+                        </div>
+                        <div class="flex flex-col items-end gap-2" vid="91">
+                            <span class="font-mono text-[15px] font-bold leading-none" vid="92">210 <span class="text-[10px] text-ink/50 font-normal" vid="93">MAD</span></span>
+                            <span class="bg-ink text-base px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-ink" vid="94">Confirmée</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 px-6 border-b border-outline flex justify-between items-center hover:bg-black/[0.02] transition-colors cursor-pointer group relative opacity-70" vid="95">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-outline scale-y-0 group-hover:scale-y-100 transition-transform origin-top" vid="96"></div>
+                        <div class="flex flex-col gap-1.5" vid="97">
+                            <span class="font-bold text-[15px] leading-none text-ink/80" vid="98">Omar K.</span>
+                            <span class="font-mono text-[12px] text-ink/40 leading-none" vid="99">13:10</span>
+                        </div>
+                        <div class="flex flex-col items-end gap-2 text-ink/80" vid="100">
+                            <span class="font-mono text-[15px] font-bold leading-none" vid="101">65 <span class="text-[10px] text-ink/40 font-normal" vid="102">MAD</span></span>
+                            <span class="bg-outline text-ink/60 px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-outline" vid="103">Terminée</span>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+
+        
+        <nav class="fixed bottom-0 left-0 w-full z-50 flex justify-center pointer-events-none" vid="104">
+            <div class="w-full max-w-[480px] bg-base border-t-2 border-ink pointer-events-auto flex items-center shadow-[0_-10px_40px_rgba(0,0,0,0.05)]" vid="105">
+                
+                <button class="flex-1 py-4 flex flex-col items-center gap-2 hover:bg-black/[0.02] transition-colors group border-r border-outline" vid="106">
+                    <svg class="w-5 h-5 text-accent stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" vid="107">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" vid="108"></path>
+                        <polyline points="9 22 9 12 15 12 15 22" vid="109"></polyline>
+                    </svg>
+                    <span class="font-mono text-[9px] uppercase tracking-widest text-accent font-bold" vid="110">Accueil</span>
+                </button>
+
+                <button class="flex-1 py-4 flex flex-col items-center gap-2 hover:bg-black/[0.02] transition-colors group border-r border-outline" vid="111">
+                    <svg class="w-5 h-5 text-ink/30 stroke-current group-hover:text-ink transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" vid="112">
+                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" vid="113"></path>
+                    </svg>
+                    <span class="font-mono text-[9px] uppercase tracking-widest text-ink/40 font-bold group-hover:text-ink transition-colors" vid="114">Catalogue</span>
+                </button>
+
+                <button class="flex-1 py-4 flex flex-col items-center gap-2 hover:bg-black/[0.02] transition-colors group border-r border-outline relative" vid="115">
+                    <div class="relative" vid="116">
+                        <svg class="w-5 h-5 text-ink/30 stroke-current group-hover:text-ink transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" vid="117">
+                            <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" vid="118"></path>
+                            <path d="M16 14h-6" vid="119"></path>
+                            <path d="M16 10h-8" vid="120"></path>
+                        </svg>
+                        <div class="absolute -top-1 -right-1 w-2 h-2 bg-accent border-[1.5px] border-base" vid="121"></div>
+                    </div>
+                    <span class="font-mono text-[9px] uppercase tracking-widest text-ink/40 font-bold group-hover:text-ink transition-colors" vid="122">Commandes</span>
+                </button>
+
+                <button class="flex-1 py-4 flex flex-col items-center gap-2 hover:bg-black/[0.02] transition-colors group border-r border-outline" vid="123">
+                    <svg class="w-5 h-5 text-ink/30 stroke-current group-hover:text-ink transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" vid="124">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" vid="125"></path>
+                        <circle cx="9" cy="7" r="4" vid="126"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" vid="127"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" vid="128"></path>
+                    </svg>
+                    <span class="font-mono text-[9px] uppercase tracking-widest text-ink/40 font-bold group-hover:text-ink transition-colors" vid="129">Clients</span>
+                </button>
+
+                <button class="flex-1 py-4 flex flex-col items-center gap-2 hover:bg-black/[0.02] transition-colors group" vid="130">
+                    <svg class="w-5 h-5 text-ink/30 stroke-current group-hover:text-ink transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" vid="131">
+                        <path d="m2 7 4.04-4.04a2 2 0 0 1 1.41-.585h9.1A2 2 0 0 1 18 2.96L22 7v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7Z" vid="132"></path>
+                        <path d="M16 14H8" vid="133"></path>
+                        <path d="M12 22v-8" vid="134"></path>
+                        <path d="M2 7h20" vid="135"></path>
+                    </svg>
+                    <span class="font-mono text-[9px] uppercase tracking-widest text-ink/40 font-bold group-hover:text-ink transition-colors" vid="136">Boutique</span>
+                </button>
+
+            </div>
+        </nav>
+
+    </main>
+
+
+</body></html>
+"""
+
+
+
+PROMPT 3: 
+
+"""
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Quickarte - Nouvel Article</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17" vid="5"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" vid="6">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" vid="7">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet" vid="8">
+    <script vid="9">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace'],
+                    },
+                    colors: {
+                        base: '#FAFAFA',
+                        ink: '#0A0A0A',
+                        accent: '#C4653A',
+                        outline: '#E5E5E5',
+                    }
+                }
+            }
+        }
+    </script>
+    <style vid="10">
+        * {
+            border-radius: 0 !important;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-base text-ink font-sans antialiased w-full h-full min-h-screen" vid="11">
+
+    <main class="w-full max-w-[390px] mx-auto bg-base min-h-screen relative flex flex-col border-x border-outline/50 shadow-2xl shadow-black/5 pb-24" vid="12">
+        
+        
+        <header class="h-16 px-4 flex justify-between items-center border-b-2 border-ink sticky top-0 bg-base z-20" vid="13">
+            <button type="button" class="w-10 h-10 flex items-center justify-center text-ink hover:text-accent transition-colors focus:outline-none" vid="14">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" vid="15">
+                    <line x1="19" y1="12" x2="5" y2="12" vid="16"></line>
+                    <polyline points="12 19 5 12 12 5" vid="17"></polyline>
+                </svg>
+            </button>
+            <h1 class="font-mono text-[14px] font-bold uppercase tracking-widest text-ink" vid="18">Nouvel Article</h1>
+            <div class="w-10" vid="19"></div> 
+        </header>
+
+        
+        <form class="flex-1 p-6 flex flex-col" vid="20">
+            
+            <h2 class="font-mono font-bold text-sm uppercase tracking-widest text-ink/40 mb-6" vid="21">01 / Informations</h2>
+            
+            <div class="flex flex-col gap-6" vid="22">
+                
+                
+                <div vid="23">
+                    <label class="block font-mono text-[11px] uppercase tracking-widest text-ink mb-3" vid="24">Photo</label>
+                    <div class="w-[120px] h-[120px] border-2 border-dashed border-outline flex items-center justify-center text-ink/30 hover:border-ink hover:text-ink transition-colors cursor-pointer bg-base group relative focus-within:border-accent" vid="25">
+                        <svg class="w-8 h-8 stroke-current" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter" vid="26">
+                            <path d="M1 6h5l2-4h8l2 4h5v16H1V6z" vid="27"></path>
+                            <circle cx="12" cy="14" r="4" vid="28"></circle>
+                        </svg>
+                    </div>
+                </div>
+
+                
+                <div vid="29">
+                    <label for="nom" class="block font-mono text-[11px] uppercase tracking-widest text-ink mb-2" vid="30">Nom</label>
+                    <div class="relative group" vid="31">
+                        <input id="nom" type="text" placeholder="Nous Nous" class="peer w-full bg-transparent border border-outline px-4 py-3.5 font-sans text-base text-ink placeholder:text-ink/30 focus:outline-none focus:border-ink focus:bg-white transition-colors" vid="32">
+                        <div class="absolute left-0 top-0 w-[3px] h-full bg-accent scale-y-0 peer-focus:scale-y-100 transition-transform origin-top pointer-events-none" vid="33"></div>
+                    </div>
+                </div>
+
+                
+                <div vid="34">
+                    <div class="flex justify-between items-baseline mb-2" vid="35">
+                        <label for="description" class="block font-mono text-[11px] uppercase tracking-widest text-ink" vid="36">Description</label>
+                        <span class="font-sans text-[11px] text-ink/40" vid="37">Optionnel</span>
+                    </div>
+                    <div class="relative group" vid="38">
+                        <textarea id="description" rows="2" placeholder="Café au lait traditionnel marocain" class="peer w-full bg-transparent border border-outline px-4 py-3.5 font-sans text-base text-ink placeholder:text-ink/30 focus:outline-none focus:border-ink focus:bg-white transition-colors resize-none" vid="39"></textarea>
+                        <div class="absolute left-0 top-0 w-[3px] h-full bg-accent scale-y-0 peer-focus:scale-y-100 transition-transform origin-top pointer-events-none" vid="40"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full h-px bg-outline my-8" vid="41"></div>
+            
+            <h2 class="font-mono font-bold text-sm uppercase tracking-widest text-ink/40 mb-6" vid="42">02 / Détails de Vente</h2>
+
+            <div class="flex flex-col gap-6" vid="43">
+                
+                
+                <div vid="44">
+                    <label for="prix" class="block font-mono text-[11px] uppercase tracking-widest text-ink mb-2" vid="45">Prix</label>
+                    <div class="relative group flex items-center" vid="46">
+                        <input id="prix" type="number" placeholder="15" class="peer w-full bg-transparent border border-outline px-4 py-3.5 pr-14 font-mono text-base text-ink placeholder:text-ink/30 focus:outline-none focus:border-ink focus:bg-white transition-colors" vid="47">
+                        <span class="absolute right-4 font-mono text-[11px] font-bold text-ink/50 pointer-events-none peer-focus:text-ink transition-colors" vid="48">MAD</span>
+                        <div class="absolute left-0 top-0 w-[3px] h-full bg-accent scale-y-0 peer-focus:scale-y-100 transition-transform origin-top pointer-events-none" vid="49"></div>
+                    </div>
+                </div>
+
+                
+                <div vid="50">
+                    <label for="categorie" class="block font-mono text-[11px] uppercase tracking-widest text-ink mb-2" vid="51">Catégorie</label>
+                    <div class="relative group" vid="52">
+                        <select id="categorie" class="appearance-none peer w-full bg-transparent border border-outline px-4 py-3.5 pr-12 font-sans text-base text-ink focus:outline-none focus:border-ink focus:bg-white transition-colors cursor-pointer" vid="53">
+                            <option value="" disabled="" selected="" class="text-ink/30" vid="54">Sélectionner une catégorie...</option>
+                            <option value="boissons-chaudes" vid="55">Boissons Chaudes</option>
+                            <option value="petit-dejeuner" vid="56">Petit-Déjeuner</option>
+                            <option value="jus-smoothies" vid="57">Jus &amp; Smoothies</option>
+                            <option value="sandwiches" vid="58">Sandwiches</option>
+                            <option value="salades" vid="59">Salades</option>
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-ink peer-focus:text-accent transition-colors" vid="60">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" vid="61">
+                                <polyline points="2 4 6 8 10 4" vid="62"></polyline>
+                            </svg>
+                        </div>
+                        <div class="absolute left-0 top-0 w-[3px] h-full bg-accent scale-y-0 peer-focus:scale-y-100 transition-transform origin-top pointer-events-none" vid="63"></div>
+                    </div>
+                </div>
+
+                
+                <div class="flex items-center justify-between py-2 mt-2" vid="64">
+                    <label class="font-mono text-[11px] uppercase tracking-widest text-ink cursor-pointer" vid="65">Disponible</label>
+                    <button type="button" class="w-12 h-6 border-2 border-ink bg-ink p-[2px] flex justify-end items-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/30 focus:ring-offset-2 focus:ring-offset-base transition-all" role="switch" aria-checked="true" vid="66">
+                        <div class="w-4 h-4 bg-base border border-ink" vid="67"></div>
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="w-full h-px bg-outline my-8" vid="68"></div>
+
+            
+            <button type="button" class="w-full text-left py-5 px-4 -mx-4 border-y border-transparent hover:bg-black/[0.02] hover:border-outline transition-colors group flex justify-between items-center bg-base focus:outline-none focus:border-ink" vid="69">
+                <div class="flex flex-col gap-1.5" vid="70">
+                    <span class="font-mono text-sm font-bold uppercase tracking-widest text-ink/80 group-hover:text-ink transition-colors" vid="71">Options &amp; Variantes</span>
+                    <span class="font-sans text-xs text-ink/50" vid="72">Tailles, suppléments, choix…</span>
+                </div>
+                <svg class="w-6 h-6 text-ink/40 group-hover:text-accent transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="square" vid="73">
+                    <line x1="12" y1="5" x2="12" y2="19" vid="74"></line>
+                    <line x1="5" y1="12" x2="19" y2="12" vid="75"></line>
+                </svg>
+            </button>
+
+        </form>
+
+        
+        <div class="fixed bottom-0 left-0 w-full z-50 flex justify-center pointer-events-none" vid="76">
+            <div class="w-full max-w-[390px] bg-base border-t-2 border-ink p-4 pointer-events-auto shadow-[0_-10px_40px_rgba(0,0,0,0.05)]" vid="77">
+                <button type="button" class="w-full bg-ink text-base px-6 py-4 flex justify-center items-center hover:bg-accent transition-colors border-2 border-transparent focus:outline-none focus:border-ink focus:ring-4 focus:ring-accent/20" vid="78">
+                    <span class="font-mono font-bold uppercase tracking-widest text-sm" vid="79">Enregistrer</span>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+
+</body></html>
+"""
