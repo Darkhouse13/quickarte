@@ -8,6 +8,7 @@ import {
   type OrderStatus,
 } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils/cn";
+import { formatDashboardDate } from "@/lib/utils/date";
 
 type RecentOrder = {
   id: string;
@@ -20,7 +21,6 @@ type RecentOrder = {
 const today = {
   merchantName: "Karim",
   businessName: "Café des Arts",
-  date: "24 OCT 2023",
   orders: 42,
   revenue: "1,450",
   pending: 5,
@@ -53,6 +53,7 @@ type Props = {
 export default async function MerchantHomePage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const today_date = formatDashboardDate();
 
   return (
     <>
@@ -62,7 +63,7 @@ export default async function MerchantHomePage({ params }: Props) {
             Bonjour, {today.merchantName}
           </h1>
           <span className="font-mono text-sm tracking-tighter text-ink font-bold">
-            {today.date}
+            {today_date}
           </span>
         </div>
         <p className="font-mono text-xs text-ink/50 uppercase tracking-widest mt-1">
