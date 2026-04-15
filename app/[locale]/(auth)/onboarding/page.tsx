@@ -3,6 +3,8 @@ import { setRequestLocale } from "next-intl/server";
 import { getCurrentBusiness } from "@/lib/auth/get-business";
 import { OnboardingForm } from "@/components/auth/onboarding-form";
 
+export const metadata = { title: "Quickarte — Création" };
+
 type Props = { params: Promise<{ locale: string }> };
 
 export default async function OnboardingPage({ params }: Props) {

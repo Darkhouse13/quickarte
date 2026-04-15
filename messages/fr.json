@@ -17,9 +17,9 @@
     "cancelled": "Annulée"
   },
   "storefront": {
-    "viewOrder": "View Order",
+    "viewOrder": "Voir la commande",
     "items": "{count, plural, =0 {0 ARTICLE} one {# ARTICLE} other {# ARTICLES}}",
-    "popular": "Popular"
+    "popular": "Populaire"
   },
   "merchant": {
     "greeting": "Bonjour, {name}",

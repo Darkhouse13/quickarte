@@ -3,6 +3,8 @@ import { requireBusiness } from "@/lib/auth/get-business";
 import { getOrdersByBusinessId } from "@/lib/ordering/queries";
 import { OrdersBoard } from "@/components/merchant/order-row";
 
+export const metadata = { title: "Quickarte — Commandes" };
+
 type Props = { params: Promise<{ locale: string }> };
 
 export default async function OrdersPage({ params }: Props) {

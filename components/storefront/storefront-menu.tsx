@@ -29,11 +29,24 @@ export function StorefrontMenu({ business, locale }: Props) {
     setHydrated(true);
   }, []);
 
+  const [flashId, setFlashId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!flashId) return;
+    const t = setTimeout(() => setFlashId(null), 280);
+    return () => clearTimeout(t);
+  }, [flashId]);
+
   const itemCount = hydrated ? getItemCount() : 0;
   const total = hydrated ? getTotal() : 0;
   const visible = itemCount > 0;
 
   const quantities = new Map(items.map((i) => [i.productId, i.quantity]));
+
+  const totalItemCount = business.sections.reduce(
+    (n, s) => n + s.items.length,
+    0,
+  );
+  const menuEmpty = totalItemCount === 0;
 
   const handleSelect = (id: string) => {
     setActiveCategory(id);
@@ -77,18 +90,29 @@ export function StorefrontMenu({ business, locale }: Props) {
         </section>
       ) : null}
 
-      <nav className="sticky top-[102px] z-10">
-        <CategoryPills
-          categories={business.sections.map((s) => ({
-            id: s.id,
-            label: s.label,
-          }))}
-          activeId={activeCategory}
-          onSelect={handleSelect}
-        />
-      </nav>
+      {menuEmpty ? (
+        <div className="flex-1 px-6 py-24 flex flex-col items-center text-center gap-4">
+          <div className="w-10 h-10 border-2 border-ink" />
+          <p className="font-sans text-[15px] text-ink/60 leading-snug max-w-[280px]">
+            Le menu sera bientôt disponible
+          </p>
+        </div>
+      ) : null}
 
-      <div className="flex-1 pb-32">
+      {!menuEmpty ? (
+        <nav className="sticky top-[102px] z-10">
+          <CategoryPills
+            categories={business.sections.map((s) => ({
+              id: s.id,
+              label: s.label,
+            }))}
+            activeId={activeCategory}
+            onSelect={handleSelect}
+          />
+        </nav>
+      ) : null}
+
+      <div className={menuEmpty ? "hidden" : "flex-1 pb-32"}>
         {business.sections.map((section, sectionIndex) => {
           const isLastSection = sectionIndex === business.sections.length - 1;
           return (
@@ -103,6 +127,8 @@ export function StorefrontMenu({ business, locale }: Props) {
                   const qty = item.productId
                     ? quantities.get(item.productId) ?? 0
                     : 0;
+                  const isFlashing =
+                    item.productId !== undefined && flashId === item.productId;
                   return (
                     <MenuItemCard
                       key={item.productId ?? `${section.id}-${i}`}
@@ -113,15 +139,18 @@ export function StorefrontMenu({ business, locale }: Props) {
                       badge={item.badge}
                       isLast={i === section.items.length - 1}
                       quantity={qty}
+                      flash={isFlashing}
                       onAdd={
                         item.productId
-                          ? () =>
+                          ? () => {
                               addItem({
                                 productId: item.productId!,
                                 name: item.name,
                                 price: item.price,
                                 image: item.image?.src,
-                              })
+                              });
+                              setFlashId(item.productId!);
+                            }
                           : undefined
                       }
                     />
@@ -150,10 +179,10 @@ export function StorefrontMenu({ business, locale }: Props) {
           >
             <div className="flex flex-col items-start">
               <span className="font-bold uppercase tracking-widest text-sm">
-                View Order
+                Voir la commande
               </span>
               <span className="font-mono text-xs opacity-90 mt-0.5">
-                {itemCount} {itemCount === 1 ? "ITEM" : "ITEMS"}
+                {itemCount} {itemCount === 1 ? "ARTICLE" : "ARTICLES"}
               </span>
             </div>
             <div className="flex items-center gap-3">

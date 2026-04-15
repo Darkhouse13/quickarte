@@ -6,6 +6,8 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { CopyButton } from "@/components/ui/copy-button";
 import { QRDisplay } from "@/components/merchant/qr-display";
 
+export const metadata = { title: "Quickarte — Boutique" };
+
 const BUSINESS_TYPE_LABEL: Record<string, string> = {
   restaurant: "Restaurant",
   cafe: "Café",

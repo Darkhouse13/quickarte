@@ -26,11 +26,13 @@ export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
       wrapperClassName,
       id,
       defaultValue,
+      value,
       ...rest
     },
     ref,
   ) {
     const inputId = id ?? rest.name;
+    const isControlled = value !== undefined;
     return (
       <div className={wrapperClassName}>
         <label
@@ -43,7 +45,9 @@ export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
           <select
             ref={ref}
             id={inputId}
-            defaultValue={defaultValue ?? (placeholder ? "" : undefined)}
+            {...(isControlled
+              ? { value }
+              : { defaultValue: defaultValue ?? (placeholder ? "" : undefined) })}
             className={cn(
               "appearance-none peer w-full bg-transparent border border-outline px-4 py-3.5 pr-12 font-sans text-base text-ink focus:outline-none focus:border-ink focus:bg-white transition-colors cursor-pointer",
               className,

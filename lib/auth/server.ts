@@ -10,9 +10,20 @@ import {
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
+const trustedOrigins = Array.from(
+  new Set(
+    [
+      appUrl,
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      process.env.NEXT_PUBLIC_LAN_URL,
+    ].filter((v): v is string => Boolean(v)),
+  ),
+);
+
 export const auth = betterAuth({
   basePath: "/api/auth",
-  trustedOrigins: [appUrl],
+  trustedOrigins,
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,

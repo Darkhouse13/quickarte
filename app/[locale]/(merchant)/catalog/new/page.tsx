@@ -4,6 +4,8 @@ import { categories } from "@/lib/db/schema";
 import { requireBusiness } from "@/lib/auth/get-business";
 import { NewItemForm } from "@/components/merchant/new-item-form";
 
+export const metadata = { title: "Quickarte — Nouvel article" };
+
 export default async function NewCatalogItemPage() {
   const { business } = await requireBusiness();
 

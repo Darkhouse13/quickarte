@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { StorefrontMenu } from "@/components/storefront/storefront-menu";
@@ -10,6 +11,23 @@ import type { StorefrontFixture } from "@/lib/catalog/fixtures";
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
 };
+
+export async function generateMetadata({
+  params,
+}: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const business = await getBusinessBySlug(slug);
+  if (!business) return { title: "Quickarte" };
+  const location = [business.city, business.address]
+    .filter(Boolean)
+    .join(" · ");
+  return {
+    title: `${business.name} — Menu`,
+    description: location
+      ? `${business.name} — ${location}`
+      : `${business.name} — Menu`,
+  };
+}
 
 export default async function StorefrontPage({ params }: Props) {
   const { locale, slug } = await params;

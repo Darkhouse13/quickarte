@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils/cn";
 import { formatDashboardDate, formatOrderTime } from "@/lib/utils/date";
+import { UserMenu } from "@/components/merchant/user-menu";
+
+export const metadata = { title: "Quickarte — Accueil" };
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -34,86 +37,149 @@ export default async function MerchantHomePage({ params }: Props) {
     maximumFractionDigits: 0,
   });
 
+  const isGettingStarted =
+    stats.todayOrderCount === 0 &&
+    stats.todayRevenue === 0 &&
+    stats.pendingCount === 0 &&
+    recentOrders.length === 0;
+
   return (
     <>
-      <header className="pt-8 px-6 pb-6 border-b-4 border-outline bg-base sticky top-0 z-20 flex flex-col gap-1">
-        <div className="flex justify-between items-baseline">
-          <h1 className="font-sans text-xl font-normal text-ink">
-            Bonjour, {merchantName}
-          </h1>
-          <span className="font-mono text-sm tracking-tighter text-ink font-bold">
-            {today_date}
-          </span>
+      <header className="pt-8 px-6 pb-6 border-b-4 border-outline bg-base sticky top-0 z-20">
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex flex-col gap-1 min-w-0 flex-1">
+            <div className="flex items-baseline justify-between gap-3">
+              <h1 className="font-sans text-xl font-normal text-ink truncate">
+                Bonjour, {merchantName}
+              </h1>
+              <span className="font-mono text-sm tracking-tighter text-ink font-bold flex-shrink-0">
+                {today_date}
+              </span>
+            </div>
+            <p className="font-mono text-xs text-ink/50 uppercase tracking-widest mt-1 truncate">
+              {business.name}
+            </p>
+          </div>
+          <UserMenu
+            name={session.user.name}
+            email={session.user.email}
+            locale={locale}
+          />
         </div>
-        <p className="font-mono text-xs text-ink/50 uppercase tracking-widest mt-1">
-          {business.name}
-        </p>
       </header>
 
       <div className="flex-1">
-        <section className="border-b-4 border-outline bg-base">
-          <SectionHeader index={1} title="Aujourd'hui" />
-          <div className="grid grid-cols-3 divide-x divide-outline">
-            <StatCard label="Commandes" value={stats.todayOrderCount} />
-            <StatCard
-              label="Revenu"
-              unit="MAD"
-              value={revenueLabel}
-              valueClassName="text-2xl"
-            />
-            <StatCard
-              label="En attente"
-              value={stats.pendingCount}
-              tone="accent"
-              indicator={stats.pendingCount > 0}
-            />
-          </div>
-        </section>
-
-        <section className="border-b-4 border-outline">
-          <SectionHeader index={2} title="Actions Rapides" />
-          <div className="flex flex-col">
-            <ActionCard
-              label="Gérer les commandes"
-              href="/orders"
-              badge={stats.pendingCount > 0 ? stats.pendingCount : undefined}
-              accent="accent"
-            />
-            <ActionCard
-              label="Modifier le catalogue"
-              href="/catalog"
-              accent="ink"
-            />
-            <ActionCard
-              label="Voir ma boutique"
-              href={`/${locale}/${business.slug}`}
-              accent="ink"
-              isLast
-            />
-          </div>
-        </section>
-
-        <section>
-          <SectionHeader index={3} title="Dernières Commandes" />
-          {recentOrders.length === 0 ? (
-            <p className="px-6 py-10 text-center font-sans text-sm text-ink/50">
-              Aucune commande récente
-            </p>
-          ) : (
+        {isGettingStarted ? (
+          <section>
+            <SectionHeader index={1} title="Démarrage" />
             <div className="flex flex-col">
-              {recentOrders.map((order) => (
-                <RecentOrderRow
-                  key={order.id}
-                  id={order.id}
-                  name={order.customerName}
-                  time={formatOrderTime(order.createdAt)}
-                  total={Number(order.total)}
-                  status={order.status as OrderStatus}
-                />
-              ))}
+              <Link
+                href="/catalog/new"
+                className="p-6 border-b border-outline flex flex-col gap-2 hover:bg-black/[0.02] transition-colors group relative"
+              >
+                <div className="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" />
+                <span className="font-mono text-[10px] uppercase tracking-widest text-accent font-bold">
+                  Étape 1
+                </span>
+                <h2 className="font-sans text-[17px] font-bold leading-tight">
+                  Bienvenue !
+                </h2>
+                <p className="font-sans text-sm text-ink/60 leading-snug">
+                  Commencez par ajouter votre menu pour pouvoir recevoir
+                  des commandes.
+                </p>
+                <span className="font-mono text-[11px] uppercase tracking-widest text-ink font-bold mt-2 group-hover:text-accent transition-colors">
+                  + Ajouter un article →
+                </span>
+              </Link>
+              <Link
+                href="/store"
+                className="p-6 flex flex-col gap-2 hover:bg-black/[0.02] transition-colors group relative"
+              >
+                <div className="absolute left-0 top-0 w-1 h-full bg-ink scale-y-0 group-hover:scale-y-100 transition-transform origin-top" />
+                <span className="font-mono text-[10px] uppercase tracking-widest text-ink/50 font-bold">
+                  Étape 2
+                </span>
+                <h2 className="font-sans text-[17px] font-bold leading-tight">
+                  Partagez votre QR code
+                </h2>
+                <p className="font-sans text-sm text-ink/60 leading-snug">
+                  Téléchargez et imprimez votre code pour que vos clients
+                  puissent scanner et commander.
+                </p>
+                <span className="font-mono text-[11px] uppercase tracking-widest text-ink font-bold mt-2 group-hover:text-accent transition-colors">
+                  Voir ma boutique →
+                </span>
+              </Link>
             </div>
-          )}
-        </section>
+          </section>
+        ) : (
+          <>
+            <section className="border-b-4 border-outline bg-base">
+              <SectionHeader index={1} title="Aujourd'hui" />
+              <div className="grid grid-cols-3 divide-x divide-outline">
+                <StatCard label="Commandes" value={stats.todayOrderCount} />
+                <StatCard
+                  label="Revenu"
+                  unit="MAD"
+                  value={revenueLabel}
+                  valueClassName="text-2xl"
+                />
+                <StatCard
+                  label="En attente"
+                  value={stats.pendingCount}
+                  tone="accent"
+                  indicator={stats.pendingCount > 0}
+                />
+              </div>
+            </section>
+
+            <section className="border-b-4 border-outline">
+              <SectionHeader index={2} title="Actions Rapides" />
+              <div className="flex flex-col">
+                <ActionCard
+                  label="Gérer les commandes"
+                  href="/orders"
+                  badge={stats.pendingCount > 0 ? stats.pendingCount : undefined}
+                  accent="accent"
+                />
+                <ActionCard
+                  label="Modifier le catalogue"
+                  href="/catalog"
+                  accent="ink"
+                />
+                <ActionCard
+                  label="Voir ma boutique"
+                  href={`/${locale}/${business.slug}`}
+                  accent="ink"
+                  isLast
+                />
+              </div>
+            </section>
+
+            <section>
+              <SectionHeader index={3} title="Dernières Commandes" />
+              {recentOrders.length === 0 ? (
+                <p className="px-6 py-10 text-center font-sans text-sm text-ink/50">
+                  Aucune commande récente
+                </p>
+              ) : (
+                <div className="flex flex-col">
+                  {recentOrders.map((order) => (
+                    <RecentOrderRow
+                      key={order.id}
+                      id={order.id}
+                      name={order.customerName}
+                      time={formatOrderTime(order.createdAt)}
+                      total={Number(order.total)}
+                      status={order.status as OrderStatus}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </>
   );

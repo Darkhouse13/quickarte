@@ -63,7 +63,7 @@ export const cafeDesArts: StorefrontFixture = {
           description:
             "Flaky, square semolina flatbread served hot with pure honey and butter.",
           price: 25,
-          badge: "Popular",
+          badge: "Populaire",
           image: {
             src: "https://images.unsplash.com/photo-1528207776546-32248a4f1ce4?auto=format&fit=crop&w=160&q=80",
             alt: "Msemen",

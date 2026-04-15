@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 import { formatOrderTime } from "@/lib/utils/date";
 import {
@@ -219,8 +220,24 @@ export function OrdersBoard({
   const totalCount = pending.length + confirmed.length + completed.length;
   if (totalCount === 0) {
     return (
-      <div className="px-6 py-20 text-center font-sans text-sm text-ink/50">
-        Aucune commande pour le moment
+      <div className="px-6 py-20 flex flex-col items-center text-center gap-6">
+        <div className="w-12 h-12 border-2 border-ink flex items-center justify-center">
+          <div className="w-3 h-3 bg-accent" />
+        </div>
+        <div className="flex flex-col gap-2 max-w-[320px]">
+          <p className="font-sans text-[15px] text-ink font-bold">
+            Aucune commande pour le moment
+          </p>
+          <p className="font-sans text-sm text-ink/60 leading-snug">
+            Partagez votre QR code pour recevoir des commandes !
+          </p>
+        </div>
+        <Link
+          href="/store"
+          className="bg-ink text-base px-6 py-3 font-mono font-bold uppercase tracking-widest text-[12px] hover:bg-accent transition-colors border-2 border-ink focus:outline-none focus:ring-4 focus:ring-accent/20"
+        >
+          Voir mon QR code →
+        </Link>
       </div>
     );
   }

@@ -165,13 +165,13 @@ export function CheckoutForm({
           <OrderTypeOption
             active={orderType === "dine_in"}
             label="Sur Place"
-            sub="Dine-in"
+            sub="Sur place"
             onClick={() => setOrderType("dine_in")}
           />
           <OrderTypeOption
             active={orderType === "takeaway"}
             label="À Emporter"
-            sub="Takeaway"
+            sub="À emporter"
             onClick={() => setOrderType("takeaway")}
             bordered
           />

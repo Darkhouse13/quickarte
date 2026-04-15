@@ -1,7 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useState } from "react";
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { ArrowLeft, Camera, Plus, Minus } from "lucide-react";
 import { FormInput } from "@/components/ui/form-input";
 import { FormTextarea } from "@/components/ui/form-textarea";
@@ -11,6 +17,9 @@ import { BottomBar } from "@/components/ui/bottom-bar";
 import { cn } from "@/lib/utils/cn";
 import {
   createProduct,
+  updateProduct,
+  deleteProduct,
+  createCategory,
   type ActionState,
 } from "@/lib/catalog/actions";
 
@@ -18,23 +27,79 @@ const initialState: ActionState = { status: "idle" };
 
 type Category = { id: string; name: string };
 
-type Props = {
-  categories: Category[];
+type ExistingProduct = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: string;
+  categoryId: string | null;
+  available: boolean;
 };
 
-export function NewItemForm({ categories }: Props) {
+type Props = {
+  categories: Category[];
+  product?: ExistingProduct;
+};
+
+export function NewItemForm({ categories: initialCategories, product }: Props) {
+  const isEdit = Boolean(product);
   const router = useRouter();
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [optionsOpen, setOptionsOpen] = useState(false);
-  const [available, setAvailable] = useState(true);
-  const [state, formAction, pending] = useActionState(
-    createProduct,
-    initialState,
+  const [available, setAvailable] = useState(product?.available ?? true);
+  const [categoryId, setCategoryId] = useState<string>(
+    product?.categoryId ?? "",
   );
+  const [newCategoryOpen, setNewCategoryOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryError, setNewCategoryError] = useState<string | null>(null);
+  const [creatingCategory, startCreateCategory] = useTransition();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, startDelete] = useTransition();
+
+  const action = product
+    ? updateProduct.bind(null, product.id)
+    : createProduct;
+
+  const [state, formAction, pending] = useActionState(action, initialState);
+
+  useEffect(() => {
+    nameRef.current?.focus();
+  }, []);
 
   const errorMessage =
     state.status === "error" ? state.message : null;
   const fieldErrors =
     state.status === "error" ? state.fieldErrors ?? {} : {};
+
+  const handleCreateCategory = () => {
+    const name = newCategoryName.trim();
+    setNewCategoryError(null);
+    if (name.length === 0) {
+      setNewCategoryError("Nom requis");
+      return;
+    }
+    startCreateCategory(async () => {
+      const result = await createCategory(name);
+      if (result.status === "error") {
+        setNewCategoryError(result.message);
+        return;
+      }
+      setCategories((prev) => [...prev, result.category]);
+      setCategoryId(result.category.id);
+      setNewCategoryName("");
+      setNewCategoryOpen(false);
+    });
+  };
+
+  const handleDelete = () => {
+    if (!product) return;
+    startDelete(async () => {
+      await deleteProduct(product.id);
+    });
+  };
 
   return (
     <main className="w-full max-w-[390px] mx-auto bg-base min-h-screen relative flex flex-col border-x border-outline/50 shadow-2xl shadow-black/5 pb-24">
@@ -52,14 +117,14 @@ export function NewItemForm({ categories }: Props) {
           />
         </button>
         <h1 className="font-mono text-[14px] font-bold uppercase tracking-widest text-ink">
-          Nouvel Article
+          {isEdit ? "Modifier l'article" : "Nouvel Article"}
         </h1>
         <div className="w-10" />
       </header>
 
       <form
         action={formAction}
-        id="new-item-form"
+        id="item-form"
         className="flex-1 p-6 flex flex-col"
       >
         <input
@@ -67,6 +132,7 @@ export function NewItemForm({ categories }: Props) {
           name="available"
           value={available ? "true" : "false"}
         />
+        <input type="hidden" name="categoryId" value={categoryId} />
 
         <h2 className="font-mono font-bold text-sm uppercase tracking-widest text-ink/40 mb-6">
           01 / Informations
@@ -91,10 +157,12 @@ export function NewItemForm({ categories }: Props) {
           </div>
 
           <FormInput
+            ref={nameRef}
             name="name"
             label="Nom"
             type="text"
             placeholder="Nous Nous"
+            defaultValue={product?.name ?? ""}
             required
           />
           {fieldErrors.name ? (
@@ -109,6 +177,7 @@ export function NewItemForm({ categories }: Props) {
             hint="Optionnel"
             rows={2}
             placeholder="Café au lait traditionnel marocain"
+            defaultValue={product?.description ?? ""}
           />
         </div>
 
@@ -127,6 +196,9 @@ export function NewItemForm({ categories }: Props) {
             min="0"
             placeholder="15"
             suffix="MAD"
+            defaultValue={
+              product?.price ? Number(product.price).toString() : ""
+            }
             required
           />
           {fieldErrors.price ? (
@@ -135,18 +207,80 @@ export function NewItemForm({ categories }: Props) {
             </p>
           ) : null}
 
-          <FormSelect
-            name="categoryId"
-            label="Catégorie"
-            placeholder="Sélectionner une catégorie..."
-            options={categories.map((c) => ({ value: c.id, label: c.name }))}
-            required
-          />
-          {fieldErrors.categoryId ? (
-            <p className="font-mono text-[11px] text-accent -mt-3">
-              {fieldErrors.categoryId[0]}
-            </p>
-          ) : null}
+          <div>
+            <FormSelect
+              label="Catégorie"
+              placeholder="Sélectionner une catégorie..."
+              options={categories.map((c) => ({ value: c.id, label: c.name }))}
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              required
+            />
+            {fieldErrors.categoryId ? (
+              <p className="font-mono text-[11px] text-accent mt-2">
+                {fieldErrors.categoryId[0]}
+              </p>
+            ) : null}
+
+            {!newCategoryOpen ? (
+              <button
+                type="button"
+                onClick={() => setNewCategoryOpen(true)}
+                className="mt-3 font-mono text-[11px] font-bold uppercase tracking-widest text-accent hover:text-ink transition-colors"
+              >
+                + Nouvelle catégorie
+              </button>
+            ) : (
+              <div className="mt-4 border border-outline p-4 flex flex-col gap-3">
+                <label className="block font-mono text-[11px] uppercase tracking-widest text-ink">
+                  Nouvelle catégorie
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => {
+                      setNewCategoryName(e.target.value);
+                      setNewCategoryError(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleCreateCategory();
+                      }
+                    }}
+                    placeholder="Ex: Desserts"
+                    className="flex-1 bg-transparent border border-outline px-3 py-2.5 text-sm text-ink placeholder:text-ink/30 focus:outline-none focus:border-ink focus:bg-white transition-colors"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateCategory}
+                    disabled={creatingCategory}
+                    className="bg-ink text-base px-4 py-2.5 font-mono font-bold uppercase tracking-widest text-[11px] hover:bg-accent transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {creatingCategory ? "…" : "Ajouter"}
+                  </button>
+                </div>
+                {newCategoryError ? (
+                  <p className="font-mono text-[11px] text-accent">
+                    {newCategoryError}
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewCategoryOpen(false);
+                    setNewCategoryName("");
+                    setNewCategoryError(null);
+                  }}
+                  className="self-start font-mono text-[11px] uppercase tracking-widest text-ink/50 hover:text-ink transition-colors"
+                >
+                  Annuler
+                </button>
+              </div>
+            )}
+          </div>
 
           <FormToggle
             label="Disponible"
@@ -210,17 +344,59 @@ export function NewItemForm({ categories }: Props) {
             {errorMessage}
           </p>
         ) : null}
+
+        {isEdit ? (
+          <div className="mt-10 pt-6 border-t border-outline flex flex-col items-center gap-4">
+            {!confirmDelete ? (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="font-mono text-[12px] uppercase tracking-widest text-accent hover:text-ink transition-colors underline underline-offset-4 decoration-accent/40"
+              >
+                Supprimer cet article
+              </button>
+            ) : (
+              <div className="w-full flex flex-col items-center gap-4">
+                <p className="font-sans text-sm text-ink">
+                  Êtes-vous sûr ?
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="bg-accent text-base px-5 py-3 font-mono font-bold uppercase tracking-widest text-[11px] hover:bg-ink transition-colors focus:outline-none focus:ring-4 focus:ring-accent/20 disabled:opacity-60"
+                  >
+                    {deleting ? "…" : "Oui, supprimer"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    disabled={deleting}
+                    className="bg-base text-ink/60 border-2 border-outline px-5 py-3 font-mono font-bold uppercase tracking-widest text-[11px] hover:border-ink hover:text-ink transition-colors focus:outline-none"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
       </form>
 
       <BottomBar maxWidth={390}>
         <button
           type="submit"
-          form="new-item-form"
+          form="item-form"
           disabled={pending}
           className="w-full bg-ink text-base px-6 py-4 flex justify-center items-center hover:bg-accent transition-colors border-2 border-transparent focus:outline-none focus:border-ink focus:ring-4 focus:ring-accent/20 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <span className="font-mono font-bold uppercase tracking-widest text-sm">
-            {pending ? "Enregistrement…" : "Enregistrer"}
+            {pending
+              ? "Enregistrement…"
+              : isEdit
+                ? "Enregistrer les modifications"
+                : "Enregistrer"}
           </span>
         </button>
       </BottomBar>

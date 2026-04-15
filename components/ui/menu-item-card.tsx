@@ -13,6 +13,7 @@ type MenuItemCardProps = {
   onClick?: () => void;
   onAdd?: () => void;
   quantity?: number;
+  flash?: boolean;
   className?: string;
 };
 
@@ -27,6 +28,7 @@ export function MenuItemCard({
   onClick,
   onAdd,
   quantity = 0,
+  flash = false,
   className,
 }: MenuItemCardProps) {
   const handleClick = onAdd ?? onClick;
@@ -49,9 +51,10 @@ export function MenuItemCard({
           : undefined
       }
       className={cn(
-        "p-6 flex gap-4 hover:bg-black/[0.02] transition-colors group relative",
+        "p-6 flex gap-4 hover:bg-black/[0.02] transition-colors duration-300 group relative",
         interactive ? "cursor-pointer" : "",
         !isLast && "border-b border-outline",
+        flash && "bg-accent/5",
         className,
       )}
     >

@@ -18,3 +18,16 @@ export const createProductSchema = z.object({
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
+
+export const updateProductSchema = createProductSchema;
+export type UpdateProductInput = z.infer<typeof updateProductSchema>;
+
+export const createCategorySchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Le nom est requis")
+    .max(60, "Nom trop long"),
+});
+
+export type CreateCategoryInput = z.infer<typeof createCategorySchema>;

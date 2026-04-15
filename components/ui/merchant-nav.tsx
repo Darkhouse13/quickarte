@@ -21,26 +21,26 @@ type MerchantTab = {
 };
 
 type MerchantNavProps = {
-  tabs?: MerchantTab[];
   className?: string;
+  pendingOrders?: number;
 };
 
-const defaultTabs: MerchantTab[] = [
-  { id: "home", label: "Accueil", href: "/home", icon: House },
-  { id: "catalog", label: "Catalogue", href: "/catalog", icon: BookOpen },
-  {
-    id: "orders",
-    label: "Commandes",
-    href: "/orders",
-    icon: ReceiptText,
-    hasNotification: true,
-  },
-  { id: "customers", label: "Clients", href: "/customers", icon: Users },
-  { id: "store", label: "Boutique", href: "/store", icon: Store },
-];
-
-export function MerchantNav({ tabs = defaultTabs, className }: MerchantNavProps) {
+export function MerchantNav({ className, pendingOrders = 0 }: MerchantNavProps) {
   const pathname = usePathname();
+
+  const tabs: MerchantTab[] = [
+    { id: "home", label: "Accueil", href: "/home", icon: House },
+    { id: "catalog", label: "Catalogue", href: "/catalog", icon: BookOpen },
+    {
+      id: "orders",
+      label: "Commandes",
+      href: "/orders",
+      icon: ReceiptText,
+      hasNotification: pendingOrders > 0,
+    },
+    { id: "customers", label: "Clients", href: "/customers", icon: Users },
+    { id: "store", label: "Boutique", href: "/store", icon: Store },
+  ];
 
   return (
     <nav
