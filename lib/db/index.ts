@@ -1,21 +1,16 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { env } from "@/lib/env";
 import * as schema from "./schema";
-
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not set");
-}
 
 declare global {
   var __quickartePool: Pool | undefined;
 }
 
 export const pool =
-  globalThis.__quickartePool ?? new Pool({ connectionString });
+  globalThis.__quickartePool ?? new Pool({ connectionString: env.DATABASE_URL });
 
-if (process.env.NODE_ENV !== "production") {
+if (env.NODE_ENV !== "production") {
   globalThis.__quickartePool = pool;
 }
 
