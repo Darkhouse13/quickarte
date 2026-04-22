@@ -72,6 +72,7 @@ export function LegalShell({ title, intro, sections }: Props) {
             className="font-mono uppercase tracking-widest text-ink/50 flex flex-wrap items-center gap-x-2 gap-y-1"
             style={{ fontSize: "11px" }}
           >
+            {/* TODO(post-SAS): restore legal links once /mentions-legales, /confidentialite, /cgv are live.
             <Link href="/mentions-legales" className="hover:text-ink transition">
               Mentions légales
             </Link>
@@ -84,6 +85,7 @@ export function LegalShell({ title, intro, sections }: Props) {
               CGV
             </Link>
             <span className="text-ink/30">·</span>
+            */}
             <a
               href="mailto:bonjour@quickarte.fr"
               className="hover:text-ink transition normal-case"

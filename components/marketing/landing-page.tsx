@@ -458,6 +458,7 @@ export function LandingPage() {
               className="font-mono uppercase tracking-widest text-ink/40 flex flex-wrap items-center gap-x-2 gap-y-1"
               style={{ fontSize: "11px" }}
             >
+              {/* TODO(post-SAS): restore legal links once /mentions-legales, /confidentialite, /cgv are live.
               <a href="/mentions-legales" className="hover:text-ink transition">
                 Mentions légales
               </a>
@@ -469,6 +470,7 @@ export function LandingPage() {
               <a href="/cgv" className="hover:text-ink transition">
                 CGV
               </a>
+              */}
             </div>
           </div>
         </div>
