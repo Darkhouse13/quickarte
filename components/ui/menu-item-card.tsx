@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils/cn";
+import { formatAmount } from "@/lib/utils/currency";
 
 type MenuItemCardProps = {
   name: string;
@@ -21,7 +22,7 @@ export function MenuItemCard({
   name,
   description,
   price,
-  currency = "MAD",
+  currency = "€",
   image,
   badge,
   isLast = false,
@@ -70,7 +71,7 @@ export function MenuItemCard({
             ) : null}
           </h3>
           <span className="font-mono text-[16px] font-bold whitespace-nowrap">
-            {price}{" "}
+            {formatAmount(price)}{" "}
             <span className="text-xs text-ink/50">{currency}</span>
           </span>
         </div>

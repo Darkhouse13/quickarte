@@ -7,6 +7,7 @@ import { MenuItemCard } from "@/components/ui/menu-item-card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { useCartStore } from "@/lib/ordering/cart-store";
 import type { StorefrontFixture } from "@/lib/catalog/fixtures";
+import { formatAmount } from "@/lib/utils/currency";
 
 type Props = {
   business: StorefrontFixture;
@@ -187,8 +188,8 @@ export function StorefrontMenu({ business, locale }: Props) {
             </div>
             <div className="flex items-center gap-3">
               <span className="font-mono font-bold text-lg">
-                {total}{" "}
-                <span className="text-sm font-sans font-normal">MAD</span>
+                {formatAmount(total)}{" "}
+                <span className="text-sm font-sans font-normal">€</span>
               </span>
               <svg
                 width="24"

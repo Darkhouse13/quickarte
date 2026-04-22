@@ -161,7 +161,7 @@ export function NewItemForm({ categories: initialCategories, product }: Props) {
             name="name"
             label="Nom"
             type="text"
-            placeholder="Nous Nous"
+            placeholder="Pain au chocolat"
             defaultValue={product?.name ?? ""}
             required
           />
@@ -176,7 +176,7 @@ export function NewItemForm({ categories: initialCategories, product }: Props) {
             label="Description"
             hint="Optionnel"
             rows={2}
-            placeholder="Café au lait traditionnel marocain"
+            placeholder="Viennoiserie pur beurre, feuilletée à la main"
             defaultValue={product?.description ?? ""}
           />
         </div>
@@ -194,8 +194,8 @@ export function NewItemForm({ categories: initialCategories, product }: Props) {
             type="number"
             step="0.01"
             min="0"
-            placeholder="15"
-            suffix="MAD"
+            placeholder="1,80"
+            suffix="€"
             defaultValue={
               product?.price ? Number(product.price).toString() : ""
             }

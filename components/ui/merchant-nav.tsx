@@ -6,8 +6,7 @@ import {
   House,
   BookOpen,
   ReceiptText,
-  Users,
-  Store,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -23,23 +22,42 @@ type MerchantTab = {
 type MerchantNavProps = {
   className?: string;
   pendingOrders?: number;
+  showOrders?: boolean;
+  showLoyalty?: boolean;
 };
 
-export function MerchantNav({ className, pendingOrders = 0 }: MerchantNavProps) {
+export function MerchantNav({
+  className,
+  pendingOrders = 0,
+  showOrders = false,
+  showLoyalty = false,
+}: MerchantNavProps) {
   const pathname = usePathname();
 
   const tabs: MerchantTab[] = [
     { id: "home", label: "Accueil", href: "/home", icon: House },
     { id: "catalog", label: "Catalogue", href: "/catalog", icon: BookOpen },
-    {
-      id: "orders",
-      label: "Commandes",
-      href: "/orders",
-      icon: ReceiptText,
-      hasNotification: pendingOrders > 0,
-    },
-    { id: "customers", label: "Clients", href: "/customers", icon: Users },
-    { id: "store", label: "Boutique", href: "/store", icon: Store },
+    ...(showOrders
+      ? [
+          {
+            id: "orders",
+            label: "Commandes",
+            href: "/orders",
+            icon: ReceiptText,
+            hasNotification: pendingOrders > 0,
+          } satisfies MerchantTab,
+        ]
+      : []),
+    ...(showLoyalty
+      ? [
+          {
+            id: "loyalty",
+            label: "Fidélité",
+            href: "/loyalty",
+            icon: Star,
+          } satisfies MerchantTab,
+        ]
+      : []),
   ];
 
   return (
@@ -49,7 +67,7 @@ export function MerchantNav({ className, pendingOrders = 0 }: MerchantNavProps) 
         className,
       )}
     >
-      <div className="w-full max-w-[480px] bg-base border-t-2 border-ink pointer-events-auto flex items-center shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+      <div className="w-full max-w-[480px] bg-base border-t-2 border-ink pointer-events-auto flex items-stretch shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
         {tabs.map((tab, i) => {
           const active = pathname?.includes(tab.href) ?? false;
           const Icon = tab.icon;

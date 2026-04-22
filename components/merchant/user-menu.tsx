@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import * as Sentry from "@sentry/nextjs";
 import { authClient } from "@/lib/auth/client";
 import { cn } from "@/lib/utils/cn";
 
@@ -40,6 +42,7 @@ export function UserMenu({ name, email, locale }: Props) {
   const signOut = () => {
     startTransition(async () => {
       await authClient.signOut();
+      Sentry.setUser(null);
       router.replace(`/${locale}/login`);
       router.refresh();
     });
@@ -75,6 +78,13 @@ export function UserMenu({ name, email, locale }: Props) {
               </p>
             ) : null}
           </div>
+          <Link
+            href="/settings"
+            onClick={() => setOpen(false)}
+            className="block w-full text-left px-4 py-3 font-mono text-[12px] uppercase tracking-widest font-bold text-ink hover:bg-ink hover:text-base transition-colors focus:outline-none focus:bg-ink focus:text-base border-b border-outline"
+          >
+            Paramètres
+          </Link>
           <button
             type="button"
             onClick={signOut}

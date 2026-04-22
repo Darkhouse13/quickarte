@@ -59,7 +59,7 @@ export function RegisterForm() {
           label="Nom"
           name="name"
           autoComplete="name"
-          placeholder="Karim"
+          placeholder="Camille"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -70,7 +70,7 @@ export function RegisterForm() {
           type="email"
           autoComplete="email"
           inputMode="email"
-          placeholder="karim@cafedesarts.ma"
+          placeholder="camille@cafedesarts.fr"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required

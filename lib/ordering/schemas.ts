@@ -1,18 +1,10 @@
 import { z } from "zod";
-
-const moroccanPhoneRegex = /^(?:\+212|0)[5-7]\d{8}$/;
+import { frenchPhoneSchema } from "@/lib/utils/phone";
 
 export const placeOrderSchema = z
   .object({
     customerName: z.string().trim().min(1, "Le nom est requis"),
-    customerPhone: z
-      .string()
-      .trim()
-      .transform((v) => v.replace(/\s+/g, ""))
-      .refine(
-        (v) => moroccanPhoneRegex.test(v),
-        "Numéro invalide (ex: +212 6XX XXX XXX)",
-      ),
+    customerPhone: frenchPhoneSchema,
     orderType: z.enum(["dine_in", "takeaway"]),
     tableNumber: z.coerce
       .number({ invalid_type_error: "Numéro de table invalide" })

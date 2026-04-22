@@ -7,12 +7,27 @@ import { FormTextarea } from "@/components/ui/form-textarea";
 import { useCartStore } from "@/lib/ordering/cart-store";
 import { placeOrder } from "@/lib/ordering/actions";
 import { cn } from "@/lib/utils/cn";
+import { formatAmount } from "@/lib/utils/currency";
+import { StripePaymentStep } from "./stripe-payment-step";
+
+type PendingStripePayment = {
+  clientSecret: string;
+  publishableKey: string;
+  orderId: string;
+  orderNumber: string;
+  totalAmount: number;
+};
 
 type Props = {
   businessId: string;
   businessName: string;
   businessSlug: string;
   locale: string;
+  loyaltyHint?: {
+    accrualType: "per_visit" | "per_euro";
+    accrualRate: number;
+    rewardDescription: string;
+  } | null;
 };
 
 type OrderType = "dine_in" | "takeaway";
@@ -22,6 +37,7 @@ export function CheckoutForm({
   businessName,
   businessSlug,
   locale,
+  loyaltyHint,
 }: Props) {
   const router = useRouter();
 
@@ -46,12 +62,30 @@ export function CheckoutForm({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [pendingPayment, setPendingPayment] =
+    useState<PendingStripePayment | null>(null);
 
   useEffect(() => {
-    if (hydrated && getItemCount() === 0 && !isPending) {
+    // Keep the "cart empty → back to menu" redirect, but skip it once the
+    // user has moved on to the Stripe step (we intentionally cleared the
+    // cart at that point).
+    if (
+      hydrated &&
+      getItemCount() === 0 &&
+      !isPending &&
+      pendingPayment === null
+    ) {
       router.replace(`/${locale}/${businessSlug}`);
     }
-  }, [hydrated, getItemCount, isPending, router, locale, businessSlug]);
+  }, [
+    hydrated,
+    getItemCount,
+    isPending,
+    router,
+    locale,
+    businessSlug,
+    pendingPayment,
+  ]);
 
   const itemCount = hydrated ? getItemCount() : 0;
   const total = hydrated ? getTotal() : 0;
@@ -77,6 +111,8 @@ export function CheckoutForm({
       })),
     };
 
+    const capturedTotal = total;
+
     startTransition(async () => {
       const result = await placeOrder(payload);
       if (result.status === "error") {
@@ -84,7 +120,22 @@ export function CheckoutForm({
         setFormError(result.message);
         return;
       }
+
+      // Order is persisted either way — clear the cart now so the cart
+      // doesn't hang around if the user abandons the Stripe step.
       clearCart();
+
+      if (result.payment.mode === "stripe") {
+        setPendingPayment({
+          clientSecret: result.payment.clientSecret,
+          publishableKey: result.payment.publishableKey,
+          orderId: result.orderId,
+          orderNumber: result.orderNumber,
+          totalAmount: capturedTotal,
+        });
+        return;
+      }
+
       router.replace(
         `/${locale}/${businessSlug}/order/confirmation?orderId=${result.orderId}`,
       );
@@ -93,6 +144,21 @@ export function CheckoutForm({
 
   const fieldError = (name: string): string | undefined =>
     fieldErrors[name]?.[0];
+
+  if (pendingPayment) {
+    return (
+      <StripePaymentStep
+        clientSecret={pendingPayment.clientSecret}
+        publishableKey={pendingPayment.publishableKey}
+        orderId={pendingPayment.orderId}
+        orderNumber={pendingPayment.orderNumber}
+        totalAmount={pendingPayment.totalAmount}
+        locale={locale}
+        businessSlug={businessSlug}
+        onBack={() => setPendingPayment(null)}
+      />
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col min-h-screen">
@@ -137,7 +203,7 @@ export function CheckoutForm({
                   {item.name}
                 </p>
                 <p className="font-mono text-[12px] text-ink/50 mt-1">
-                  {item.price} <span className="text-[10px]">MAD</span>
+                  {formatAmount(item.price)} <span className="text-[10px]">€</span>
                 </p>
               </div>
               <QuantityStepper
@@ -151,8 +217,8 @@ export function CheckoutForm({
                 onRemove={() => removeItem(item.productId)}
               />
               <div className="w-[70px] text-right font-mono font-bold text-[14px] self-center">
-                {item.price * item.quantity}
-                <span className="text-[10px] text-ink/50 ml-1">MAD</span>
+                {formatAmount(item.price * item.quantity)}
+                <span className="text-[10px] text-ink/50 ml-1">€</span>
               </div>
             </li>
           ))}
@@ -196,12 +262,28 @@ export function CheckoutForm({
 
       <section className="px-6 py-6 border-b-4 border-outline">
         <SectionLabel index={3} title="Contact" />
+        {loyaltyHint ? (
+          <div className="mb-5 border-2 border-ink bg-accent/5 px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-accent font-bold">
+              Programme fidélité
+            </span>
+            <p className="font-sans text-[13px] text-ink/80 leading-snug">
+              Gagnez{" "}
+              <span className="font-bold">
+                {loyaltyHint.accrualType === "per_visit"
+                  ? `${formatRate(loyaltyHint.accrualRate)} tampon${loyaltyHint.accrualRate > 1 ? "s" : ""} sur cette commande`
+                  : `${formatRate(loyaltyHint.accrualRate)} point${loyaltyHint.accrualRate > 1 ? "s" : ""} par euro dépensé`}
+              </span>
+              . Récompense&nbsp;: {loyaltyHint.rewardDescription}.
+            </p>
+          </div>
+        ) : null}
         <div className="flex flex-col gap-4">
           <div>
             <FormInput
               label="Nom"
               name="customerName"
-              placeholder="ex: Youssef"
+              placeholder="ex: Camille"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               autoComplete="name"
@@ -213,7 +295,7 @@ export function CheckoutForm({
               label="Téléphone"
               name="customerPhone"
               type="tel"
-              placeholder="+212 6XX XXX XXX"
+              placeholder="06 12 34 56 78"
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
               autoComplete="tel"
@@ -268,8 +350,8 @@ export function CheckoutForm({
             </div>
             <div className="flex items-center gap-3">
               <span className="font-mono font-bold text-lg">
-                {total}{" "}
-                <span className="text-sm font-sans font-normal">MAD</span>
+                {formatAmount(total)}{" "}
+                <span className="text-sm font-sans font-normal">€</span>
               </span>
               {isPending ? (
                 <Spinner />
@@ -293,6 +375,10 @@ export function CheckoutForm({
       </div>
     </form>
   );
+}
+
+function formatRate(n: number): string {
+  return n % 1 === 0 ? n.toString() : n.toFixed(2).replace(".", ",");
 }
 
 function SectionLabel({

@@ -26,9 +26,16 @@ export const metadata: Metadata = {
     default: "Quickarte",
     template: "%s",
   },
-  description: "Commerce premium pour restaurants, cafés et hôtels.",
+  description: "Commerce premium pour boulangeries, cafés et brunchs.",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Quickarte",
+    statusBarStyle: "black-translucent",
   },
 };
 
@@ -36,6 +43,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  themeColor: "#0A0A0A",
 };
 
 export function generateStaticParams() {

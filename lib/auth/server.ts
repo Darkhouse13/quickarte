@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 import {
   accounts,
   sessions,
@@ -8,15 +9,13 @@ import {
   verifications,
 } from "@/lib/db/schema";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-
 const trustedOrigins = Array.from(
   new Set(
     [
-      appUrl,
+      env.NEXT_PUBLIC_APP_URL,
       "http://localhost:3000",
       "http://127.0.0.1:3000",
-      process.env.NEXT_PUBLIC_LAN_URL,
+      env.NEXT_PUBLIC_LAN_URL,
     ].filter((v): v is string => Boolean(v)),
   ),
 );

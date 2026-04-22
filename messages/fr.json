@@ -1,14 +1,17 @@
 {
   "app": {
     "name": "Quickarte",
-    "currency": "MAD"
+    "currency": "EUR"
   },
   "nav": {
     "home": "Accueil",
     "catalog": "Catalogue",
     "orders": "Commandes",
-    "customers": "Clients",
-    "store": "Boutique"
+    "loyalty": "Fidélité"
+  },
+  "userMenu": {
+    "settings": "Paramètres",
+    "signOut": "Déconnexion"
   },
   "status": {
     "pending": "En attente",
@@ -35,8 +38,7 @@
     },
     "actions": {
       "manageOrders": "Gérer les commandes",
-      "editCatalog": "Modifier le catalogue",
-      "viewStore": "Voir ma boutique"
+      "editCatalog": "Modifier le catalogue"
     }
   },
   "form": {
@@ -54,9 +56,9 @@
       "available": "Disponible"
     },
     "placeholders": {
-      "name": "Nous Nous",
-      "description": "Café au lait traditionnel marocain",
-      "price": "15",
+      "name": "Pain au chocolat",
+      "description": "Viennoiserie pur beurre, feuilletée à la main",
+      "price": "1,80",
       "selectCategory": "Sélectionner une catégorie..."
     },
     "hints": {

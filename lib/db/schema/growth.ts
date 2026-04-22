@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   numeric,
   pgEnum,
   pgTable,
@@ -46,3 +47,27 @@ export const promoCodesRelations = relations(promoCodes, ({ one }) => ({
 }));
 
 export type PromoCode = typeof promoCodes.$inferSelect;
+
+export const contactRequests = pgTable(
+  "contact_requests",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    nom: text("nom").notNull(),
+    commerce: text("commerce").notNull(),
+    ville: text("ville").notNull(),
+    telephone: text("telephone").notNull(),
+    message: text("message"),
+    ip: text("ip"),
+    userAgent: text("user_agent"),
+    emailSent: boolean("email_sent").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("contact_requests_ip_created_idx").on(t.ip, t.createdAt),
+    index("contact_requests_created_idx").on(t.createdAt),
+  ],
+);
+
+export type ContactRequest = typeof contactRequests.$inferSelect;

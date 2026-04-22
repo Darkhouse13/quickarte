@@ -13,6 +13,7 @@ import { orders, reservations } from "./ordering";
 import { promoCodes } from "./growth";
 
 export const businessTypeEnum = pgEnum("business_type", [
+  "boulangerie",
   "restaurant",
   "cafe",
   "hotel",
@@ -32,9 +33,19 @@ export const businesses = pgTable("businesses", {
   address: text("address"),
   logo: text("logo"),
   cover: text("cover"),
-  currency: text("currency").notNull().default("MAD"),
-  timezone: text("timezone").notNull().default("Africa/Casablanca"),
+  currency: text("currency").notNull().default("EUR"),
+  timezone: text("timezone").notNull().default("Europe/Paris"),
   locale: text("locale").notNull().default("fr"),
+  stripeAccountId: text("stripe_account_id"),
+  stripeChargesEnabled: boolean("stripe_charges_enabled")
+    .notNull()
+    .default(false),
+  stripePayoutsEnabled: boolean("stripe_payouts_enabled")
+    .notNull()
+    .default(false),
+  stripeOnboardingCompletedAt: timestamp("stripe_onboarding_completed_at", {
+    withTimezone: true,
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

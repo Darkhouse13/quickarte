@@ -55,7 +55,7 @@ export function LoginForm() {
           type="email"
           autoComplete="email"
           inputMode="email"
-          placeholder="karim@cafedesarts.ma"
+          placeholder="camille@cafedesarts.fr"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required

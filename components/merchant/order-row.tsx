@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 import { formatOrderTime } from "@/lib/utils/date";
+import { formatAmount, formatAmountCompact } from "@/lib/utils/currency";
 import {
   StatusBadge,
   type OrderStatus,
@@ -83,22 +84,59 @@ export function OrderRow({
           )}
         >
           <span className="font-mono text-[15px] font-bold leading-none text-right">
-            {total.toFixed(0)}{" "}
+            {formatAmountCompact(total)}{" "}
             <span
               className={cn(
                 "text-[10px] font-normal",
                 isDone ? "text-ink/40" : "text-ink/50",
               )}
             >
-              MAD
+              €
             </span>
           </span>
-          <StatusBadge status={status} />
+          <div className="flex items-center gap-1.5">
+            <PaymentPill status={order.paymentStatus} />
+            <StatusBadge status={status} />
+          </div>
         </div>
       </button>
 
       {expanded ? <OrderDetail order={order} /> : null}
     </div>
+  );
+}
+
+function PaymentPill({
+  status,
+}: {
+  status: "unpaid" | "paid" | "refunded" | "failed";
+}) {
+  if (status === "paid") {
+    return (
+      <span className="px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none bg-accent text-base">
+        Payé
+      </span>
+    );
+  }
+  if (status === "refunded") {
+    return (
+      <span className="px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-outline text-ink/50">
+        Remb.
+      </span>
+    );
+  }
+  if (status === "failed") {
+    return (
+      <span className="px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-accent text-accent">
+        Échec
+      </span>
+    );
+  }
+  // unpaid → cash on arrival
+  return (
+    <span className="px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-outline text-ink/50">
+      Sur place
+    </span>
   );
 }
 
@@ -134,7 +172,7 @@ function OrderDetail({ order }: { order: OrderWithItems }) {
               {item.product?.name ?? "Article supprimé"}
             </span>
             <span className="text-ink/70 whitespace-nowrap">
-              {Number(item.subtotal).toFixed(0)} MAD
+              {formatAmount(item.subtotal)} €
             </span>
           </li>
         ))}
@@ -233,7 +271,7 @@ export function OrdersBoard({
           </p>
         </div>
         <Link
-          href="/store"
+          href="/home"
           className="bg-ink text-base px-6 py-3 font-mono font-bold uppercase tracking-widest text-[12px] hover:bg-accent transition-colors border-2 border-ink focus:outline-none focus:ring-4 focus:ring-accent/20"
         >
           Voir mon QR code →

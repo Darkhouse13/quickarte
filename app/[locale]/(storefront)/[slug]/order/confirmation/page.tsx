@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
+import { and, desc, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import {
+  loyaltyCustomers,
+  loyaltyTransactions,
+} from "@/lib/db/schema";
 import { getBusinessBySlug } from "@/lib/catalog/queries";
 import { getOrderById } from "@/lib/ordering/queries";
+import { getProgram } from "@/lib/loyalty/queries";
 import { StatusBadge, type OrderStatus } from "@/components/ui/status-badge";
+import { formatAmount } from "@/lib/utils/currency";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
@@ -20,8 +28,8 @@ function formatOrderNumber(orderId: string): string {
   return orderId.replace(/-/g, "").slice(0, 8).toUpperCase();
 }
 
-function formatDateTime(date: Date, locale: string): string {
-  return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", {
+function formatDateTime(date: Date): string {
+  return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
@@ -53,6 +61,8 @@ export default async function OrderConfirmationPage({
   const statusForBadge: OrderStatus =
     order.status === "cancelled" ? "completed" : order.status;
   const totalNum = Number(order.total);
+
+  const loyaltyInfo = await buildLoyaltySummary(order.id, order.businessId);
 
   return (
     <main className="w-full max-w-[480px] mx-auto bg-base min-h-screen relative flex flex-col border-x border-outline/50 shadow-2xl shadow-black/5">
@@ -101,7 +111,10 @@ export default async function OrderConfirmationPage({
                 #{orderNumber}
               </p>
             </div>
-            <StatusBadge status={statusForBadge} />
+            <div className="flex flex-col items-end gap-2">
+              <StatusBadge status={statusForBadge} />
+              <PaymentStatusBadge status={order.paymentStatus} />
+            </div>
           </div>
         </div>
       </div>
@@ -129,7 +142,7 @@ export default async function OrderConfirmationPage({
           ) : null}
           <DetailRow
             label="Passée le"
-            value={formatDateTime(new Date(order.createdAt), locale)}
+            value={formatDateTime(new Date(order.createdAt))}
           />
         </dl>
       </section>
@@ -166,12 +179,12 @@ export default async function OrderConfirmationPage({
                     {item.product?.name ?? "Article supprimé"}
                   </p>
                   <p className="font-mono text-[11px] text-ink/50 mt-1">
-                    {unit} MAD × {item.quantity}
+                    {formatAmount(unit)} € × {item.quantity}
                   </p>
                 </div>
                 <span className="font-mono font-bold text-[14px] self-center whitespace-nowrap">
-                  {subtotal}{" "}
-                  <span className="text-[10px] text-ink/50">MAD</span>
+                  {formatAmount(subtotal)}{" "}
+                  <span className="text-[10px] text-ink/50">€</span>
                 </span>
               </li>
             );
@@ -183,9 +196,9 @@ export default async function OrderConfirmationPage({
             Total
           </span>
           <span className="font-mono font-bold text-2xl tracking-tight">
-            {totalNum}{" "}
+            {formatAmount(totalNum)}{" "}
             <span className="text-sm font-sans font-normal text-ink/60">
-              MAD
+              €
             </span>
           </span>
         </div>
@@ -204,6 +217,40 @@ export default async function OrderConfirmationPage({
           <p className="text-[14px] leading-relaxed text-ink/80 border-l-2 border-accent pl-4">
             {order.notes}
           </p>
+        </section>
+      ) : null}
+
+      {loyaltyInfo ? (
+        <section className="px-6 py-6 border-b-4 border-outline">
+          <div className="border-2 border-ink bg-accent/5 p-5 flex flex-col gap-3">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-accent font-bold">
+              Programme fidélité
+            </span>
+            <p className="text-[14px] leading-snug text-ink">
+              Vous avez{" "}
+              <span className="font-bold">
+                {formatBalance(loyaltyInfo.balance)}{" "}
+                {loyaltyInfo.unitLabel(loyaltyInfo.balance)}
+              </span>
+              .
+              {loyaltyInfo.remaining > 0 ? (
+                <>
+                  {" "}
+                  Encore{" "}
+                  <span className="font-bold">
+                    {formatBalance(loyaltyInfo.remaining)}{" "}
+                    {loyaltyInfo.unitLabel(loyaltyInfo.remaining)}
+                  </span>{" "}
+                  pour {loyaltyInfo.rewardDescription}.
+                </>
+              ) : (
+                <>
+                  {" "}
+                  Votre récompense est prête&nbsp;: {loyaltyInfo.rewardDescription}.
+                </>
+              )}
+            </p>
+          </div>
         </section>
       ) : null}
 
@@ -246,6 +293,37 @@ export default async function OrderConfirmationPage({
   );
 }
 
+type PaymentStatus = "unpaid" | "paid" | "refunded" | "failed";
+
+function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
+  if (status === "paid") {
+    return (
+      <span className="px-2 py-0.5 bg-accent text-base text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-accent">
+        Paiement confirmé
+      </span>
+    );
+  }
+  if (status === "refunded") {
+    return (
+      <span className="px-2 py-0.5 bg-base/10 text-base/70 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-base/30">
+        Remboursé
+      </span>
+    );
+  }
+  if (status === "failed") {
+    return (
+      <span className="px-2 py-0.5 bg-base/10 text-accent text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-accent/60">
+        Paiement échoué
+      </span>
+    );
+  }
+  return (
+    <span className="px-2 py-0.5 bg-transparent text-base/60 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-base/30">
+      À régler sur place
+    </span>
+  );
+}
+
 function DetailRow({
   label,
   value,
@@ -269,4 +347,58 @@ function DetailRow({
       </dd>
     </div>
   );
+}
+
+function formatBalance(n: number): string {
+  return n % 1 === 0 ? n.toString() : n.toFixed(2).replace(".", ",");
+}
+
+type LoyaltySummary = {
+  balance: number;
+  threshold: number;
+  remaining: number;
+  rewardDescription: string;
+  unitLabel: (n: number) => string;
+};
+
+async function buildLoyaltySummary(
+  orderId: string,
+  businessId: string,
+): Promise<LoyaltySummary | null> {
+  const ledger = await db.query.loyaltyTransactions.findFirst({
+    where: and(
+      eq(loyaltyTransactions.orderId, orderId),
+      eq(loyaltyTransactions.type, "earn"),
+    ),
+    orderBy: [desc(loyaltyTransactions.createdAt)],
+  });
+  if (!ledger) return null;
+
+  const program = await getProgram(businessId);
+  if (!program) return null;
+
+  const customer = await db.query.loyaltyCustomers.findFirst({
+    where: eq(loyaltyCustomers.id, ledger.customerId),
+  });
+  if (!customer) return null;
+
+  const balance = Number(customer.balance);
+  const threshold = Number(program.rewardThreshold);
+  const remaining = Math.max(threshold - balance, 0);
+  const unitLabel = (n: number) =>
+    program.accrualType === "per_visit"
+      ? n === 1
+        ? "tampon"
+        : "tampons"
+      : n === 1
+        ? "point"
+        : "points";
+
+  return {
+    balance,
+    threshold,
+    remaining,
+    rewardDescription: program.rewardDescription,
+    unitLabel,
+  };
 }

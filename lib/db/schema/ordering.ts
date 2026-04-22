@@ -1,5 +1,6 @@
 import {
   date,
+  index,
   integer,
   jsonb,
   numeric,
@@ -27,6 +28,13 @@ export const orderStatusEnum = pgEnum("order_status", [
   "cancelled",
 ]);
 
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "unpaid",
+  "paid",
+  "refunded",
+  "failed",
+]);
+
 export const reservationStatusEnum = pgEnum("reservation_status", [
   "pending",
   "confirmed",
@@ -43,9 +51,16 @@ export const orders = pgTable("orders", {
   customerPhone: text("customer_phone"),
   type: orderTypeEnum("type").notNull().default("dine_in"),
   status: orderStatusEnum("status").notNull().default("pending"),
+  paymentStatus: paymentStatusEnum("payment_status")
+    .notNull()
+    .default("unpaid"),
   total: numeric("total", { precision: 10, scale: 2 }).notNull(),
   notes: text("notes"),
   tableNumber: text("table_number"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  stripeChargeId: text("stripe_charge_id"),
+  platformFeeCents: integer("platform_fee_cents"),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -94,6 +109,21 @@ export const reservations = pgTable("reservations", {
     .defaultNow(),
 });
 
+export const stripeEvents = pgTable(
+  "stripe_events",
+  {
+    id: text("id").primaryKey(),
+    type: text("type").notNull(),
+    payloadJson: jsonb("payload_json").notNull(),
+    processedAt: timestamp("processed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    typeIdx: index("stripe_events_type_idx").on(table.type),
+  }),
+);
+
 export const ordersRelations = relations(orders, ({ one, many }) => ({
   business: one(businesses, {
     fields: [orders.businessId],
@@ -123,3 +153,4 @@ export const reservationsRelations = relations(reservations, ({ one }) => ({
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
 export type Reservation = typeof reservations.$inferSelect;
+export type StripeEvent = typeof stripeEvents.$inferSelect;

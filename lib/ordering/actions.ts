@@ -6,14 +6,29 @@ import { db } from "@/lib/db";
 import { businesses, orderItems, orders, products } from "@/lib/db/schema";
 import { placeOrderSchema } from "./schemas";
 import { requireBusiness } from "@/lib/auth/get-business";
+import { hasEntitlement } from "@/lib/entitlements/queries";
+import { recordAccrual } from "@/lib/loyalty/service";
+import { getProgram } from "@/lib/loyalty/queries";
+import { createPaymentIntent, isStripeConfigured } from "@/lib/payments";
+import { sendOrderNotification } from "@/lib/push/send";
+
+export type PlaceOrderSuccess = {
+  status: "success";
+  orderId: string;
+  orderNumber: string;
+  businessSlug: string;
+  payment:
+    | {
+        mode: "stripe";
+        clientSecret: string;
+        publishableKey: string;
+        paymentIntentId: string;
+      }
+    | { mode: "cash" };
+};
 
 export type PlaceOrderResult =
-  | {
-      status: "success";
-      orderId: string;
-      orderNumber: string;
-      businessSlug: string;
-    }
+  | PlaceOrderSuccess
   | {
       status: "error";
       message: string;
@@ -48,7 +63,12 @@ export async function placeOrder(
 
   const business = await db.query.businesses.findFirst({
     where: eq(businesses.id, data.businessId),
-    columns: { id: true, slug: true },
+    columns: {
+      id: true,
+      slug: true,
+      stripeAccountId: true,
+      stripeChargesEnabled: true,
+    },
   });
   if (!business) {
     return { status: "error", message: "Boutique introuvable" };
@@ -125,11 +145,89 @@ export async function placeOrder(
   revalidatePath("/orders");
   revalidatePath("/home");
 
+  try {
+    const [hasLoyalty, hasOrdering] = await Promise.all([
+      hasEntitlement(business.id, "loyalty"),
+      hasEntitlement(business.id, "online_ordering"),
+    ]);
+    if (hasLoyalty && hasOrdering) {
+      const program = await getProgram(business.id);
+      if (program && program.enabled) {
+        await recordAccrual({
+          businessId: business.id,
+          phone: data.customerPhone,
+          name: data.customerName,
+          amountSpent: total,
+          orderId,
+          source: "online_order",
+        });
+      }
+    }
+  } catch (err) {
+    console.error("[loyalty] accrual on order failed (non-fatal):", err);
+  }
+
+  // Fire-and-forget push to merchant devices. A failure here must never
+  // block the customer's order — mirrors the loyalty pattern above.
+  try {
+    const hasOrdering = await hasEntitlement(business.id, "online_ordering");
+    if (hasOrdering) {
+      await sendOrderNotification(business.id, orderId);
+    }
+  } catch (err) {
+    console.error("[push] order notification failed (non-fatal):", err);
+  }
+
+  const orderNumber = orderId.replace(/-/g, "").slice(0, 8).toUpperCase();
+
+  // Payment branch — only mint a PaymentIntent when everything lines up.
+  // A single miss (no Stripe keys, no connected account, KYC not done) falls
+  // back to the cash-on-arrival flow instead of blocking the order.
+  const canCharge =
+    isStripeConfigured() &&
+    Boolean(business.stripeAccountId) &&
+    business.stripeChargesEnabled;
+
+  const hasOrderingEntitled = await hasEntitlement(
+    business.id,
+    "online_ordering",
+  );
+
+  if (hasOrderingEntitled && canCharge) {
+    try {
+      const intent = await createPaymentIntent({
+        orderId,
+        businessId: business.id,
+        amount: total,
+      });
+      return {
+        status: "success",
+        orderId,
+        orderNumber,
+        businessSlug: business.slug,
+        payment: {
+          mode: "stripe",
+          clientSecret: intent.clientSecret,
+          publishableKey: intent.publishableKey,
+          paymentIntentId: intent.paymentIntentId,
+        },
+      };
+    } catch (err) {
+      // Stripe outage or misconfig — order is already created; degrade to
+      // cash flow rather than leave the customer stuck.
+      console.error(
+        "[payments] createPaymentIntent failed, falling back to cash:",
+        err,
+      );
+    }
+  }
+
   return {
     status: "success",
     orderId,
-    orderNumber: orderId.replace(/-/g, "").slice(0, 8).toUpperCase(),
+    orderNumber,
     businessSlug: business.slug,
+    payment: { mode: "cash" },
   };
 }
 

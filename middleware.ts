@@ -9,12 +9,10 @@ const MERCHANT_PATHS = [
   "/home",
   "/catalog",
   "/orders",
-  "/store",
-  "/customers",
+  "/loyalty",
+  "/settings",
   "/onboarding",
 ];
-
-const AUTH_PATHS = ["/login", "/register"];
 
 function stripLocale(pathname: string): string {
   for (const locale of routing.locales) {
@@ -32,22 +30,15 @@ function matchesAny(path: string, roots: string[]): boolean {
 
 export default function middleware(req: NextRequest) {
   const path = stripLocale(req.nextUrl.pathname);
-  const session = getSessionCookie(req);
 
   if (matchesAny(path, MERCHANT_PATHS)) {
+    const session = getSessionCookie(req);
     if (!session) {
       const url = req.nextUrl.clone();
       url.pathname = "/login";
       url.search = "";
       return NextResponse.redirect(url);
     }
-  }
-
-  if (matchesAny(path, AUTH_PATHS) && session) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/home";
-    url.search = "";
-    return NextResponse.redirect(url);
   }
 
   return intlMiddleware(req);

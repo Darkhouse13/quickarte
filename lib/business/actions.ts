@@ -6,9 +6,16 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { businesses, businessSettings } from "@/lib/db/schema";
 import { requireSession } from "@/lib/auth/get-business";
+import { provisionDefaultEntitlements } from "@/lib/entitlements/defaults";
 import { isValidSlug } from "@/lib/utils/slug";
 
-const BUSINESS_TYPES = ["restaurant", "cafe", "hotel", "other"] as const;
+const BUSINESS_TYPES = [
+  "boulangerie",
+  "restaurant",
+  "cafe",
+  "hotel",
+  "other",
+] as const;
 
 const createBusinessSchema = z.object({
   name: z.string().trim().min(2, "Nom trop court").max(80),
@@ -98,6 +105,8 @@ export async function createBusinessAction(
     takeawayEnabled: true,
     deliveryEnabled: false,
   });
+
+  await provisionDefaultEntitlements(inserted.id);
 
   redirect("/home");
 }

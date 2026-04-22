@@ -10,12 +10,12 @@ import {
 } from "@/lib/business/actions";
 import { cn } from "@/lib/utils/cn";
 
-type BusinessType = "restaurant" | "cafe" | "hotel" | "other";
+type BusinessType = "boulangerie" | "restaurant" | "cafe" | "hotel" | "other";
 
 const TYPE_OPTIONS: { value: BusinessType; label: string }[] = [
-  { value: "restaurant", label: "Restaurant" },
+  { value: "boulangerie", label: "Boulangerie" },
   { value: "cafe", label: "Café" },
-  { value: "hotel", label: "Hôtel" },
+  { value: "restaurant", label: "Restaurant" },
   { value: "other", label: "Autre" },
 ];
 
@@ -28,7 +28,7 @@ type SlugCheck =
 
 export function OnboardingForm() {
   const [name, setName] = useState("");
-  const [type, setType] = useState<BusinessType>("restaurant");
+  const [type, setType] = useState<BusinessType>("boulangerie");
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
   const [slug, setSlug] = useState("");
@@ -147,7 +147,7 @@ export function OnboardingForm() {
             <FormInput
               label="Ville"
               name="city"
-              placeholder="Casablanca"
+              placeholder="Paris"
               value={city}
               onChange={(e) => setCity(e.target.value)}
               required

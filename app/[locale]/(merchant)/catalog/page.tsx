@@ -6,6 +6,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { BottomBar } from "@/components/ui/bottom-bar";
 import { ProductAvailabilityToggle } from "@/components/merchant/product-availability-toggle";
 import { cn } from "@/lib/utils/cn";
+import { formatAmount } from "@/lib/utils/currency";
 
 export const metadata = { title: "Quickarte — Catalogue" };
 
@@ -96,8 +97,8 @@ export default async function CatalogIndexPage({ params }: Props) {
                           {product.name}
                         </span>
                         <span className="font-mono text-[12px] text-ink/50 leading-none">
-                          {Number(product.price).toFixed(0)}{" "}
-                          <span className="text-[10px] text-ink/40">MAD</span>
+                          {formatAmount(product.price)}{" "}
+                          <span className="text-[10px] text-ink/40">€</span>
                         </span>
                       </div>
                       <div className="flex items-center gap-4 flex-shrink-0 relative z-20">
