@@ -103,20 +103,25 @@ export function LandingPage() {
           <a href="#" className="font-mono font-bold tracking-widest text-sm text-ink">
             QUICKARTE
           </a>
-          <nav className="hidden md:flex items-center gap-10">
-            <a href="#produit" className="font-mono text-xs uppercase tracking-widest text-ink/60 hover:text-ink transition">
-              LE PRODUIT
+          <div className="flex items-center gap-10">
+            <nav className="hidden md:flex items-center gap-10">
+              <a href="#produit" className="font-mono text-xs uppercase tracking-widest text-ink/60 hover:text-ink transition">
+                LE PRODUIT
+              </a>
+              <a href="#modele" className="font-mono text-xs uppercase tracking-widest text-ink/60 hover:text-ink transition">
+                LE MODÈLE
+              </a>
+              <a href="#pourquoi" className="font-mono text-xs uppercase tracking-widest text-ink/60 hover:text-ink transition">
+                POURQUOI
+              </a>
+              <a href="#contact" className="font-mono text-xs uppercase tracking-widest text-ink/60 hover:text-ink transition">
+                CONTACT
+              </a>
+            </nav>
+            <a href="/fr/login" className="font-mono text-xs uppercase tracking-widest text-ink hover:text-accent transition">
+              SE CONNECTER
             </a>
-            <a href="#modele" className="font-mono text-xs uppercase tracking-widest text-ink/60 hover:text-ink transition">
-              LE MODÈLE
-            </a>
-            <a href="#pourquoi" className="font-mono text-xs uppercase tracking-widest text-ink/60 hover:text-ink transition">
-              POURQUOI
-            </a>
-            <a href="#contact" className="font-mono text-xs uppercase tracking-widest text-ink/60 hover:text-ink transition">
-              CONTACT
-            </a>
-          </nav>
+          </div>
         </div>
       </header>
 
@@ -130,12 +135,18 @@ export function LandingPage() {
             <p className="qk-hero-sub mt-6 md:mt-8 font-sans text-lg md:text-xl text-ink/60 leading-relaxed max-w-[560px]">
               Menu, commandes, fidélité, analyses. Quatre modules, un abonnement, zéro commission.
             </p>
-            <div className="mt-10">
+            <div className="mt-10 flex flex-wrap items-center gap-4">
               <a
-                href="#contact"
+                href="/fr/register"
                 className="inline-block bg-accent text-base px-8 py-4 font-mono font-bold text-sm uppercase tracking-widest border-2 border-accent hover:bg-ink hover:border-ink transition"
               >
-                DEMANDER UN ACCÈS →
+                CRÉER MON ÉTABLISSEMENT →
+              </a>
+              <a
+                href="#contact"
+                className="inline-block bg-base text-ink px-8 py-4 font-mono font-bold text-sm uppercase tracking-widest border-2 border-ink hover:bg-ink hover:text-base transition"
+              >
+                NOUS CONTACTER →
               </a>
             </div>
           </div>
@@ -425,6 +436,11 @@ export function LandingPage() {
                 NOUS SUIVRE
               </div>
               <ul className="space-y-2">
+                <li>
+                  <a href="/fr/login" className="font-mono text-xs uppercase tracking-widest text-ink hover:text-accent transition">
+                    Se connecter
+                  </a>
+                </li>
                 <li>
                   <a href="#" className="font-mono text-xs uppercase tracking-widest text-ink hover:text-accent transition">
                     Instagram
