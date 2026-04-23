@@ -21,6 +21,21 @@ const booleanFromString = z
   .enum(["true", "false"])
   .transform((v) => v === "true");
 
+// `next build` evaluates route modules (for manifests, page data, etc.) even
+// for routes marked force-dynamic. Any import chain that reaches this module
+// runs during the build phase. Prod secrets aren't required to compile — gate
+// in a placeholder only when NEXT_PHASE=phase-production-build. At runtime
+// (server boot, request handling), missing values still fail validation.
+const buildPhaseFallback =
+  <T>(value: T) =>
+  (v: unknown) => {
+    const missing = v === undefined || v === null || v === "";
+    if (missing && process.env.NEXT_PHASE === "phase-production-build") {
+      return value;
+    }
+    return v;
+  };
+
 const adminEmailsSchema = z
   .string()
   .optional()
@@ -54,11 +69,18 @@ const schema = z
       .default("development"),
 
     // Always required
-    DATABASE_URL: urlSchema,
-    BETTER_AUTH_SECRET: z
-      .string()
-      .min(16, "BETTER_AUTH_SECRET must be at least 16 chars"),
-    BETTER_AUTH_URL: urlSchema,
+    DATABASE_URL: z.preprocess(
+      buildPhaseFallback("postgres://build:build@localhost:5432/build"),
+      urlSchema,
+    ),
+    BETTER_AUTH_SECRET: z.preprocess(
+      buildPhaseFallback("build-phase-placeholder-secret-32chars"),
+      z.string().min(16, "BETTER_AUTH_SECRET must be at least 16 chars"),
+    ),
+    BETTER_AUTH_URL: z.preprocess(
+      buildPhaseFallback("https://build.local"),
+      urlSchema,
+    ),
     NEXT_PUBLIC_APP_URL: urlSchema,
     NEXT_PUBLIC_CANONICAL_URL: httpsUrlSchema,
 
