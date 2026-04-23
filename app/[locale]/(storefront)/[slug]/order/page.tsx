@@ -5,6 +5,9 @@ import { CheckoutForm } from "@/components/storefront/checkout-form";
 import { hasEntitlement } from "@/lib/entitlements/queries";
 import { getProgram } from "@/lib/loyalty/queries";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
 };

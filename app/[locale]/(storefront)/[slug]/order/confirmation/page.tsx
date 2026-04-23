@@ -13,6 +13,9 @@ import { getProgram } from "@/lib/loyalty/queries";
 import { StatusBadge, type OrderStatus } from "@/components/ui/status-badge";
 import { formatAmount } from "@/lib/utils/currency";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
   searchParams: Promise<{ orderId?: string }>;

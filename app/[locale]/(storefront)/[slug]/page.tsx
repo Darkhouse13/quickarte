@@ -8,6 +8,9 @@ import {
 } from "@/lib/catalog/queries";
 import type { StorefrontFixture } from "@/lib/catalog/fixtures";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
 };

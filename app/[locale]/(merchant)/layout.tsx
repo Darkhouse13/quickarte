@@ -8,6 +8,7 @@ import { ServiceWorkerRegister } from "@/components/merchant/sw-register";
 import { InstallPrompt } from "@/components/merchant/install-prompt";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 async function safeHasEntitlement(
   businessId: string,

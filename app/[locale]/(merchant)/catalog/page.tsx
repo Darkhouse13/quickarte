@@ -8,6 +8,9 @@ import { ProductAvailabilityToggle } from "@/components/merchant/product-availab
 import { cn } from "@/lib/utils/cn";
 import { formatAmount } from "@/lib/utils/currency";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export const metadata = { title: "Quickarte — Catalogue" };
 
 type Props = { params: Promise<{ locale: string }> };

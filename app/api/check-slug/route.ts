@@ -4,6 +4,9 @@ import { db } from "@/lib/db";
 import { businesses } from "@/lib/db/schema";
 import { isValidSlug } from "@/lib/utils/slug";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const slug = searchParams.get("slug")?.trim() ?? "";

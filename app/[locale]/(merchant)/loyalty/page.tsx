@@ -13,6 +13,9 @@ import {
   type LoyaltyCustomerRow,
 } from "@/components/merchant/loyalty-customer-list";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export const metadata = { title: "Quickarte — Fidélité" };
 
 type Props = {

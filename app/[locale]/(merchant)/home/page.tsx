@@ -38,6 +38,9 @@ import {
 import type { AnalyticsRange } from "@/lib/analytics/types";
 import { formatShortDayLabelFR } from "@/lib/analytics/format";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export const metadata = { title: "Quickarte — Accueil" };
 
 type Props = {

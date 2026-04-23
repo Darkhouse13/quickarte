@@ -5,6 +5,9 @@ import { OrdersBoard } from "@/components/merchant/order-row";
 import { Gated } from "@/components/entitlements/gated";
 import { UpsellCard } from "@/components/entitlements/upsell-card";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export const metadata = { title: "Quickarte — Commandes" };
 
 type Props = { params: Promise<{ locale: string }> };

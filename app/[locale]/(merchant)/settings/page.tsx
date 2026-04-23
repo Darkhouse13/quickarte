@@ -7,6 +7,9 @@ import { getConnectStatus } from "@/lib/payments";
 import { PaymentsSection } from "@/components/merchant/payments-section";
 import { NotificationsSettings } from "@/components/merchant/notifications-settings";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export const metadata = { title: "Quickarte — Paramètres" };
 
 const BUSINESS_TYPE_LABEL: Record<string, string> = {
