@@ -1,11 +1,13 @@
 "use server";
 
+import * as Sentry from "@sentry/nextjs";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { businesses, businessSettings } from "@/lib/db/schema";
 import { requireSession } from "@/lib/auth/get-business";
+import { seedDefaultCatalog } from "@/lib/catalog/default-menus";
 import { provisionDefaultEntitlements } from "@/lib/entitlements/defaults";
 import { isValidSlug } from "@/lib/utils/slug";
 
@@ -105,6 +107,16 @@ export async function createBusinessAction(
     takeawayEnabled: true,
     deliveryEnabled: false,
   });
+
+  try {
+    await seedDefaultCatalog(inserted.id, data.type);
+  } catch (err) {
+    console.error("seedDefaultCatalog failed", err);
+    Sentry.captureException(err, {
+      tags: { area: "onboarding-seed" },
+      extra: { businessId: inserted.id, type: data.type },
+    });
+  }
 
   await provisionDefaultEntitlements(inserted.id);
 
