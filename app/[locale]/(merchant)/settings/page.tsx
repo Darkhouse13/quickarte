@@ -6,20 +6,12 @@ import { hasEntitlement } from "@/lib/entitlements/queries";
 import { getConnectStatus } from "@/lib/payments";
 import { PaymentsSection } from "@/components/merchant/payments-section";
 import { NotificationsSettings } from "@/components/merchant/notifications-settings";
+import { BusinessProfileSection } from "@/components/merchant/business-profile-section";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export const metadata = { title: "Quickarte — Paramètres" };
-
-const BUSINESS_TYPE_LABEL: Record<string, string> = {
-  boulangerie: "Boulangerie",
-  restaurant: "Restaurant",
-  cafe: "Café",
-  hotel: "Hôtel",
-  retail: "Commerce",
-  other: "Autre",
-};
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -42,7 +34,6 @@ export default async function SettingsPage({ params, searchParams }: Props) {
     ),
   ]);
 
-  const typeLabel = BUSINESS_TYPE_LABEL[business.type] ?? business.type;
   const locationLabel =
     [business.city, business.address].filter(Boolean).join(" · ") ||
     "Non renseignée";
@@ -61,20 +52,12 @@ export default async function SettingsPage({ params, searchParams }: Props) {
       <div className="flex-1 pb-16">
         <section>
           <SectionHeader index={1} title="Établissement" />
-          <dl className="flex flex-col divide-y divide-outline">
-            <InfoRow label="Nom" value={business.name} />
-            <InfoRow label="Type" value={typeLabel} />
-            <InfoRow label="Emplacement" value={locationLabel} />
-            <InfoRow label="Adresse publique" value={business.slug} mono />
-            <div className="flex items-center justify-between px-6 py-5">
-              <span className="font-mono text-[11px] uppercase tracking-widest text-ink/40">
-                Modifier →
-              </span>
-              <span className="font-mono text-[9px] uppercase tracking-widest text-ink/30 border border-outline px-1.5 py-0.5">
-                Bientôt
-              </span>
-            </div>
-          </dl>
+          <BusinessProfileSection
+            name={business.name}
+            type={business.type}
+            slug={business.slug}
+            locationLabel={locationLabel}
+          />
         </section>
 
         {hasOrdering && connectStatus ? (
@@ -91,32 +74,5 @@ export default async function SettingsPage({ params, searchParams }: Props) {
         ) : null}
       </div>
     </>
-  );
-}
-
-function InfoRow({
-  label,
-  value,
-  mono = false,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 px-6 py-4">
-      <dt className="font-mono text-[11px] uppercase tracking-widest text-ink/50">
-        {label}
-      </dt>
-      <dd
-        className={
-          mono
-            ? "font-mono text-sm text-ink"
-            : "font-sans text-[15px] font-bold text-ink"
-        }
-      >
-        {value}
-      </dd>
-    </div>
   );
 }
