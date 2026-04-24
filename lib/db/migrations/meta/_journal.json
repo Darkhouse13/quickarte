@@ -50,6 +50,13 @@
       "when": 1776818906094,
       "tag": "0006_certain_killmonger",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1776988845662,
+      "tag": "0007_places_address",
+      "breakpoints": true
     }
   ]
 }

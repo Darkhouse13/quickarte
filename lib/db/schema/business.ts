@@ -1,5 +1,6 @@
 import {
   boolean,
+  numeric,
   pgEnum,
   pgTable,
   text,
@@ -31,6 +32,10 @@ export const businesses = pgTable("businesses", {
   type: businessTypeEnum("type").notNull().default("cafe"),
   city: text("city"),
   address: text("address"),
+  googlePlaceId: text("google_place_id"),
+  formattedAddress: text("formatted_address"),
+  lat: numeric("lat", { precision: 10, scale: 7 }),
+  lng: numeric("lng", { precision: 10, scale: 7 }),
   logo: text("logo"),
   cover: text("cover"),
   currency: text("currency").notNull().default("EUR"),

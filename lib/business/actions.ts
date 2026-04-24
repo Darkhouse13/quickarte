@@ -23,13 +23,10 @@ const BUSINESS_TYPES = [
 const createBusinessSchema = z.object({
   name: z.string().trim().min(2, "Nom trop court").max(80),
   type: z.enum(BUSINESS_TYPES),
-  city: z.string().trim().min(2, "Ville requise").max(80),
-  address: z
-    .string()
-    .trim()
-    .max(160)
-    .optional()
-    .transform((v) => (v && v.length > 0 ? v : undefined)),
+  googlePlaceId: z.string().trim().min(1, "Adresse requise"),
+  formattedAddress: z.string().trim().min(1, "Adresse requise").max(300),
+  lat: z.number().finite().min(-90).max(90),
+  lng: z.number().finite().min(-180).max(180),
   slug: z
     .string()
     .trim()
@@ -91,8 +88,10 @@ export async function createBusinessAction(
       name: data.name,
       slug: data.slug,
       type: data.type,
-      city: data.city,
-      address: data.address ?? null,
+      googlePlaceId: data.googlePlaceId,
+      formattedAddress: data.formattedAddress,
+      lat: data.lat.toString(),
+      lng: data.lng.toString(),
     })
     .returning({ id: businesses.id });
 

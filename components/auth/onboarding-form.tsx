@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { FormInput } from "@/components/ui/form-input";
 import { SectionHeader } from "@/components/ui/section-header";
+import {
+  AddressAutocomplete,
+  type PlaceSelection,
+} from "@/components/places/address-autocomplete";
 import { slugify, isValidSlug } from "@/lib/utils/slug";
 import {
   createBusinessAction,
@@ -29,8 +33,7 @@ type SlugCheck =
 export function OnboardingForm() {
   const [name, setName] = useState("");
   const [type, setType] = useState<BusinessType>("boulangerie");
-  const [city, setCity] = useState("");
-  const [address, setAddress] = useState("");
+  const [place, setPlace] = useState<PlaceSelection | null>(null);
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [slugCheck, setSlugCheck] = useState<SlugCheck>({ state: "idle" });
@@ -79,11 +82,18 @@ export function OnboardingForm() {
     setFormError(null);
     setFieldErrors({});
 
+    if (!place) {
+      setFormError("Sélectionnez une adresse dans la liste");
+      return;
+    }
+
     const payload: CreateBusinessInput = {
       name: name.trim(),
       type,
-      city: city.trim(),
-      address: address.trim().length > 0 ? address.trim() : undefined,
+      googlePlaceId: place.placeId,
+      formattedAddress: place.formattedAddress,
+      lat: place.lat,
+      lng: place.lng,
       slug: slug.trim(),
     };
 
@@ -95,6 +105,10 @@ export function OnboardingForm() {
       }
     });
   };
+
+  const handlePlaceSelect = useCallback((next: PlaceSelection | null) => {
+    setPlace(next);
+  }, []);
 
   const fieldError = (n: string) => fieldErrors[n]?.[0];
 
@@ -144,27 +158,12 @@ export function OnboardingForm() {
           </div>
 
           <div>
-            <FormInput
-              label="Ville"
-              name="city"
-              placeholder="Paris"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              required
-            />
-            <FieldError message={fieldError("city")} />
-          </div>
-
-          <div>
-            <FormInput
-              label="Adresse"
-              name="address"
-              placeholder="12 rue des Artistes"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              hint="Optionnel"
-            />
-            <FieldError message={fieldError("address")} />
+            <AddressAutocomplete onSelect={handlePlaceSelect} required />
+            <p className="mt-2 font-mono text-[11px] uppercase tracking-widest text-ink/50">
+              Sélectionnez votre établissement dans la liste.
+            </p>
+            <FieldError message={fieldError("formattedAddress")} />
+            <FieldError message={fieldError("googlePlaceId")} />
           </div>
         </div>
       </section>
@@ -210,6 +209,7 @@ export function OnboardingForm() {
             type="submit"
             disabled={
               isPending ||
+              !place ||
               slugCheck.state === "taken" ||
               slugCheck.state === "invalid"
             }
