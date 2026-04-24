@@ -7,12 +7,20 @@ export async function provisionDefaultEntitlements(
 ): Promise<void> {
   await db
     .insert(businessEntitlements)
-    .values({
-      businessId,
-      module: "menu_qr",
-      enabled: true,
-      source: "grandfathered",
-    })
+    .values([
+      {
+        businessId,
+        module: "menu_qr",
+        enabled: true,
+        source: "trial",
+      },
+      {
+        businessId,
+        module: "online_ordering",
+        enabled: true,
+        source: "trial",
+      },
+    ])
     .onConflictDoNothing({
       target: [businessEntitlements.businessId, businessEntitlements.module],
     });
