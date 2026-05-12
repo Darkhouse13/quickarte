@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { FormInput } from "@/components/ui/form-input";
 import { FormTextarea } from "@/components/ui/form-textarea";
-import { useCartStore } from "@/lib/ordering/cart-store";
+import { getCartLineKey, useCartStore } from "@/lib/ordering/cart-store";
 import { placeOrder } from "@/lib/ordering/actions";
 import { cn } from "@/lib/utils/cn";
 import { formatAmount } from "@/lib/utils/currency";
@@ -106,8 +106,11 @@ export function CheckoutForm({
           : undefined,
       notes: notes.trim().length > 0 ? notes : undefined,
       items: items.map((i) => ({
-        productId: i.productId,
+        product_id: i.product_id,
         quantity: i.quantity,
+        variant_id: i.variant_id,
+        selected_option_value_ids: i.selected_option_value_ids,
+        unit_price: i.unit_price,
       })),
     };
 
@@ -195,29 +198,30 @@ export function CheckoutForm({
         <ul className="flex flex-col">
           {items.map((item) => (
             <li
-              key={item.productId}
+              key={getCartLineKey(item)}
               className="flex gap-3 py-3 border-b border-outline last:border-b-0"
             >
               <div className="flex-1 min-w-0">
                 <p className="text-[14px] font-bold leading-tight truncate">
-                  {item.name}
+                  {item.product_name}
                 </p>
+                <ConfigurationSummary item={item} />
                 <p className="font-mono text-[12px] text-ink/50 mt-1">
-                  {formatAmount(item.price)}
+                  {formatAmount(item.unit_price)}
                 </p>
               </div>
               <QuantityStepper
                 quantity={item.quantity}
                 onDecrease={() =>
-                  updateQuantity(item.productId, item.quantity - 1)
+                  updateQuantity(getCartLineKey(item), item.quantity - 1)
                 }
                 onIncrease={() =>
-                  updateQuantity(item.productId, item.quantity + 1)
+                  updateQuantity(getCartLineKey(item), item.quantity + 1)
                 }
-                onRemove={() => removeItem(item.productId)}
+                onRemove={() => removeItem(getCartLineKey(item))}
               />
               <div className="w-[70px] text-right font-mono font-bold text-[14px] self-center">
-                {formatAmount(item.price * item.quantity)}
+                {formatAmount(item.unit_price * item.quantity)}
               </div>
             </li>
           ))}
@@ -372,6 +376,31 @@ export function CheckoutForm({
         </div>
       </div>
     </form>
+  );
+}
+
+function ConfigurationSummary({
+  item,
+}: {
+  item: {
+    variant_name: string | null;
+    selected_options_summary: Array<{
+      option_name: string;
+      values: Array<{ value_name: string }>;
+    }>;
+  };
+}) {
+  const parts: string[] = [];
+  if (item.variant_name) parts.push(item.variant_name);
+  for (const option of item.selected_options_summary) {
+    const values = option.values.map((value) => value.value_name).join(", ");
+    if (values) parts.push(`${option.option_name}: ${values}`);
+  }
+  if (parts.length === 0) return null;
+  return (
+    <p className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mt-1 truncate">
+      {parts.join(" • ")}
+    </p>
   );
 }
 

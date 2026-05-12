@@ -60,6 +60,24 @@ export default async function StorefrontPage({ params }: Props) {
         image: product.image
           ? { src: product.image, alt: product.name }
           : undefined,
+        variants: product.variants.map((variant) => ({
+          id: variant.id,
+          name: variant.name,
+          priceOverride:
+            variant.priceOverride == null ? null : Number(variant.priceOverride),
+        })),
+        options: product.options.map((option) => ({
+          id: option.id,
+          name: option.name,
+          type: option.type,
+          required: option.required,
+          maxSelections: option.maxSelections,
+          values: option.values.map((value) => ({
+            id: value.id,
+            name: value.name,
+            priceAddition: Number(value.priceAddition),
+          })),
+        })),
       })),
     })),
   };

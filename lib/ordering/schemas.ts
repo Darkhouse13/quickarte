@@ -19,11 +19,18 @@ export const placeOrderSchema = z
     items: z
       .array(
         z.object({
-          productId: z.string().uuid("Produit invalide"),
+          product_id: z.string().uuid("Produit invalide"),
           quantity: z
             .number({ invalid_type_error: "Quantité invalide" })
             .int()
             .positive(),
+          variant_id: z.string().uuid("Variante invalide").nullable(),
+          selected_option_value_ids: z
+            .array(z.string().uuid("Choix invalide"))
+            .default([]),
+          unit_price: z
+            .number({ invalid_type_error: "Prix invalide" })
+            .nonnegative("Prix invalide"),
         }),
       )
       .min(1, "Panier vide"),

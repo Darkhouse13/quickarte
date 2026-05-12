@@ -6,6 +6,29 @@ export type MenuItem = {
   image?: { src: string; alt: string };
   badge?: string;
   isSignature?: boolean;
+  variants?: MenuItemVariant[];
+  options?: MenuItemOption[];
+};
+
+export type MenuItemVariant = {
+  id: string;
+  name: string;
+  priceOverride: number | null;
+};
+
+export type MenuItemOptionValue = {
+  id: string;
+  name: string;
+  priceAddition: number;
+};
+
+export type MenuItemOption = {
+  id: string;
+  name: string;
+  type: "single_select" | "multi_select";
+  required: boolean;
+  maxSelections: number | null;
+  values: MenuItemOptionValue[];
 };
 
 export type MenuSection = {
