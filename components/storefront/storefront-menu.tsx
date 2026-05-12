@@ -188,8 +188,7 @@ export function StorefrontMenu({ business, locale }: Props) {
             </div>
             <div className="flex items-center gap-3">
               <span className="font-mono font-bold text-lg">
-                {formatAmount(total)}{" "}
-                <span className="text-sm font-sans font-normal">€</span>
+                {formatAmount(total)}
               </span>
               <svg
                 width="24"

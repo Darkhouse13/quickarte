@@ -91,7 +91,7 @@ export function LoyaltyProgramForm({ initial }: ProgramFormProps) {
             />
             <AccrualOption
               active={accrualType === "per_euro"}
-              label="1 € dépensé = X points"
+              label="1 MAD dépensé = X points"
               sub="Points proportionnels au montant"
               onClick={() => setAccrualType("per_euro")}
               bordered
@@ -102,7 +102,7 @@ export function LoyaltyProgramForm({ initial }: ProgramFormProps) {
             label={
               accrualType === "per_visit"
                 ? "Tampons par visite"
-                : "Points par euro dépensé"
+                : "Points par MAD dépensé"
             }
             name="accrualRate"
             type="text"

@@ -38,9 +38,9 @@ export const businesses = pgTable("businesses", {
   lng: numeric("lng", { precision: 10, scale: 7 }),
   logo: text("logo"),
   cover: text("cover"),
-  currency: text("currency").notNull().default("EUR"),
-  timezone: text("timezone").notNull().default("Europe/Paris"),
-  locale: text("locale").notNull().default("fr"),
+  currency: text("currency").notNull().default("MAD"),
+  timezone: text("timezone").notNull().default("Africa/Casablanca"),
+  locale: text("locale").notNull().default("fr-MA"),
   stripeAccountId: text("stripe_account_id"),
   stripeChargesEnabled: boolean("stripe_charges_enabled")
     .notNull()

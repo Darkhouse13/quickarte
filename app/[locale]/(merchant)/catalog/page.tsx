@@ -100,8 +100,7 @@ export default async function CatalogIndexPage({ params }: Props) {
                           {product.name}
                         </span>
                         <span className="font-mono text-[12px] text-ink/50 leading-none">
-                          {formatAmount(product.price)}{" "}
-                          <span className="text-[10px] text-ink/40">€</span>
+                          {formatAmount(product.price)}
                         </span>
                       </div>
                       <div className="flex items-center gap-4 flex-shrink-0 relative z-20">

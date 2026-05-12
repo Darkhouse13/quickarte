@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils/cn";
 type StatCardProps = {
   label: string;
   value: ReactNode;
-  unit?: string;
   tone?: "default" | "accent";
   indicator?: boolean;
   valueClassName?: string;
@@ -14,7 +13,6 @@ type StatCardProps = {
 export function StatCard({
   label,
   value,
-  unit,
   tone = "default",
   indicator = false,
   valueClassName,
@@ -31,7 +29,6 @@ export function StatCard({
       <div className="flex items-center justify-between">
         <span className="font-mono text-[10px] uppercase tracking-widest text-ink/60">
           {label}
-          {unit ? <span className="text-[8px] ml-1">{unit}</span> : null}
         </span>
         {indicator ? <div className="w-2 h-2 bg-accent" /> : null}
       </div>

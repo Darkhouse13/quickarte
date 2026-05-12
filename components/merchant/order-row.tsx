@@ -84,15 +84,7 @@ export function OrderRow({
           )}
         >
           <span className="font-mono text-[15px] font-bold leading-none text-right">
-            {formatAmountCompact(total)}{" "}
-            <span
-              className={cn(
-                "text-[10px] font-normal",
-                isDone ? "text-ink/40" : "text-ink/50",
-              )}
-            >
-              €
-            </span>
+            {formatAmountCompact(total)}
           </span>
           <div className="flex items-center gap-1.5">
             <PaymentPill status={order.paymentStatus} />
@@ -172,7 +164,7 @@ function OrderDetail({ order }: { order: OrderWithItems }) {
               {item.product?.name ?? "Article supprimé"}
             </span>
             <span className="text-ink/70 whitespace-nowrap">
-              {formatAmount(item.subtotal)} €
+              {formatAmount(item.subtotal)}
             </span>
           </li>
         ))}

@@ -1,5 +1,5 @@
 export function formatDashboardDate(date: Date = new Date()): string {
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat("fr-MA", {
     day: "2-digit",
     month: "short",
     year: "numeric",

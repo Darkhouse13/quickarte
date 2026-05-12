@@ -9,7 +9,7 @@ import {
   type LoyaltyProgram,
 } from "@/lib/db/schema";
 import type { AccrualType, LoyaltySource } from "./types";
-import { normalizeFrenchPhone } from "@/lib/utils/phone";
+import { normalizeMoroccanPhone } from "@/lib/utils/phone";
 import {
   InsufficientBalanceError,
   NoProgramConfiguredError,
@@ -126,7 +126,7 @@ export async function recordAccrual(
 async function recordAccrualImpl(
   input: RecordAccrualInput,
 ): Promise<AccrualResult> {
-  const phone = normalizeFrenchPhone(input.phone);
+  const phone = normalizeMoroccanPhone(input.phone);
 
   return await db.transaction(async (tx) => {
     const program = await tx.query.loyaltyPrograms.findFirst({
@@ -303,4 +303,3 @@ export async function adjustBalance(
     return updated;
   });
 }
-

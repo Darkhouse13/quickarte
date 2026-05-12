@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { frenchPhoneSchema } from "@/lib/utils/phone";
+import { moroccanPhoneSchema } from "@/lib/utils/phone";
 
 export const placeOrderSchema = z
   .object({
     customerName: z.string().trim().min(1, "Le nom est requis"),
-    customerPhone: frenchPhoneSchema,
+    customerPhone: moroccanPhoneSchema,
     orderType: z.enum(["dine_in", "takeaway"]),
     tableNumber: z.coerce
       .number({ invalid_type_error: "Numéro de table invalide" })

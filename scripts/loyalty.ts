@@ -29,7 +29,7 @@ async function main() {
   const { recordAccrual, recordRedemption } = await import(
     "../lib/loyalty/service"
   );
-  const { normalizeFrenchPhone: normalizePhone, formatPhoneForDisplay } =
+  const { normalizeMoroccanPhone: normalizePhone, formatPhoneForDisplay } =
     await import("../lib/utils/phone");
 
   try {

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import * as Sentry from "@sentry/nextjs";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
+import { formatAmount } from "@/lib/utils/currency";
 import {
   pushSubscriptions,
   orderItems,
@@ -40,10 +41,6 @@ function ensureVapid(): boolean {
   return true;
 }
 
-function formatEuros(amount: number): string {
-  return `${amount.toFixed(2).replace(".", ",")} €`;
-}
-
 function describeOrder(order: OrderSummary): string {
   const parts: string[] = [];
   if (order.type === "dine_in" && order.tableNumber) {
@@ -54,7 +51,7 @@ function describeOrder(order: OrderSummary): string {
     parts.push("Livraison");
   }
   parts.push(`${order.itemCount} article${order.itemCount > 1 ? "s" : ""}`);
-  parts.push(formatEuros(order.total));
+  parts.push(formatAmount(order.total));
   return parts.join(" · ");
 }
 

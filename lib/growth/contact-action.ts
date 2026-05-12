@@ -5,7 +5,7 @@ import { and, eq, gt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { contactRequests } from "@/lib/db/schema";
-import { normalizeLooseFrenchPhone } from "./phone";
+import { normalizeLooseMoroccanPhone } from "./phone";
 import { sendContactAlert } from "./email";
 
 const CONTACT_TO = "bonjour@quickarte.fr";
@@ -74,13 +74,13 @@ export async function submitContactRequest(
     return { status: "error", fieldErrors, values };
   }
 
-  const normalized = normalizeLooseFrenchPhone(parsed.data.telephone);
+  const normalized = normalizeLooseMoroccanPhone(parsed.data.telephone);
   if (!normalized) {
     return {
       status: "error",
       fieldErrors: {
         telephone:
-          "Numéro invalide. Utilisez un numéro français (01, 06, 07…) ou +33.",
+          "Numéro invalide. Utilisez un numéro marocain (05, 06, 07…) ou +212.",
       },
       values,
     };

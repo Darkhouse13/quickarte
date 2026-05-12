@@ -198,7 +198,7 @@ function formatLastVisit(date: Date): string {
   if (diffH < 24) return `Il y a ${diffH} h`;
   const diffD = Math.round(diffH / 24);
   if (diffD < 30) return `Il y a ${diffD} j`;
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat("fr-MA", {
     day: "2-digit",
     month: "short",
     year: "numeric",

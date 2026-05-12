@@ -195,7 +195,7 @@ export function NewItemForm({ categories: initialCategories, product }: Props) {
             step="0.01"
             min="0"
             placeholder="1,80"
-            suffix="€"
+            suffix="MAD"
             defaultValue={
               product?.price ? Number(product.price).toString() : ""
             }

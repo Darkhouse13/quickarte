@@ -7,7 +7,6 @@ type MenuItemCardProps = {
   name: string;
   description?: string;
   price: number;
-  currency?: string;
   image?: { src: string; alt: string };
   badge?: string;
   isLast?: boolean;
@@ -22,7 +21,6 @@ export function MenuItemCard({
   name,
   description,
   price,
-  currency = "€",
   image,
   badge,
   isLast = false,
@@ -71,8 +69,7 @@ export function MenuItemCard({
             ) : null}
           </h3>
           <span className="font-mono text-[16px] font-bold whitespace-nowrap">
-            {formatAmount(price)}{" "}
-            <span className="text-xs text-ink/50">{currency}</span>
+            {formatAmount(price)}
           </span>
         </div>
         {description ? (

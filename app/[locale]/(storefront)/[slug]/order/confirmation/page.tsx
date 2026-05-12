@@ -32,7 +32,7 @@ function formatOrderNumber(orderId: string): string {
 }
 
 function formatDateTime(date: Date): string {
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat("fr-MA", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
@@ -182,12 +182,11 @@ export default async function OrderConfirmationPage({
                     {item.product?.name ?? "Article supprimé"}
                   </p>
                   <p className="font-mono text-[11px] text-ink/50 mt-1">
-                    {formatAmount(unit)} € × {item.quantity}
+                    {formatAmount(unit)} × {item.quantity}
                   </p>
                 </div>
                 <span className="font-mono font-bold text-[14px] self-center whitespace-nowrap">
-                  {formatAmount(subtotal)}{" "}
-                  <span className="text-[10px] text-ink/50">€</span>
+                  {formatAmount(subtotal)}
                 </span>
               </li>
             );
@@ -199,10 +198,7 @@ export default async function OrderConfirmationPage({
             Total
           </span>
           <span className="font-mono font-bold text-2xl tracking-tight">
-            {formatAmount(totalNum)}{" "}
-            <span className="text-sm font-sans font-normal text-ink/60">
-              €
-            </span>
+            {formatAmount(totalNum)}
           </span>
         </div>
       </section>

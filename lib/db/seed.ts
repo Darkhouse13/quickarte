@@ -73,9 +73,9 @@ async function main() {
         type: "cafe",
         city: "Paris",
         address: "Rue Oberkampf",
-        currency: "EUR",
-        timezone: "Europe/Paris",
-        locale: "fr",
+        currency: "MAD",
+        timezone: "Africa/Casablanca",
+        locale: "fr-MA",
         // Fake Stripe Connect state so the demo flows show "Paiements activés"
         // and a mix of paid vs sur-place orders without hitting real Stripe.
         // Real onboarding goes via the in-app "Connecter Stripe" button.
@@ -169,21 +169,21 @@ async function main() {
       lifetimeEarned: number;
       daysAgo: number;
     }> = [
-      { phone: "+33611223344", name: "Inès",       lifetimeEarned: 18, daysAgo: 0.2 },
-      { phone: "+33612345678", name: "Sophie",     lifetimeEarned: 13, daysAgo: 0.5 },
-      { phone: "+33698765432", name: "Thomas",     lifetimeEarned: 11, daysAgo: 1.2 },
-      { phone: "+33688112233", name: "Camille D.", lifetimeEarned: 8,  daysAgo: 0.3 },
-      { phone: "+33677998844", name: "Léa",        lifetimeEarned: 7,  daysAgo: 2 },
-      { phone: "+33666554411", name: "Mehdi",      lifetimeEarned: 6,  daysAgo: 3 },
-      { phone: "+33655443322", name: "Julien",     lifetimeEarned: 5,  daysAgo: 4 },
-      { phone: "+33644332211", name: "Antoine",    lifetimeEarned: 2,  daysAgo: 6 },
-      { phone: "+33633221100", name: "Sarah",      lifetimeEarned: 3,  daysAgo: 5 },
-      { phone: "+33622110099", name: "Pauline",    lifetimeEarned: 1,  daysAgo: 9 },
-      { phone: "+33611009988", name: "Karim",      lifetimeEarned: 2,  daysAgo: 11 },
-      { phone: "+33699887766", name: "Raphaël",    lifetimeEarned: 2,  daysAgo: 14 },
-      { phone: "+33688776655", name: "Noémie G.",  lifetimeEarned: 1,  daysAgo: 19 },
-      { phone: "+33677665544", name: "Olivier",    lifetimeEarned: 1,  daysAgo: 22 },
-      { phone: "+33655667788", name: "Claire",     lifetimeEarned: 1,  daysAgo: 27 },
+      { phone: "+212612233441", name: "Inès",       lifetimeEarned: 18, daysAgo: 0.2 },
+      { phone: "+212612345678", name: "Sophie",     lifetimeEarned: 13, daysAgo: 0.5 },
+      { phone: "+212698765432", name: "Thomas",     lifetimeEarned: 11, daysAgo: 1.2 },
+      { phone: "+212688112233", name: "Camille D.", lifetimeEarned: 8,  daysAgo: 0.3 },
+      { phone: "+212677998844", name: "Léa",        lifetimeEarned: 7,  daysAgo: 2 },
+      { phone: "+212666554411", name: "Mehdi",      lifetimeEarned: 6,  daysAgo: 3 },
+      { phone: "+212655443322", name: "Julien",     lifetimeEarned: 5,  daysAgo: 4 },
+      { phone: "+212644332211", name: "Antoine",    lifetimeEarned: 2,  daysAgo: 6 },
+      { phone: "+212633221100", name: "Sarah",      lifetimeEarned: 3,  daysAgo: 5 },
+      { phone: "+212622110099", name: "Pauline",    lifetimeEarned: 1,  daysAgo: 9 },
+      { phone: "+212611009988", name: "Karim",      lifetimeEarned: 2,  daysAgo: 11 },
+      { phone: "+212699887766", name: "Raphaël",    lifetimeEarned: 2,  daysAgo: 14 },
+      { phone: "+212688776655", name: "Noémie G.",  lifetimeEarned: 1,  daysAgo: 19 },
+      { phone: "+212677665544", name: "Olivier",    lifetimeEarned: 1,  daysAgo: 22 },
+      { phone: "+212655667788", name: "Claire",     lifetimeEarned: 1,  daysAgo: 27 },
     ];
 
     for (const c of loyaltySeedCustomers) {
@@ -477,9 +477,9 @@ async function main() {
         type: "boulangerie",
         city: "Lyon",
         address: "Rue Mercière",
-        currency: "EUR",
-        timezone: "Europe/Paris",
-        locale: "fr",
+        currency: "MAD",
+        timezone: "Africa/Casablanca",
+        locale: "fr-MA",
       })
       .returning();
     if (!business) throw new Error("Failed to insert business");

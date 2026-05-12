@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils/cn";
 import { formatDashboardDate, formatOrderTime } from "@/lib/utils/date";
-import { formatAmountCompact } from "@/lib/utils/currency";
+import { formatAmount, formatAmountCompact } from "@/lib/utils/currency";
 import { UserMenu } from "@/components/merchant/user-menu";
 import { EnableNotifications } from "@/components/merchant/enable-notifications";
 import { hasEntitlement } from "@/lib/entitlements/queries";
@@ -229,7 +229,7 @@ async function TodayBody({
       )
     : 0;
 
-  const revenueLabel = formatAmountCompact(stats.todayRevenue);
+  const revenueLabel = formatAmount(stats.todayRevenue);
 
   const isGettingStarted =
     stats.todayOrderCount === 0 &&
@@ -280,7 +280,6 @@ async function TodayBody({
           <StatCard label="Commandes" value={stats.todayOrderCount} />
           <StatCard
             label="Revenu"
-            unit="€"
             value={revenueLabel}
             valueClassName="text-2xl"
           />
@@ -455,15 +454,13 @@ async function RangeBody({
         <div className="grid grid-cols-2 divide-x divide-y divide-outline">
           <StatCard
             label="Revenu"
-            unit="€"
-            value={formatAmountCompact(summary.revenue)}
+            value={formatAmount(summary.revenue)}
             valueClassName="text-2xl"
           />
           <StatCard label="Commandes" value={summary.orderCount} />
           <StatCard
             label="Panier moyen"
-            unit="€"
-            value={formatAmountCompact(summary.avgTicket)}
+            value={formatAmount(summary.avgTicket)}
             valueClassName="text-2xl"
           />
           <StatCard
@@ -580,15 +577,7 @@ function RecentOrderRow({ name, time, total, status }: RecentOrderRowProps) {
         )}
       >
         <span className="font-mono text-[15px] font-bold leading-none">
-          {formatAmountCompact(total)}{" "}
-          <span
-            className={cn(
-              "text-[10px] font-normal",
-              isDone ? "text-ink/40" : "text-ink/50",
-            )}
-          >
-            €
-          </span>
+          {formatAmountCompact(total)}
         </span>
         <StatusBadge status={status} />
       </div>

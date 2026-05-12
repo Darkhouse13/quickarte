@@ -207,8 +207,7 @@ function PaymentForm({
             Montant à régler
           </span>
           <span className="font-mono font-bold text-2xl tracking-tight">
-            {formatAmount(totalAmount)}{" "}
-            <span className="text-sm font-sans font-normal text-ink/60">€</span>
+            {formatAmount(totalAmount)}
           </span>
         </div>
       </section>
@@ -249,8 +248,7 @@ function PaymentForm({
             </span>
             <div className="flex items-center gap-3">
               <span className="font-mono font-bold text-lg">
-                {formatAmount(totalAmount)}{" "}
-                <span className="text-sm font-sans font-normal">€</span>
+                {formatAmount(totalAmount)}
               </span>
               {submitting ? (
                 <span

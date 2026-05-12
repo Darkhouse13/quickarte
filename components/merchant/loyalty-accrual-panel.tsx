@@ -25,8 +25,18 @@ type AccrualFeedback = {
 };
 
 function formatPhoneAsType(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 10);
-  return digits.replace(/(\d{2})(?=\d)/g, "$1 ").trim();
+  const trimmed = raw.trim();
+  const digits = raw.replace(/\D/g, "");
+  if (trimmed.startsWith("+") || digits.startsWith("212")) {
+    const subscriber = digits.startsWith("212")
+      ? digits.slice(3, 12)
+      : digits.slice(0, 9);
+    if (!subscriber) return "+212";
+    const grouped = subscriber.replace(/(\d)(\d{2})(?=\d)/, "$1 $2");
+    return `+212 ${grouped.replace(/(\d{2})(?=\d)/g, "$1 ")}`.trim();
+  }
+  const national = digits.slice(0, 10);
+  return national.replace(/(\d{2})(?=\d)/g, "$1 ").trim();
 }
 
 export function LoyaltyAccrualPanel({
@@ -106,7 +116,7 @@ export function LoyaltyAccrualPanel({
           name="phone"
           type="tel"
           inputMode="numeric"
-          placeholder="06 12 34 56 78"
+          placeholder="+212 6 12 34 56 78"
           value={phone}
           onChange={(e) => setPhone(formatPhoneAsType(e.target.value))}
           autoComplete="off"
@@ -128,7 +138,7 @@ export function LoyaltyAccrualPanel({
             type="text"
             inputMode="decimal"
             placeholder="0,00"
-            suffix="€"
+            suffix="MAD"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required

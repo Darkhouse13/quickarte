@@ -46,7 +46,7 @@ export function hourLabel(h: number): string {
   return `${h}h`;
 }
 
-const shortDayFormatter = new Intl.DateTimeFormat("fr-FR", {
+const shortDayFormatter = new Intl.DateTimeFormat("fr-MA", {
   weekday: "short",
   day: "2-digit",
 });
@@ -55,7 +55,7 @@ export function formatShortDayLabelFR(date: Date): string {
   return shortDayFormatter.format(date).replace(".", ".").trim();
 }
 
-const monthDayFormatter = new Intl.DateTimeFormat("fr-FR", {
+const monthDayFormatter = new Intl.DateTimeFormat("fr-MA", {
   day: "2-digit",
   month: "2-digit",
 });

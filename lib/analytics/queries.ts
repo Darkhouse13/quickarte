@@ -49,7 +49,14 @@ export async function getSummary(
 
   const result = await db.execute<Row>(sql`
     WITH
-      today_p AS (SELECT (now() AT TIME ZONE 'Europe/Paris')::date AS d),
+      business_tz AS (
+        SELECT coalesce(nullif(timezone, ''), 'Africa/Casablanca') AS tz
+        FROM businesses
+        WHERE id = ${businessId}::uuid
+      ),
+      today_p AS (
+        SELECT (now() AT TIME ZONE (SELECT tz FROM business_tz))::date AS d
+      ),
       bounds AS (
         SELECT
           ((SELECT d FROM today_p) - (${days - 1} * interval '1 day'))::date AS range_start_d,
@@ -59,15 +66,15 @@ export async function getSummary(
       ),
       bounds_ts AS (
         SELECT
-          (range_start_d::timestamp AT TIME ZONE 'Europe/Paris') AS range_start_ts,
-          (range_end_d::timestamp AT TIME ZONE 'Europe/Paris')   AS range_end_ts,
-          (prev_start_d::timestamp  AT TIME ZONE 'Europe/Paris') AS prev_start_ts,
-          (prev_end_d::timestamp    AT TIME ZONE 'Europe/Paris') AS prev_end_ts
+          (range_start_d::timestamp AT TIME ZONE (SELECT tz FROM business_tz)) AS range_start_ts,
+          (range_end_d::timestamp AT TIME ZONE (SELECT tz FROM business_tz)) AS range_end_ts,
+          (prev_start_d::timestamp AT TIME ZONE (SELECT tz FROM business_tz)) AS prev_start_ts,
+          (prev_end_d::timestamp AT TIME ZONE (SELECT tz FROM business_tz)) AS prev_end_ts
         FROM bounds
       ),
       current_orders AS (
         SELECT o.total,
-          EXTRACT(DOW FROM (o.created_at AT TIME ZONE 'Europe/Paris'))::int AS dow
+          EXTRACT(DOW FROM (o.created_at AT TIME ZONE (SELECT tz FROM business_tz)))::int AS dow
         FROM orders o, bounds_ts b
         WHERE o.business_id = ${businessId}::uuid
           AND o.status IN ('confirmed', 'completed')
@@ -164,7 +171,14 @@ export async function getRevenueByDay(
 
   const result = await db.execute<Row>(sql`
     WITH
-      today_p AS (SELECT (now() AT TIME ZONE 'Europe/Paris')::date AS d),
+      business_tz AS (
+        SELECT coalesce(nullif(timezone, ''), 'Africa/Casablanca') AS tz
+        FROM businesses
+        WHERE id = ${businessId}::uuid
+      ),
+      today_p AS (
+        SELECT (now() AT TIME ZONE (SELECT tz FROM business_tz))::date AS d
+      ),
       bounds AS (
         SELECT
           ((SELECT d FROM today_p) - (${days - 1} * interval '1 day'))::date AS range_start_d,
@@ -176,14 +190,14 @@ export async function getRevenueByDay(
       ),
       grouped AS (
         SELECT
-          (o.created_at AT TIME ZONE 'Europe/Paris')::date AS day,
+          (o.created_at AT TIME ZONE (SELECT tz FROM business_tz))::date AS day,
           sum(o.total)::text AS revenue,
           count(*)::int AS order_count
         FROM orders o, bounds b
         WHERE o.business_id = ${businessId}::uuid
           AND o.status IN ('confirmed', 'completed')
-          AND o.created_at >= (b.range_start_d::timestamp AT TIME ZONE 'Europe/Paris')
-          AND o.created_at <  ((b.range_end_d + interval '1 day')::timestamp AT TIME ZONE 'Europe/Paris')
+          AND o.created_at >= (b.range_start_d::timestamp AT TIME ZONE (SELECT tz FROM business_tz))
+          AND o.created_at <  ((b.range_end_d + interval '1 day')::timestamp AT TIME ZONE (SELECT tz FROM business_tz))
         GROUP BY 1
       )
     SELECT
@@ -217,7 +231,14 @@ export async function getProductPerformance(
 
   const topResult = await db.execute<TopRow>(sql`
     WITH
-      today_p AS (SELECT (now() AT TIME ZONE 'Europe/Paris')::date AS d),
+      business_tz AS (
+        SELECT coalesce(nullif(timezone, ''), 'Africa/Casablanca') AS tz
+        FROM businesses
+        WHERE id = ${businessId}::uuid
+      ),
+      today_p AS (
+        SELECT (now() AT TIME ZONE (SELECT tz FROM business_tz))::date AS d
+      ),
       bounds AS (
         SELECT
           ((SELECT d FROM today_p) - (${days - 1} * interval '1 day'))::date AS range_start_d,
@@ -225,8 +246,8 @@ export async function getProductPerformance(
       ),
       bounds_ts AS (
         SELECT
-          (range_start_d::timestamp AT TIME ZONE 'Europe/Paris') AS range_start_ts,
-          (range_end_d::timestamp AT TIME ZONE 'Europe/Paris')   AS range_end_ts
+          (range_start_d::timestamp AT TIME ZONE (SELECT tz FROM business_tz)) AS range_start_ts,
+          (range_end_d::timestamp AT TIME ZONE (SELECT tz FROM business_tz)) AS range_end_ts
         FROM bounds
       ),
       item_rows AS (
@@ -259,7 +280,14 @@ export async function getProductPerformance(
 
   const bottomResult = await db.execute<BottomRow>(sql`
     WITH
-      today_p AS (SELECT (now() AT TIME ZONE 'Europe/Paris')::date AS d),
+      business_tz AS (
+        SELECT coalesce(nullif(timezone, ''), 'Africa/Casablanca') AS tz
+        FROM businesses
+        WHERE id = ${businessId}::uuid
+      ),
+      today_p AS (
+        SELECT (now() AT TIME ZONE (SELECT tz FROM business_tz))::date AS d
+      ),
       bounds AS (
         SELECT
           ((SELECT d FROM today_p) - (${days - 1} * interval '1 day'))::date AS range_start_d,
@@ -267,8 +295,8 @@ export async function getProductPerformance(
       ),
       bounds_ts AS (
         SELECT
-          (range_start_d::timestamp AT TIME ZONE 'Europe/Paris') AS range_start_ts,
-          (range_end_d::timestamp AT TIME ZONE 'Europe/Paris')   AS range_end_ts
+          (range_start_d::timestamp AT TIME ZONE (SELECT tz FROM business_tz)) AS range_start_ts,
+          (range_end_d::timestamp AT TIME ZONE (SELECT tz FROM business_tz)) AS range_end_ts
         FROM bounds
       ),
       item_rows AS (
@@ -335,7 +363,14 @@ export async function getHourlyHeatmap(
 
   const result = await db.execute<Row>(sql`
     WITH
-      today_p AS (SELECT (now() AT TIME ZONE 'Europe/Paris')::date AS d),
+      business_tz AS (
+        SELECT coalesce(nullif(timezone, ''), 'Africa/Casablanca') AS tz
+        FROM businesses
+        WHERE id = ${businessId}::uuid
+      ),
+      today_p AS (
+        SELECT (now() AT TIME ZONE (SELECT tz FROM business_tz))::date AS d
+      ),
       bounds AS (
         SELECT
           ((SELECT d FROM today_p) - (${days - 1} * interval '1 day'))::date AS range_start_d,
@@ -343,13 +378,13 @@ export async function getHourlyHeatmap(
       ),
       bounds_ts AS (
         SELECT
-          (range_start_d::timestamp AT TIME ZONE 'Europe/Paris') AS range_start_ts,
-          (range_end_d::timestamp AT TIME ZONE 'Europe/Paris')   AS range_end_ts
+          (range_start_d::timestamp AT TIME ZONE (SELECT tz FROM business_tz)) AS range_start_ts,
+          (range_end_d::timestamp AT TIME ZONE (SELECT tz FROM business_tz)) AS range_end_ts
         FROM bounds
       )
     SELECT
-      EXTRACT(DOW  FROM (o.created_at AT TIME ZONE 'Europe/Paris'))::int AS pg_dow,
-      EXTRACT(HOUR FROM (o.created_at AT TIME ZONE 'Europe/Paris'))::int AS hour,
+      EXTRACT(DOW FROM (o.created_at AT TIME ZONE (SELECT tz FROM business_tz)))::int AS pg_dow,
+      EXTRACT(HOUR FROM (o.created_at AT TIME ZONE (SELECT tz FROM business_tz)))::int AS hour,
       count(*)::int AS order_count
     FROM orders o, bounds_ts b
     WHERE o.business_id = ${businessId}::uuid

@@ -57,6 +57,13 @@
       "when": 1776988845662,
       "tag": "0007_places_address",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778621236674,
+      "tag": "0008_morocco_default_business_columns",
+      "breakpoints": true
     }
   ]
 }

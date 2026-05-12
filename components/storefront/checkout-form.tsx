@@ -203,7 +203,7 @@ export function CheckoutForm({
                   {item.name}
                 </p>
                 <p className="font-mono text-[12px] text-ink/50 mt-1">
-                  {formatAmount(item.price)} <span className="text-[10px]">€</span>
+                  {formatAmount(item.price)}
                 </p>
               </div>
               <QuantityStepper
@@ -218,7 +218,6 @@ export function CheckoutForm({
               />
               <div className="w-[70px] text-right font-mono font-bold text-[14px] self-center">
                 {formatAmount(item.price * item.quantity)}
-                <span className="text-[10px] text-ink/50 ml-1">€</span>
               </div>
             </li>
           ))}
@@ -272,7 +271,7 @@ export function CheckoutForm({
               <span className="font-bold">
                 {loyaltyHint.accrualType === "per_visit"
                   ? `${formatRate(loyaltyHint.accrualRate)} tampon${loyaltyHint.accrualRate > 1 ? "s" : ""} sur cette commande`
-                  : `${formatRate(loyaltyHint.accrualRate)} point${loyaltyHint.accrualRate > 1 ? "s" : ""} par euro dépensé`}
+                  : `${formatRate(loyaltyHint.accrualRate)} point${loyaltyHint.accrualRate > 1 ? "s" : ""} par MAD dépensé`}
               </span>
               . Récompense&nbsp;: {loyaltyHint.rewardDescription}.
             </p>
@@ -295,7 +294,7 @@ export function CheckoutForm({
               label="Téléphone"
               name="customerPhone"
               type="tel"
-              placeholder="06 12 34 56 78"
+              placeholder="+212 6 12 34 56 78"
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
               autoComplete="tel"
@@ -350,8 +349,7 @@ export function CheckoutForm({
             </div>
             <div className="flex items-center gap-3">
               <span className="font-mono font-bold text-lg">
-                {formatAmount(total)}{" "}
-                <span className="text-sm font-sans font-normal">€</span>
+                {formatAmount(total)}
               </span>
               {isPending ? (
                 <Spinner />

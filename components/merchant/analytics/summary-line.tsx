@@ -1,4 +1,4 @@
-import { formatAmountCompact } from "@/lib/utils/currency";
+import { formatAmount } from "@/lib/utils/currency";
 import { formatDeltaFR } from "@/lib/analytics/format";
 import type { AnalyticsRange, AnalyticsSummary } from "@/lib/analytics/types";
 
@@ -14,7 +14,7 @@ function rangePhrase(range: AnalyticsRange): string {
 export function SummaryLine({ summary, range }: SummaryLineProps) {
   const { revenue, orderCount, revenueDeltaPct, bestDayOfWeek } = summary;
   const prefix = rangePhrase(range);
-  const revenueLabel = `${formatAmountCompact(revenue)} €`;
+  const revenueLabel = formatAmount(revenue);
 
   let sentence: string;
   if (revenueDeltaPct !== null) {

@@ -70,7 +70,7 @@ function loadGoogleMaps(apiKey: string): Promise<void> {
     script.defer = true;
     script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
       apiKey,
-    )}&libraries=places&language=fr&region=FR`;
+    )}&libraries=places&language=fr&region=MA`;
     script.addEventListener("load", handleLoad);
     script.addEventListener("error", handleError);
     document.head.appendChild(script);
@@ -111,7 +111,7 @@ export function AddressAutocomplete({
           return;
         }
         const ac = new places.Autocomplete(input, {
-          componentRestrictions: { country: "fr" },
+          componentRestrictions: { country: 'ma' },
           fields: ["place_id", "formatted_address", "geometry"],
         });
         autocompleteRef.current = ac;
@@ -174,7 +174,7 @@ export function AddressAutocomplete({
           autoComplete="off"
           defaultValue={defaultValue}
           required={required}
-          placeholder="12 rue des Artistes, Paris"
+          placeholder="Maarif, Casablanca"
           onChange={() => {
             if (selectedRef.current) {
               selectedRef.current = null;
