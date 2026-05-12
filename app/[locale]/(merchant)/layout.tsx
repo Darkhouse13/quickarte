@@ -6,6 +6,7 @@ import { hasEntitlement } from "@/lib/entitlements/queries";
 import { getEntitlements } from "@/lib/entitlements/queries";
 import { ServiceWorkerRegister } from "@/components/merchant/sw-register";
 import { InstallPrompt } from "@/components/merchant/install-prompt";
+import { MERCHANT_BOTTOM_NAV_CLEARANCE_PX } from "@/lib/layout/merchant-bottom-nav";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -81,7 +82,10 @@ export default async function MerchantLayout({
     : false;
 
   return (
-    <main className="w-full max-w-[480px] mx-auto bg-base min-h-screen relative flex flex-col border-x border-outline/50 shadow-2xl shadow-black/5 pb-24">
+    <main
+      className="w-full max-w-[480px] mx-auto bg-base min-h-screen relative flex flex-col border-x border-outline/50 shadow-2xl shadow-black/5"
+      style={{ paddingBottom: `${MERCHANT_BOTTOM_NAV_CLEARANCE_PX}px` }}
+    >
       <ServiceWorkerRegister />
       {children}
       {hasInstallableEntitlement ? <InstallPrompt /> : null}

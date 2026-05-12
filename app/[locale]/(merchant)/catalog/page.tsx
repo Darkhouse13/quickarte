@@ -125,7 +125,7 @@ export default async function CatalogIndexPage({ params }: Props) {
 
       </div>
 
-      <BottomBar maxWidth={480} className="bottom-[72px]">
+      <BottomBar maxWidth={480}>
         <Link
           href="/catalog/new"
           className="w-full bg-ink text-base px-6 py-4 flex justify-center items-center hover:bg-accent transition-colors border-2 border-transparent focus:outline-none focus:border-ink focus:ring-4 focus:ring-accent/20"
