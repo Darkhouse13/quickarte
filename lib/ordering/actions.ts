@@ -16,6 +16,10 @@ import { recordAccrual } from "@/lib/loyalty/service";
 import { getProgram } from "@/lib/loyalty/queries";
 import { createPaymentIntent, isStripeConfigured } from "@/lib/payments";
 import { sendOrderNotification } from "@/lib/push/send";
+import {
+  canTransitionOrderStatus,
+  type OrderLifecycleStatus,
+} from "./status";
 
 export type PlaceOrderSuccess = {
   status: "success";
@@ -429,22 +433,73 @@ function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-export async function confirmOrder(orderId: string): Promise<void> {
+export type OrderTransitionResult =
+  | { status: "success" }
+  | { status: "error"; message: string };
+
+export async function transitionOrderStatus(
+  orderId: string,
+  nextStatus: OrderLifecycleStatus,
+): Promise<OrderTransitionResult> {
   const { business } = await requireBusiness();
+  const order = await db.query.orders.findFirst({
+    where: and(eq(orders.id, orderId), eq(orders.businessId, business.id)),
+    columns: { id: true, status: true },
+  });
+  if (!order) {
+    return { status: "error", message: "Commande introuvable" };
+  }
+
+  const currentStatus = order.status as OrderLifecycleStatus;
+  if (!canTransitionOrderStatus(currentStatus, nextStatus)) {
+    return { status: "error", message: "Transition de statut invalide" };
+  }
+
   await db
     .update(orders)
-    .set({ status: "confirmed", updatedAt: new Date() })
+    .set({ status: nextStatus, updatedAt: new Date() })
     .where(and(eq(orders.id, orderId), eq(orders.businessId, business.id)));
   revalidatePath("/orders");
   revalidatePath("/home");
+  return { status: "success" };
+}
+
+export async function cancelOrder(
+  orderId: string,
+  reason?: string,
+): Promise<OrderTransitionResult> {
+  const { business } = await requireBusiness();
+  const order = await db.query.orders.findFirst({
+    where: and(eq(orders.id, orderId), eq(orders.businessId, business.id)),
+    columns: { id: true, status: true, notes: true },
+  });
+  if (!order) {
+    return { status: "error", message: "Commande introuvable" };
+  }
+
+  const currentStatus = order.status as OrderLifecycleStatus;
+  if (!canTransitionOrderStatus(currentStatus, "cancelled")) {
+    return { status: "error", message: "Transition de statut invalide" };
+  }
+
+  const trimmedReason = reason?.trim();
+  const notes = trimmedReason
+    ? [order.notes, `Annulation: ${trimmedReason}`].filter(Boolean).join("\n")
+    : order.notes;
+
+  await db
+    .update(orders)
+    .set({ status: "cancelled", notes, updatedAt: new Date() })
+    .where(and(eq(orders.id, orderId), eq(orders.businessId, business.id)));
+  revalidatePath("/orders");
+  revalidatePath("/home");
+  return { status: "success" };
+}
+
+export async function confirmOrder(orderId: string): Promise<void> {
+  await transitionOrderStatus(orderId, "confirmed");
 }
 
 export async function completeOrder(orderId: string): Promise<void> {
-  const { business } = await requireBusiness();
-  await db
-    .update(orders)
-    .set({ status: "completed", updatedAt: new Date() })
-    .where(and(eq(orders.id, orderId), eq(orders.businessId, business.id)));
-  revalidatePath("/orders");
-  revalidatePath("/home");
+  await transitionOrderStatus(orderId, "completed");
 }

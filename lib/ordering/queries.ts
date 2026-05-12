@@ -2,6 +2,7 @@ import "server-only";
 import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { orders, type Order, type OrderItem } from "@/lib/db/schema";
+import type { OrderLifecycleStatus } from "./status";
 
 export type OrderItemWithProduct = OrderItem & {
   product: { id: string; name: string } | null;
@@ -13,13 +14,15 @@ export type OrderWithItems = Order & {
 
 export async function getOrdersByBusinessId(
   businessId: string,
-  status?: "pending" | "confirmed" | "completed" | "cancelled",
+  status?: OrderLifecycleStatus,
+  limit = 50,
 ): Promise<OrderWithItems[]> {
   const rows = await db.query.orders.findMany({
     where: status
       ? and(eq(orders.businessId, businessId), eq(orders.status, status))
       : eq(orders.businessId, businessId),
     orderBy: [desc(orders.createdAt)],
+    limit,
     with: {
       items: {
         with: {

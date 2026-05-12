@@ -1,53 +1,54 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import Link from "next/link";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
-import { formatOrderTime } from "@/lib/utils/date";
 import { formatAmount, formatAmountCompact } from "@/lib/utils/currency";
+import { StatusBadge, type OrderStatus } from "@/components/ui/status-badge";
+import { cancelOrder, transitionOrderStatus } from "@/lib/ordering/actions";
+import { parseOrderItemOptions } from "@/lib/ordering/options-summary";
 import {
-  StatusBadge,
-  type OrderStatus,
-} from "@/components/ui/status-badge";
-import { confirmOrder, completeOrder } from "@/lib/ordering/actions";
+  isTerminalOrderStatus,
+  PRIMARY_ORDER_ACTIONS,
+  type OrderLifecycleStatus,
+} from "@/lib/ordering/status";
 import type { OrderWithItems } from "@/lib/ordering/queries";
 
 type OrderRowProps = {
   order: OrderWithItems;
   expanded: boolean;
   onToggle: () => void;
-  muted?: boolean;
 };
 
-export function OrderRow({
-  order,
-  expanded,
-  onToggle,
-  muted = false,
-}: OrderRowProps) {
+export function OrdersPoller() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const id = window.setInterval(() => router.refresh(), 15_000);
+    return () => window.clearInterval(id);
+  }, [router]);
+
+  return null;
+}
+
+export function OrderRow({ order, expanded, onToggle }: OrderRowProps) {
   const status = order.status as OrderStatus;
-  const isPending = status === "pending";
-  const isDone = status === "completed";
-  const barColor = isPending ? "bg-accent" : isDone ? "bg-outline" : "bg-ink";
+  const barColor = getBarColor(status);
   const total = Number(order.total);
-  const time = formatOrderTime(order.createdAt);
   const isDineIn = order.type === "dine_in";
 
   return (
     <div
       className={cn(
         "border-b border-outline group relative",
-        status === "confirmed" && "bg-black/[0.01]",
-        muted && "opacity-70",
+        status === "cancelled" && "opacity-70",
       )}
     >
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
-        className={cn(
-          "w-full p-4 px-6 flex justify-between items-start gap-4 text-left hover:bg-black/[0.02] transition-colors cursor-pointer",
-        )}
+        className="w-full p-4 px-6 flex justify-between items-start gap-4 text-left hover:bg-black/[0.02] transition-colors cursor-pointer"
       >
         <div
           className={cn(
@@ -58,35 +59,26 @@ export function OrderRow({
         />
         <div className="flex flex-col gap-2 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className={cn(
-                "font-bold text-[15px] leading-none",
-                isDone && "text-ink/80",
-              )}
-            >
+            <span className="font-mono text-[11px] leading-none text-ink/45 font-bold">
+              #{shortOrderId(order.id)}
+            </span>
+            <span className="font-bold text-[15px] leading-none truncate">
               {order.customerName}
             </span>
             <OrderTypeBadge dineIn={isDineIn} tableNumber={order.tableNumber} />
           </div>
-          <span
-            className={cn(
-              "font-mono text-[12px] leading-none",
-              isDone ? "text-ink/40" : "text-ink/50",
-            )}
-          >
-            {time}
-          </span>
+          <div className="flex flex-col gap-1 font-mono text-[12px] leading-none text-ink/50">
+            <span className="truncate">
+              {order.customerPhone ?? "T\u00e9l\u00e9phone absent"}
+            </span>
+            <span>{formatRelativeTime(order.createdAt)}</span>
+          </div>
         </div>
-        <div
-          className={cn(
-            "flex flex-col items-end gap-2 flex-shrink-0",
-            isDone && "text-ink/80",
-          )}
-        >
+        <div className="flex flex-col items-end gap-2 flex-shrink-0">
           <span className="font-mono text-[15px] font-bold leading-none text-right">
             {formatAmountCompact(total)}
           </span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
             <PaymentPill status={order.paymentStatus} />
             <StatusBadge status={status} />
           </div>
@@ -106,7 +98,7 @@ function PaymentPill({
   if (status === "paid") {
     return (
       <span className="px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none bg-accent text-base">
-        Payé
+        {"Pay\u00e9"}
       </span>
     );
   }
@@ -120,11 +112,10 @@ function PaymentPill({
   if (status === "failed") {
     return (
       <span className="px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-accent text-accent">
-        Échec
+        {"\u00c9chec"}
       </span>
     );
   }
-  // unpaid → cash on arrival
   return (
     <span className="px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-outline text-ink/50">
       Sur place
@@ -140,8 +131,8 @@ function OrderTypeBadge({
   tableNumber: string | null;
 }) {
   const label = dineIn
-    ? `Sur place${tableNumber ? ` · T${tableNumber}` : ""}`
-    : "À emporter";
+    ? `Sur Place${tableNumber ? ` / T${tableNumber}` : ""}`
+    : "\u00c0 Emporter";
   return (
     <span className="bg-ink text-base text-[10px] uppercase font-mono px-1.5 py-0.5 leading-none">
       {label}
@@ -150,215 +141,199 @@ function OrderTypeBadge({
 }
 
 function OrderDetail({ order }: { order: OrderWithItems }) {
-  const status = order.status as OrderStatus;
-  return (
-    <div className="bg-black/[0.01] border-t border-outline px-6 py-5 flex flex-col gap-4">
-      <ul className="flex flex-col gap-1.5">
-        {order.items.map((item) => (
-          <li
-            key={item.id}
-            className="flex justify-between gap-4 font-mono text-[13px] leading-snug"
-          >
-            <span>
-              <span className="font-bold">{item.quantity}×</span>{" "}
-              {item.product?.name ?? "Article supprimé"}
-            </span>
-            <span className="text-ink/70 whitespace-nowrap">
-              {formatAmount(item.subtotal)}
-            </span>
-          </li>
-        ))}
-      </ul>
+  const status = order.status as OrderLifecycleStatus;
+  const isDineIn = order.type === "dine_in";
 
-      <div className="flex flex-col gap-1 font-mono text-[12px] uppercase tracking-widest">
-        <div className="flex gap-2">
-          <span className="text-ink/40">Tél</span>
-          <span className="text-ink/80">
-            {order.customerPhone ?? "—"}
-          </span>
-        </div>
+  return (
+    <div className="bg-black/[0.01] border-t border-outline px-6 py-5 flex flex-col gap-5">
+      <section className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3 font-mono text-[12px] uppercase tracking-widest">
+        <DetailPair label="Client" value={order.customerName} />
+        <DetailPair label={"T\u00e9l"} value={order.customerPhone ?? "-"} />
+        <DetailPair label="Type" value={isDineIn ? "Sur Place" : "\u00c0 Emporter"} />
+        {isDineIn ? (
+          <DetailPair label="Table" value={order.tableNumber ?? "-"} />
+        ) : null}
         {order.notes ? (
-          <p className="font-sans normal-case tracking-normal text-[13px] text-ink/50 mt-2 leading-snug">
+          <p className="min-[420px]:col-span-2 font-sans normal-case tracking-normal text-[13px] text-ink/60 leading-snug border-t border-outline pt-3">
             {order.notes}
           </p>
         ) : null}
+      </section>
+
+      <ul className="flex flex-col gap-3">
+        {order.items.map((item) => (
+          <OrderLineItem key={item.id} item={item} />
+        ))}
+      </ul>
+
+      <div className="border-t-2 border-ink pt-4 flex justify-between items-center font-mono font-bold uppercase tracking-widest text-[13px]">
+        <span>Total</span>
+        <span>{formatAmount(Number(order.total))}</span>
       </div>
 
-      {status !== "completed" ? (
-        <div className="flex justify-end">
-          <OrderActionButton orderId={order.id} status={status} />
-        </div>
+      {!isTerminalOrderStatus(status) ? (
+        <OrderActions orderId={order.id} status={status} />
       ) : null}
     </div>
   );
 }
 
-function OrderActionButton({
+function DetailPair({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-ink/40">{label}</span>
+      <span className="text-ink/80 truncate">{value}</span>
+    </div>
+  );
+}
+
+function OrderLineItem({ item }: { item: OrderWithItems["items"][number] }) {
+  const parsed = parseOrderItemOptions(item.optionsJson);
+
+  return (
+    <li className="border border-outline p-3 flex flex-col gap-2">
+      <div className="flex justify-between gap-4">
+        <span className="font-sans text-[14px] leading-snug font-bold min-w-0">
+          {item.product?.name ?? "Article supprim\u00e9"}{" "}
+          <span className="font-mono text-ink/50">x{item.quantity}</span>
+        </span>
+        <span className="font-mono text-[12px] text-ink/60 whitespace-nowrap">
+          {formatAmount(Number(item.unitPrice))}
+        </span>
+      </div>
+
+      {parsed.variantName ? (
+        <p className="font-mono text-[11px] uppercase tracking-widest text-ink/55 leading-snug">
+          Variante : {parsed.variantName}
+        </p>
+      ) : null}
+      {parsed.options.map((option) => (
+        <p
+          key={option.optionName}
+          className="font-mono text-[11px] uppercase tracking-widest text-ink/55 leading-snug"
+        >
+          {option.optionName} :{" "}
+          {option.values
+            .map((value) =>
+              value.priceAddition > 0
+                ? `${value.valueName} (+${formatAmount(value.priceAddition)})`
+                : value.valueName,
+            )
+            .join(", ")}
+        </p>
+      ))}
+
+      <div className="flex justify-end font-mono text-[12px] font-bold text-ink">
+        {formatAmount(Number(item.subtotal))}
+      </div>
+    </li>
+  );
+}
+
+function OrderActions({
   orderId,
   status,
 }: {
   orderId: string;
-  status: OrderStatus;
+  status: OrderLifecycleStatus;
 }) {
   const [pending, startTransition] = useTransition();
-  const isConfirmStep = status === "pending";
-  const label = isConfirmStep ? "Confirmer" : "Terminer";
-  const colorClass = isConfirmStep
-    ? "bg-ink text-base hover:bg-accent"
-    : "bg-accent text-base hover:bg-ink";
+  const action = PRIMARY_ORDER_ACTIONS[status];
 
-  const run = () => {
+  const runPrimary = () => {
+    if (!action) return;
     startTransition(async () => {
-      if (isConfirmStep) {
-        await confirmOrder(orderId);
-      } else {
-        await completeOrder(orderId);
-      }
+      const result = await transitionOrderStatus(orderId, action.next);
+      if (result.status === "error") window.alert(result.message);
+    });
+  };
+
+  const runCancel = () => {
+    if (!window.confirm("Annuler cette commande ?")) return;
+    startTransition(async () => {
+      const result = await cancelOrder(orderId);
+      if (result.status === "error") window.alert(result.message);
     });
   };
 
   return (
-    <button
-      type="button"
-      onClick={run}
-      disabled={pending}
-      className={cn(
-        "px-5 py-3 font-mono font-bold uppercase tracking-widest text-[12px] transition-colors border-2 border-transparent focus:outline-none focus:border-ink focus:ring-4 focus:ring-accent/20 disabled:opacity-60 disabled:cursor-not-allowed",
-        colorClass,
-      )}
-    >
-      {pending ? "…" : label}
-    </button>
+    <div className="flex flex-col min-[420px]:flex-row justify-end gap-2">
+      {action ? (
+        <button
+          type="button"
+          onClick={runPrimary}
+          disabled={pending}
+          className="px-5 py-3 font-mono font-bold uppercase tracking-widest text-[12px] transition-colors border-2 border-ink bg-ink text-base hover:bg-accent hover:text-base focus:outline-none focus:ring-4 focus:ring-accent/20 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {pending ? "..." : action.label}
+        </button>
+      ) : null}
+      <button
+        type="button"
+        onClick={runCancel}
+        disabled={pending}
+        className="px-5 py-3 font-mono font-bold uppercase tracking-widest text-[12px] transition-colors border-2 border-accent text-accent bg-base hover:bg-accent hover:text-base focus:outline-none focus:ring-4 focus:ring-accent/20 disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        Annuler
+      </button>
+    </div>
   );
 }
 
 type OrdersBoardProps = {
-  pending: OrderWithItems[];
-  confirmed: OrderWithItems[];
-  completed: OrderWithItems[];
+  orders: OrderWithItems[];
 };
 
-export function OrdersBoard({
-  pending,
-  confirmed,
-  completed,
-}: OrdersBoardProps) {
+export function OrdersBoard({ orders }: OrdersBoardProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const toggle = (id: string) =>
     setExpandedId((curr) => (curr === id ? null : id));
 
-  const totalCount = pending.length + confirmed.length + completed.length;
-  if (totalCount === 0) {
+  if (orders.length === 0) {
     return (
-      <div className="px-6 py-20 flex flex-col items-center text-center gap-6">
+      <div className="px-6 py-20 flex flex-col items-center text-center gap-4">
         <div className="w-12 h-12 border-2 border-ink flex items-center justify-center">
           <div className="w-3 h-3 bg-accent" />
         </div>
-        <div className="flex flex-col gap-2 max-w-[320px]">
-          <p className="font-sans text-[15px] text-ink font-bold">
-            Aucune commande pour le moment
-          </p>
-          <p className="font-sans text-sm text-ink/60 leading-snug">
-            Partagez votre QR code pour recevoir des commandes !
-          </p>
-        </div>
-        <Link
-          href="/home"
-          className="bg-ink text-base px-6 py-3 font-mono font-bold uppercase tracking-widest text-[12px] hover:bg-accent transition-colors border-2 border-ink focus:outline-none focus:ring-4 focus:ring-accent/20"
-        >
-          Voir mon QR code →
-        </Link>
+        <p className="font-mono text-[12px] uppercase tracking-widest text-ink/50 font-bold">
+          Aucune commande pour le moment
+        </p>
       </div>
     );
   }
 
   return (
-    <>
-      <Section
-        index={1}
-        title="En attente"
-        accent
-        orders={pending}
-        expandedId={expandedId}
-        onToggle={toggle}
-        emptyLabel="Aucune commande en attente"
-      />
-      <Section
-        index={2}
-        title="Confirmées"
-        orders={confirmed}
-        expandedId={expandedId}
-        onToggle={toggle}
-        emptyLabel="Aucune commande confirmée"
-      />
-      <Section
-        index={3}
-        title="Terminées"
-        orders={completed}
-        expandedId={expandedId}
-        onToggle={toggle}
-        emptyLabel="Aucune commande terminée"
-        muted
-      />
-    </>
+    <div className="flex flex-col">
+      {orders.map((order) => (
+        <OrderRow
+          key={order.id}
+          order={order}
+          expanded={expandedId === order.id}
+          onToggle={() => toggle(order.id)}
+        />
+      ))}
+    </div>
   );
 }
 
-function Section({
-  index,
-  title,
-  orders,
-  expandedId,
-  onToggle,
-  emptyLabel,
-  accent = false,
-  muted = false,
-}: {
-  index: number;
-  title: string;
-  orders: OrderWithItems[];
-  expandedId: string | null;
-  onToggle: (id: string) => void;
-  emptyLabel: string;
-  accent?: boolean;
-  muted?: boolean;
-}) {
-  const padded = String(index).padStart(2, "0");
-  return (
-    <section className="border-b-4 border-outline">
-      <div
-        className={cn(
-          "px-6 py-6 border-b border-outline bg-base/50 flex items-center justify-between",
-          accent && "bg-accent/[0.02]",
-        )}
-      >
-        <h2
-          className={cn(
-            "font-mono font-bold text-lg uppercase tracking-widest",
-            accent ? "text-accent" : "text-ink/40",
-          )}
-        >
-          {padded} / {title}
-        </h2>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-ink/50 font-bold">
-          {orders.length}
-        </span>
-      </div>
-      {orders.length === 0 ? (
-        <p className="px-6 py-5 font-sans text-sm text-ink/40">{emptyLabel}</p>
-      ) : (
-        <div className="flex flex-col">
-          {orders.map((order) => (
-            <OrderRow
-              key={order.id}
-              order={order}
-              expanded={expandedId === order.id}
-              onToggle={() => onToggle(order.id)}
-              muted={muted}
-            />
-          ))}
-        </div>
-      )}
-    </section>
-  );
+function getBarColor(status: OrderStatus): string {
+  if (status === "pending" || status === "preparing") return "bg-accent";
+  if (status === "completed" || status === "cancelled") return "bg-outline";
+  return "bg-ink";
+}
+
+function shortOrderId(id: string): string {
+  return id.replace(/-/g, "").slice(0, 8).toUpperCase();
+}
+
+function formatRelativeTime(input: Date | string): string {
+  const date = typeof input === "string" ? new Date(input) : input;
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.max(0, Math.floor(diffMs / 60_000));
+  if (diffMinutes < 1) return "\u00e0 l'instant";
+  if (diffMinutes < 60) return `il y a ${diffMinutes} min`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `il y a ${diffHours} h`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `il y a ${diffDays} j`;
 }

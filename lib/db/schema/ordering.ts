@@ -24,6 +24,8 @@ export const orderTypeEnum = pgEnum("order_type", [
 export const orderStatusEnum = pgEnum("order_status", [
   "pending",
   "confirmed",
+  "preparing",
+  "ready",
   "completed",
   "cancelled",
 ]);
