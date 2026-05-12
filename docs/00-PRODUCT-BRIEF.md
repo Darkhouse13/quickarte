@@ -1,10 +1,12 @@
 # Quickarte — Founding Product Brief
 
 ## Mission
-Build a premium, minimalist, mobile-first commerce operating system for independent Moroccan boulangeries, cafés, and salons de thé in Casablanca, Rabat, Marrakech, and Tangier.
+Build a premium, minimalist, mobile-first commerce operating system for independent Moroccan fast-food restaurants and cafés in Casablanca, Rabat, Marrakech, and Tangier.
 
 ## Context
-Morocco's urban food merchants are digitizing from the outside in: Instagram drives discovery, WhatsApp handles pre-orders, QR codes are familiar after COVID, and many owner-operated shops still run their daily operation through a patchwork of legacy POS, spreadsheets, paper notes, and unbranded online-menu builders. Feadys is the primary direct competitor reference; the wider competitive set is still thin and uneven.
+Morocco's urban food merchants are digitizing from the outside in: Instagram drives discovery, WhatsApp handles pre-orders, QR codes are familiar after COVID, and many owner-operated shops still run their daily operation through a patchwork of phone calls, legacy POS, spreadsheets, paper notes, and unbranded online-menu builders. Feadys is the primary direct competitor reference; the wider competitive set is still thin and uneven.
+
+Fast-food restaurants and cafés are the right wedge because they have a visible customer journey, high repeat traffic, and immediate operational pain around menus, order capture, and loyalty. French tacos, shawarmas, pizzas, kebabs, patata asada, paninis, burgers, fries, petits déjeuners, snacks, pâtisseries, coffee, and tea all fit the same need: a branded storefront and operating workspace that is simple enough to run from a phone. French tacos and shawarmas are heavily configured at order time, so product options and variants must be first-class in the ordering experience, not an afterthought.
 
 The wedge is not to become a payments processor or a full POS replacement. The wedge is one opinionated, beautifully designed tool that lets a merchant publish a branded menu, capture orders, manage loyalty, and understand the week without stitching together ad-hoc tools.
 
@@ -24,10 +26,10 @@ Clean, boxy, sharp brutalist aesthetic. Premium, calm, sharp, minimal, architect
 Visual inspiration: Linear × Vercel × Stripe × Notion — adapted to independent food merchants.
 
 ## Core User
-Non-technical, owner-operated small business (boulangerie, café, brunch spot, salon de thé). Runs the counter and the back office from the same phone. Rarely sits at a desk.
+Non-technical, owner-operated fast-food restaurant owner or café manager. Runs the counter, order flow, catalog, and back office from the same phone. Rarely sits at a desk, and needs the system to work during service without becoming another screen to manage.
 
 ## Primary Direction
-Start with independent boulangeries, cafés, brunch spots, and salons de thé in Casablanca, Rabat, Marrakech, and Tangier as the wedge. Expand to adjacent food categories (traiteurs, juice bars, concept cafés, specialty grocery) once the wedge is locked.
+Start with independent fast-food restaurants and cafés in Casablanca, Rabat, Marrakech, and Tangier as the wedge. Expand to adjacent independent restaurant formats once the pilot proves the operating loop.
 
 ## Product Principles
 - Create before configure
@@ -45,6 +47,7 @@ Start with independent boulangeries, cafés, brunch spots, and salons de thé in
 - Digital menu / storefront (MAD)
 - QR menu page
 - Online ordering + checkout for order capture only
+- Product options & variants (size / sauces / toppings / meat choice) — first-class in the customer-facing ordering flow
 - "À régler sur place" as the only payment path
 - Reservation request or table ordering
 - Simple branded mini website

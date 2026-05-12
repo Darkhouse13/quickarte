@@ -4,7 +4,7 @@
 
 Quickarte is sold as a set of independently priced modules. A merchant only pays for what they turn on. This is both a pricing advantage (lower effective price vs. bundled incumbents) and a product constraint (each module must stand on its own; no module may hard-depend on another unrelated module).
 
-Concretely: a boulangerie that only wants a QR menu pays for `menu_qr` and nothing else. A brunch café that wants the full stack subscribes to all four. The UI, the manual activation process, and the backend all reflect this reality.
+Concretely: a fast-food restaurant that only wants a QR menu, or a small café that only wants Menu+QR and Loyalty, pays only for the relevant modules. A café that wants the full stack subscribes to all four. The UI, the manual activation process, and the backend all reflect this reality.
 
 ---
 
