@@ -14,12 +14,9 @@ import { orders, reservations } from "./ordering";
 import { promoCodes } from "./growth";
 
 export const businessTypeEnum = pgEnum("business_type", [
-  "boulangerie",
   "restaurant",
   "cafe",
-  "hotel",
-  "retail",
-  "other",
+  "autre",
 ]);
 
 export const businesses = pgTable("businesses", {

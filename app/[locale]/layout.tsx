@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     default: "Quickarte",
     template: "%s",
   },
-  description: "Commerce premium pour boulangeries, cafés et brunchs.",
+  description: "Commerce premium pour restaurants et cafés.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],

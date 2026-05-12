@@ -13,6 +13,11 @@
     "settings": "Paramètres",
     "signOut": "Déconnexion"
   },
+  "businessTypes": {
+    "restaurant": "Restaurant",
+    "cafe": "Café",
+    "autre": "Autre"
+  },
   "status": {
     "pending": "En attente",
     "confirmed": "Confirmée",

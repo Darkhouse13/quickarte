@@ -131,7 +131,7 @@ quickarte/
 - `businesses` — id, owner_id, name, slug, type (restaurant|cafe|autre), logo, cover, currency (default MAD), timezone (default Africa/Casablanca), locale (default fr-MA), created_at
 - `business_settings` — business_id, ordering_enabled, reservations_enabled, etc.
 
-Schema migration to drop the `boulangerie` and `brunch` values from the type enum is part of the boulangerie-drop work; this doc describes the target state, not the migration.
+Migration `0009` implements this target enum and remaps legacy values into the remaining target set.
 
 ### Catalog
 - `categories` — id, business_id, name, position, visible

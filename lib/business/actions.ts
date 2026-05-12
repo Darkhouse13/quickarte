@@ -13,11 +13,9 @@ import { provisionDefaultEntitlements } from "@/lib/entitlements/defaults";
 import { isValidSlug } from "@/lib/utils/slug";
 
 const BUSINESS_TYPES = [
-  "boulangerie",
   "restaurant",
   "cafe",
-  "hotel",
-  "other",
+  "autre",
 ] as const;
 
 const createBusinessSchema = z.object({
@@ -124,19 +122,9 @@ export async function createBusinessAction(
 }
 
 const ALL_BUSINESS_TYPES = [
-  "boulangerie",
-  "cafe",
   "restaurant",
-  "hotel",
-  "retail",
-  "other",
-] as const;
-
-const SELECTABLE_BUSINESS_TYPES = [
-  "boulangerie",
   "cafe",
-  "restaurant",
-  "other",
+  "autre",
 ] as const;
 
 const updateBusinessProfileSchema = z.object({
@@ -169,17 +157,6 @@ export async function updateBusinessProfile(
     };
   }
   const data = parsed.data;
-
-  const isSelectable = (
-    SELECTABLE_BUSINESS_TYPES as readonly string[]
-  ).includes(data.type);
-  if (!isSelectable && data.type !== business.type) {
-    return {
-      ok: false,
-      error: "Type non autorisé",
-      fieldErrors: { type: ["Type non autorisé"] },
-    };
-  }
 
   await db
     .update(businesses)

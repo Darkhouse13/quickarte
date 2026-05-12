@@ -130,7 +130,7 @@ export function LandingPage() {
         <div className="qk-hero-grid grid grid-cols-1 gap-12 md:gap-12 items-center">
           <div>
             <h1 className="qk-hero-title font-sans font-black text-5xl md:text-6xl xl:text-7xl tracking-tight leading-[0.95]">
-              Le système de commerce des boulangeries et cafés qui se respectent.
+              Le système de commerce des restaurants et cafés qui se respectent.
             </h1>
             <p className="qk-hero-sub mt-6 md:mt-8 font-sans text-lg md:text-xl text-ink/60 leading-relaxed max-w-[560px]">
               Menu, commandes, fidélité, analyses. Quatre modules, un abonnement, zéro commission.

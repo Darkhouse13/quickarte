@@ -11,67 +11,12 @@ type DefaultCategory = {
 };
 type DefaultMenu = { categories: DefaultCategory[] };
 
-type BusinessType = "boulangerie" | "cafe" | "restaurant" | "hotel" | "other";
+type BusinessType = "restaurant" | "cafe" | "autre";
 
 export const DEFAULT_MENUS: Record<BusinessType, DefaultMenu | null> = {
-  boulangerie: {
-    categories: [
-      {
-        name: "Viennoiseries",
-        order: 0,
-        items: [
-          { name: "Croissant", priceEUR: 1.3 },
-          { name: "Pain au chocolat", priceEUR: 1.4 },
-          { name: "Chausson aux pommes", priceEUR: 2.2 },
-          { name: "Brioche", priceEUR: 3.5 },
-        ],
-      },
-      {
-        name: "Pains",
-        order: 1,
-        items: [
-          { name: "Baguette tradition", priceEUR: 1.5 },
-          { name: "Baguette classique", priceEUR: 1.1 },
-          { name: "Pain de campagne", priceEUR: 4.5 },
-          { name: "Pain complet", priceEUR: 4.0 },
-        ],
-      },
-      {
-        name: "Pâtisseries",
-        order: 2,
-        items: [
-          { name: "Éclair au chocolat", priceEUR: 3.5 },
-          { name: "Tarte aux fruits", priceEUR: 4.0 },
-          { name: "Mille-feuille", priceEUR: 4.0 },
-          { name: "Flan pâtissier", priceEUR: 3.0 },
-        ],
-      },
-      {
-        name: "Boissons",
-        order: 3,
-        items: [
-          { name: "Café expresso", priceEUR: 1.5 },
-          { name: "Café allongé", priceEUR: 1.8 },
-          { name: "Thé", priceEUR: 2.5 },
-          { name: "Chocolat chaud", priceEUR: 3.0 },
-        ],
-      },
-      {
-        name: "Sandwichs & en-cas",
-        order: 4,
-        items: [
-          { name: "Jambon beurre", priceEUR: 4.5 },
-          { name: "Poulet crudités", priceEUR: 5.5 },
-          { name: "Sandwich au thon", priceEUR: 5.0 },
-          { name: "Quiche lorraine", priceEUR: 4.0 },
-        ],
-      },
-    ],
-  },
-  cafe: null,
   restaurant: null,
-  hotel: null,
-  other: null,
+  cafe: null,
+  autre: null,
 };
 
 type Executor = Pick<typeof db, "query" | "insert">;

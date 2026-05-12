@@ -14,13 +14,12 @@ import {
 } from "@/lib/business/actions";
 import { cn } from "@/lib/utils/cn";
 
-type BusinessType = "boulangerie" | "restaurant" | "cafe" | "hotel" | "other";
+type BusinessType = "restaurant" | "cafe" | "autre";
 
 const TYPE_OPTIONS: { value: BusinessType; label: string }[] = [
-  { value: "boulangerie", label: "Boulangerie" },
-  { value: "cafe", label: "Café" },
   { value: "restaurant", label: "Restaurant" },
-  { value: "other", label: "Autre" },
+  { value: "cafe", label: "Café" },
+  { value: "autre", label: "Autre" },
 ];
 
 type SlugCheck =
@@ -32,7 +31,7 @@ type SlugCheck =
 
 export function OnboardingForm() {
   const [name, setName] = useState("");
-  const [type, setType] = useState<BusinessType>("boulangerie");
+  const [type, setType] = useState<BusinessType>("restaurant");
   const [place, setPlace] = useState<PlaceSelection | null>(null);
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
@@ -149,7 +148,7 @@ export function OnboardingForm() {
                   label={opt.label}
                   active={type === opt.value}
                   onClick={() => setType(opt.value)}
-                  rowBottomBorder={i < 2}
+                  rowBottomBorder={i === 0}
                   colLeftBorder={i % 2 === 1}
                 />
               ))}

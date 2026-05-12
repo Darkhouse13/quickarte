@@ -1939,7 +1939,7 @@
       "name": "business_type",
       "schema": "public",
       "values": [
-        "boulangerie",
+        "boulanger\u0069e",
         "restaurant",
         "cafe",
         "hotel",

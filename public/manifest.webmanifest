@@ -1,7 +1,7 @@
 {
   "name": "Quickarte",
   "short_name": "Quickarte",
-  "description": "Le système de commerce des boulangeries et cafés.",
+  "description": "Le système de commerce des restaurants et cafés.",
   "start_url": "/fr/home",
   "scope": "/",
   "display": "standalone",

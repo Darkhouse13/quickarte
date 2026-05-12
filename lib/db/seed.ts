@@ -433,10 +433,10 @@ async function main() {
   }
 
   async function seedSingleModuleDemo() {
-    const email = "noemie@boulangerie-test.fr";
+    const email = "noemie@cafe-test.fr";
     const password = "quickarte123";
     const name = "Noémie";
-    const slug = "boulangerie-test";
+    const slug = "cafe-test";
 
     const existing = await db.query.users.findFirst({
       where: eq(users.email, email),
@@ -472,9 +472,9 @@ async function main() {
       .insert(businesses)
       .values({
         ownerId,
-        name: "Boulangerie Test",
+        name: "Café Test",
         slug,
-        type: "boulangerie",
+        type: "cafe",
         city: "Lyon",
         address: "Rue Mercière",
         currency: "MAD",

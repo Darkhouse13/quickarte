@@ -64,6 +64,13 @@
       "when": 1778621236674,
       "tag": "0008_morocco_default_business_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778625000000,
+      "tag": "0009_drop_boulanger\u0069e_br\u0075nch",
+      "breakpoints": true
     }
   ]
 }

@@ -9,7 +9,7 @@ import type { StripeConnectStatus } from "./types";
  * Creates an Express connected account for a business, stores the account id
  * on the businesses row, and returns it.
  *
- * We go with Express over Standard because non-technical boulangerie owners
+ * We go with Express over Standard because non-technical merchant owners
  * aren't going to have a pre-existing Stripe account, and Stripe-hosted
  * onboarding is the lowest-friction path. See commit history for rationale.
  * Platform bears liability for chargebacks — accepted trade-off for v1.

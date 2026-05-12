@@ -4,29 +4,19 @@ import { useState, useTransition } from "react";
 import { updateBusinessProfile } from "@/lib/business/actions";
 import { cn } from "@/lib/utils/cn";
 
-type SelectableType = "boulangerie" | "cafe" | "restaurant" | "other";
-type StoredType =
-  | "boulangerie"
-  | "cafe"
-  | "restaurant"
-  | "hotel"
-  | "retail"
-  | "other";
+type SelectableType = "restaurant" | "cafe" | "autre";
+type StoredType = SelectableType;
 
 const SELECTABLE_OPTIONS: { value: SelectableType; label: string }[] = [
-  { value: "boulangerie", label: "Boulangerie" },
-  { value: "cafe", label: "Café" },
   { value: "restaurant", label: "Restaurant" },
-  { value: "other", label: "Autre" },
+  { value: "cafe", label: "Café" },
+  { value: "autre", label: "Autre" },
 ];
 
 const TYPE_LABEL: Record<StoredType, string> = {
-  boulangerie: "Boulangerie",
-  cafe: "Café",
   restaurant: "Restaurant",
-  hotel: "Hôtel",
-  retail: "Commerce",
-  other: "Autre",
+  cafe: "Café",
+  autre: "Autre",
 };
 
 type Props = {
@@ -44,19 +34,14 @@ export function BusinessProfileSection({
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(name);
-  const isSelectable = (t: StoredType): t is SelectableType =>
-    t === "boulangerie" || t === "cafe" || t === "restaurant" || t === "other";
-  const initialTile: SelectableType | null = isSelectable(type) ? type : null;
-  const [selectedTile, setSelectedTile] = useState<SelectableType | null>(
-    initialTile,
-  );
+  const [selectedTile, setSelectedTile] = useState<SelectableType>(type);
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const enterEdit = () => {
     setDraftName(name);
-    setSelectedTile(initialTile);
+    setSelectedTile(type);
     setError(null);
     setNameError(null);
     setEditing(true);
@@ -76,11 +61,10 @@ export function BusinessProfileSection({
       setNameError("Nom trop court");
       return;
     }
-    const nextType: StoredType = selectedTile ?? type;
     startTransition(async () => {
       const res = await updateBusinessProfile({
         name: trimmed,
-        type: nextType,
+        type: selectedTile,
       });
       if (!res.ok) {
         setError(res.error);
@@ -92,7 +76,6 @@ export function BusinessProfileSection({
   };
 
   const typeLabel = TYPE_LABEL[type] ?? type;
-  const showCurrentTypeChip = !isSelectable(type);
 
   return (
     <dl className="flex flex-col divide-y divide-outline">
@@ -134,11 +117,6 @@ export function BusinessProfileSection({
         <dd className="flex-1 flex flex-col items-end gap-2">
           {editing ? (
             <>
-              {showCurrentTypeChip ? (
-                <span className="font-mono text-[10px] uppercase tracking-widest text-ink/60 border border-outline px-1.5 py-0.5">
-                  Type actuel : {typeLabel}
-                </span>
-              ) : null}
               <div className="w-full max-w-[260px] grid grid-cols-2 gap-0 border-2 border-ink">
                 {SELECTABLE_OPTIONS.map((opt, i) => (
                   <button
@@ -152,7 +130,7 @@ export function BusinessProfileSection({
                         ? "bg-ink text-base"
                         : "bg-base text-ink hover:bg-black/[0.03]",
                       i % 2 === 1 && "border-l-2 border-ink",
-                      i < 2 && "border-b-2 border-ink",
+                      i === 0 && "border-b-2 border-ink",
                     )}
                   >
                     <span className="font-bold uppercase tracking-widest text-[12px]">
