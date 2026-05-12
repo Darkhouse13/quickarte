@@ -62,6 +62,7 @@ export const productVariants = pgTable("product_variants", {
     .references(() => products.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   priceOverride: numeric("price_override", { precision: 10, scale: 2 }),
+  position: integer("position").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -78,6 +79,8 @@ export const productOptions = pgTable("product_options", {
   name: text("name").notNull(),
   type: optionTypeEnum("type").notNull().default("single_select"),
   required: boolean("required").notNull().default(false),
+  position: integer("position").notNull().default(0),
+  maxSelections: integer("max_selections"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -95,6 +98,7 @@ export const optionValues = pgTable("option_values", {
   priceAddition: numeric("price_addition", { precision: 10, scale: 2 })
     .notNull()
     .default("0"),
+  position: integer("position").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

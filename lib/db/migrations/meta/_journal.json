@@ -69,7 +69,14 @@
       "idx": 9,
       "version": "7",
       "when": 1778625000000,
-      "tag": "0009_drop_boulanger\u0069e_br\u0075nch",
+      "tag": "0009_drop_boulangerie_brunch",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1778625421133,
+      "tag": "0010_options_variants_positions_and_limits",
       "breakpoints": true
     }
   ]

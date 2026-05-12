@@ -14,6 +14,11 @@ import { FormTextarea } from "@/components/ui/form-textarea";
 import { FormSelect } from "@/components/ui/form-select";
 import { FormToggle } from "@/components/ui/form-toggle";
 import { BottomBar } from "@/components/ui/bottom-bar";
+import {
+  ProductCustomizationsSection,
+  type ProductCustomizationOption,
+  type ProductCustomizationVariant,
+} from "@/components/merchant/product-customizations-section";
 import { cn } from "@/lib/utils/cn";
 import {
   createProduct,
@@ -39,9 +44,16 @@ type ExistingProduct = {
 type Props = {
   categories: Category[];
   product?: ExistingProduct;
+  variants?: ProductCustomizationVariant[];
+  options?: ProductCustomizationOption[];
 };
 
-export function NewItemForm({ categories: initialCategories, product }: Props) {
+export function NewItemForm({
+  categories: initialCategories,
+  product,
+  variants = [],
+  options = [],
+}: Props) {
   const isEdit = Boolean(product);
   const router = useRouter();
   const nameRef = useRef<HTMLInputElement>(null);
@@ -161,7 +173,6 @@ export function NewItemForm({ categories: initialCategories, product }: Props) {
             name="name"
             label="Nom"
             type="text"
-            placeholder="Pain au chocolat"
             defaultValue={product?.name ?? ""}
             required
           />
@@ -176,7 +187,6 @@ export function NewItemForm({ categories: initialCategories, product }: Props) {
             label="Description"
             hint="Optionnel"
             rows={2}
-            placeholder="Viennoiserie pur beurre, feuilletée à la main"
             defaultValue={product?.description ?? ""}
           />
         </div>
@@ -194,7 +204,6 @@ export function NewItemForm({ categories: initialCategories, product }: Props) {
             type="number"
             step="0.01"
             min="0"
-            placeholder="1,80"
             suffix="MAD"
             defaultValue={
               product?.price ? Number(product.price).toString() : ""
@@ -210,7 +219,6 @@ export function NewItemForm({ categories: initialCategories, product }: Props) {
           <div>
             <FormSelect
               label="Catégorie"
-              placeholder="Sélectionner une catégorie..."
               options={categories.map((c) => ({ value: c.id, label: c.name }))}
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
@@ -249,8 +257,7 @@ export function NewItemForm({ categories: initialCategories, product }: Props) {
                         handleCreateCategory();
                       }
                     }}
-                    placeholder="Ex: Desserts"
-                    className="flex-1 bg-transparent border border-outline px-3 py-2.5 text-sm text-ink placeholder:text-ink/30 focus:outline-none focus:border-ink focus:bg-white transition-colors"
+                    className="flex-1 bg-transparent border border-outline px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-ink focus:bg-white transition-colors"
                     autoFocus
                   />
                   <button
@@ -323,20 +330,14 @@ export function NewItemForm({ categories: initialCategories, product }: Props) {
         <div
           className={cn(
             "overflow-hidden transition-all",
-            optionsOpen ? "max-h-[800px] mt-6" : "max-h-0",
+            optionsOpen ? "max-h-[4000px] mt-6" : "max-h-0",
           )}
         >
-          <div className="flex flex-col gap-6 border border-outline p-4">
-            <p className="font-sans text-sm text-ink/60">
-              Ajoutez des tailles, suppléments ou choix pour cet article.
-            </p>
-            <button
-              type="button"
-              className="self-start font-mono text-xs font-bold uppercase tracking-widest text-accent hover:text-ink transition-colors"
-            >
-              + Ajouter une option
-            </button>
-          </div>
+          <ProductCustomizationsSection
+            productId={product?.id}
+            variants={variants}
+            options={options}
+          />
         </div>
 
         {errorMessage ? (
