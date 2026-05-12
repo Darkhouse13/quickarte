@@ -36,6 +36,8 @@ import {
   getTopLoyalCustomers,
 } from "@/lib/analytics/queries";
 import type { AnalyticsRange } from "@/lib/analytics/types";
+import { countProductsByBusinessId } from "@/lib/catalog/queries";
+import { shouldShowGettingStarted } from "@/lib/merchant/getting-started";
 import { formatShortDayLabelFR } from "@/lib/analytics/format";
 
 export const dynamic = "force-dynamic";
@@ -212,12 +214,17 @@ async function TodayBody({
   hasOrdering: boolean;
   hasLoyalty: boolean;
 }) {
-  const [stats, recentOrders] = await Promise.all([
+  const [stats, recentOrders, catalogItemCount] = await Promise.all([
     safeCall("getOrderStats", () => getOrderStats(businessId), ZERO_STATS),
     safeCall(
       "getRecentOrders",
       () => getRecentOrders(businessId, 5),
       [] as Awaited<ReturnType<typeof getRecentOrders>>,
+    ),
+    safeCall(
+      "countProductsByBusinessId",
+      () => countProductsByBusinessId(businessId),
+      0,
     ),
   ]);
 
@@ -231,11 +238,11 @@ async function TodayBody({
 
   const revenueLabel = formatAmount(stats.todayRevenue);
 
-  const isGettingStarted =
-    stats.todayOrderCount === 0 &&
-    stats.todayRevenue === 0 &&
-    stats.pendingCount === 0 &&
-    recentOrders.length === 0;
+  const isGettingStarted = shouldShowGettingStarted(
+    stats,
+    recentOrders.length,
+    catalogItemCount,
+  );
 
   if (isGettingStarted) {
     return (

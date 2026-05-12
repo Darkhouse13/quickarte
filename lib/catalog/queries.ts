@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   businesses,
@@ -119,4 +119,14 @@ export async function getAllProductsByBusinessId(
     },
   });
   return rows;
+}
+
+export async function countProductsByBusinessId(
+  businessId: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(products)
+    .where(eq(products.businessId, businessId));
+  return row?.count ?? 0;
 }

@@ -13,6 +13,7 @@ import {
   type CreateBusinessInput,
 } from "@/lib/business/actions";
 import { cn } from "@/lib/utils/cn";
+import { clientEnv } from "@/lib/env.client";
 
 type BusinessType = "restaurant" | "cafe" | "autre";
 
@@ -28,6 +29,10 @@ type SlugCheck =
   | { state: "ok" }
   | { state: "taken" }
   | { state: "invalid" };
+
+const publicHost = new URL(
+  clientEnv.NEXT_PUBLIC_CANONICAL_URL || clientEnv.NEXT_PUBLIC_APP_URL,
+).host;
 
 export function OnboardingForm() {
   const [name, setName] = useState("");
@@ -184,7 +189,7 @@ export function OnboardingForm() {
             required
           />
           <p className="font-mono text-[11px] text-ink/50">
-            quickarte.app/
+            {publicHost}/
             <span className="text-ink font-bold">{slug || "—"}</span>
           </p>
           <SlugStatus check={slugCheck} />

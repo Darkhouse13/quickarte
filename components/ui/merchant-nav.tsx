@@ -3,16 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  House,
   BookOpen,
+  House,
   ReceiptText,
   Star,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import {
+  getMerchantTabs,
+  type MerchantTabId,
+} from "@/lib/navigation/merchant-tabs";
 
 type MerchantTab = {
-  id: string;
+  id: MerchantTabId;
   label: string;
   href: string;
   icon: LucideIcon;
@@ -29,36 +33,19 @@ type MerchantNavProps = {
 export function MerchantNav({
   className,
   pendingOrders = 0,
-  showOrders = false,
-  showLoyalty = false,
 }: MerchantNavProps) {
   const pathname = usePathname();
 
-  const tabs: MerchantTab[] = [
-    { id: "home", label: "Accueil", href: "/home", icon: House },
-    { id: "catalog", label: "Catalogue", href: "/catalog", icon: BookOpen },
-    ...(showOrders
-      ? [
-          {
-            id: "orders",
-            label: "Commandes",
-            href: "/orders",
-            icon: ReceiptText,
-            hasNotification: pendingOrders > 0,
-          } satisfies MerchantTab,
-        ]
-      : []),
-    ...(showLoyalty
-      ? [
-          {
-            id: "loyalty",
-            label: "Fidélité",
-            href: "/loyalty",
-            icon: Star,
-          } satisfies MerchantTab,
-        ]
-      : []),
-  ];
+  const icons: Record<MerchantTabId, LucideIcon> = {
+    home: House,
+    catalog: BookOpen,
+    orders: ReceiptText,
+    loyalty: Star,
+  };
+  const tabs: MerchantTab[] = getMerchantTabs(pendingOrders).map((tab) => ({
+    ...tab,
+    icon: icons[tab.id],
+  }));
 
   return (
     <nav

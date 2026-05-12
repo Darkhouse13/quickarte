@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test lib/utils/currency.test.ts lib/utils/phone.test.ts lib/catalog/customizations.test.ts lib/ordering/cart-store.test.ts lib/ordering/actions.test.ts lib/ordering/status.test.ts lib/ordering/options-summary.test.ts",
+    "test": "tsx --test lib/utils/currency.test.ts lib/utils/phone.test.ts lib/catalog/customizations.test.ts lib/merchant/getting-started.test.ts lib/navigation/merchant-tabs.test.ts lib/ordering/cart-store.test.ts lib/ordering/actions.test.ts lib/ordering/status.test.ts lib/ordering/options-summary.test.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
