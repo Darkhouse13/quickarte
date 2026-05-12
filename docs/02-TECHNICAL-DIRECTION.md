@@ -18,8 +18,8 @@
 - **Cloudinary** — image uploads for menu items (free tier)
 
 ### Infrastructure
-- **Coolify** (self-hosted on Hetzner VPS) — Docker-based PaaS, no vendor lock-in, ~€10/mo total
-- **Hetzner** VPS (CX22 or CAX11) — EU datacenter (Falkenstein/Nuremberg — RGPD-friendly), excellent price/perf, ARM option available
+- **Coolify** (self-hosted on Hetzner VPS) — Docker-based PaaS, no vendor lock-in, predictable pilot cost
+- **Hetzner** VPS (CX22 or CAX11) — EU datacenter (Falkenstein/Nuremberg), excellent price/perf, ARM option available
 - **Cloudflare** as DNS + CDN layer in front (free tier) — caching, DDoS, edge performance
 - **PostgreSQL** running on the same VPS via Coolify (Docker) — no managed DB cost in MVP
 - **Resend** for transactional email
@@ -27,22 +27,22 @@
 - **Next.js `standalone` output** — the deploy artifact is the standalone bundle inside a minimal Docker image; confirmed as the canonical build target for Coolify.
 
 ### Payments
-- **Stripe as primary, both sides of the marketplace:**
-  - **Stripe Connect** for customer → merchant order payments (Express or Standard accounts; onboarding inline from the merchant dashboard). Handles cards, Apple Pay, Google Pay, and SEPA where relevant.
-  - **Stripe Billing** for merchant → Quickarte subscriptions. Each billable module (`menu_qr`, `online_ordering`, `loyalty`, `analytics`) maps to a Stripe Product with one or more Prices; a merchant's active subscription items drive their entitlements (see `04-PRICING-AND-ENTITLEMENTS.md`).
-- **Cash orders** remain supported from day 1 — some boulangeries will run QR/online for menu display only and keep payment at the counter.
-- **Payment abstraction layer** in code so checkout, refunds, and subscription sync don't hard-bind to Stripe's SDK shape. This is cheap insurance; we're not building a second provider in v1.
-- **Future fallbacks (not v1):** Mollie (broader EU acquirer coverage, simpler pricing for some merchant profiles) and Lyra/PayZen (strong French acquirer relationships, useful for merchants with an existing BNP/CA/Société Générale contract). We will NOT build or maintain a second provider in v1 — the abstraction exists to keep the option open, not to ship two integrations.
+Quickarte does NOT process customer-to-merchant payments. The application captures orders only; merchants settle payment with customers out-of-band (cash, in-store card terminal, bank transfer). The order confirmation displays "À régler sur place" as the only payment path.
 
-#### RGPD / GDPR Readiness (v1 Requirements)
-France-native means RGPD-native. These are v1 blockers, not nice-to-haves:
-- **Cookie and tracker consent** — a compliant banner (CNIL-aligned) before any non-essential cookie or third-party script fires. Analytics, marketing pixels, and session replay are all gated on explicit consent.
+The `payment_accounts`, `payment_intents`, and `billing_subscriptions` tables remain in the schema as dead weight — no v1 code reads or writes them, and no migration drops them, leaving the door open for future optionality.
+
+Subscription billing is also out of product. Module entitlements are granted manually via `npm run entitlements -- grant` per the deployment runbook. Pricing is hand-set per deal during the pilot phase.
+
+### Loi 09-08 / CNDP Readiness (v1 Requirements)
+Morocco-native means Loi 09-08 / CNDP-aware. These are v1 blockers, not nice-to-haves:
+- **Cookie and tracker consent** — a compliant banner before any non-essential cookie or third-party script fires. Analytics, marketing pixels, and session replay are all gated on explicit consent.
 - **No third-party trackers without consent** — no Google Analytics, Meta Pixel, or similar loaded by default. First-party, server-side analytics for our own product telemetry.
 - **Data export endpoint** — a merchant (and, where applicable, an end customer) can request a machine-readable export of their data. Initial implementation can be a signed, async job that emails a download link.
-- **Data deletion endpoint** — a merchant can trigger account and business deletion; we hard-delete or anonymize per a documented retention policy. Orders are retained for legal accounting minima (10 years in France) in an anonymized form.
+- **Data deletion endpoint** — a merchant can trigger account and business deletion; we hard-delete or anonymize per a documented retention policy. Orders are retained or anonymized according to documented Moroccan legal/accounting obligations.
 - **Privacy policy page** — public `/politique-de-confidentialite` page, kept in sync with what we actually do. Linked from footer and signup.
-- **DPA / sub-processor list** — a short, public list of sub-processors (Stripe, Cloudinary, Resend, Hetzner, Cloudflare) with their roles and locations.
-- **Data residency** — all primary data in EU (Hetzner Germany). No US-region services in the hot path.
+- **Sub-processor list** — a short, public list of sub-processors (Cloudinary, Resend, Hetzner, Cloudflare) with their roles and locations.
+- **Data residency** — all primary data in EU, hosted at Hetzner Germany.
+- **Pilot hosting posture** — Hetzner Germany is acceptable for pilot under current Loi 09-08 reading; review with counsel before scaling beyond pilot.
 
 #### Hosting Decision Rationale
 We evaluated two alternatives to Vercel:
@@ -51,8 +51,8 @@ We evaluated two alternatives to Vercel:
 - Standard Node.js runtime — zero compatibility concerns with Next.js 15 standalone output
 - PostgreSQL runs alongside the app on the same server — no external DB cost
 - Docker-based — trivial to add Redis, MinIO, or any service later
-- Full control, no vendor lock-in, predictable cost (~€10/mo)
-- EU data residency by default — RGPD-aligned
+- Full control, no vendor lock-in, predictable cost
+- EU data residency by default — aligned with the Loi 09-08 / CNDP pilot posture
 - Cloudflare CDN in front gives us edge caching for free
 
 **Cloudflare Workers (rejected for now):**
@@ -71,7 +71,7 @@ Single Next.js app with clear internal module boundaries — NOT a monorepo with
 - Database schema mirrors domain modules: identity, business, catalog, ordering, payments, entitlements, loyalty, analytics
 - API layer is thin — server actions for mutations, server components for reads
 - Feature flags via simple env vars (no feature flag service in v1)
-- i18n scaffolding in place (next-intl), French as the only active locale for v1
+- i18n scaffolding in place (next-intl), fr-MA active; ar retained on disk for a later RTL-audit sprint, not surfaced in UI
 - Entitlement checks are centralized — no ad-hoc `if (business.hasLoyalty)` in components; a single `hasEntitlement(businessId, module)` helper
 
 ## Project Structure
@@ -103,12 +103,12 @@ quickarte/
 │   ├── business/            # Business profiles, settings
 │   ├── catalog/             # Products, categories, variants
 │   ├── ordering/            # Orders, carts, checkout
-│   ├── payments/            # Stripe Connect + Billing, payment abstraction
-│   ├── entitlements/        # Module entitlement checks, sync from Stripe Billing
+│   ├── payments/            # Schema-only payment tables; no v1 reads/writes
+│   ├── entitlements/        # Module entitlement checks, manual grants
 │   ├── loyalty/             # Points / stamp card logic
 │   ├── analytics/           # Aggregations, charts data
 │   └── utils/
-├── messages/                # i18n translation files (fr active; ar retained but unused — to be removed in a later pass)
+├── messages/                # fr-MA active; ar retained on disk for a later RTL-audit sprint, not surfaced in UI
 │   ├── fr.json
 │   └── ar.json
 ├── public/
@@ -128,7 +128,7 @@ quickarte/
 - `sessions` — standard auth sessions
 
 ### Business
-- `businesses` — id, owner_id, name, slug, type (boulangerie|cafe|brunch|restaurant), logo, cover, currency (default EUR), timezone, locale (default fr-FR), created_at
+- `businesses` — id, owner_id, name, slug, type (boulangerie|cafe|brunch|restaurant), logo, cover, currency (default MAD), timezone (default Africa/Casablanca), locale (default fr-MA), created_at
 - `business_settings` — business_id, ordering_enabled, reservations_enabled, etc.
 
 ### Catalog
@@ -143,13 +143,17 @@ quickarte/
 - `order_items` — id, order_id, product_id, quantity, unit_price, options_json, subtotal
 - `reservations` — id, business_id, customer_name, customer_phone, date, time, party_size, status, notes
 
-### Payments (Stripe-backed)
+### Payments (schema-only)
 - `payment_accounts` — business_id, stripe_account_id, charges_enabled, payouts_enabled, onboarding_status
 - `payment_intents` — id, order_id, stripe_payment_intent_id, status, amount, currency
+
+These tables remain in the schema for future optionality. No v1 code reads or writes them.
 
 ### Entitlements & Billing
 - `business_entitlements` — business_id, module, enabled, plan_tier, valid_until (see `04-PRICING-AND-ENTITLEMENTS.md` for the full model)
 - `billing_subscriptions` — business_id, stripe_customer_id, stripe_subscription_id, status
+
+`billing_subscriptions` remains in the schema for future optionality. No v1 code reads or writes it.
 
 ### Loyalty
 - `loyalty_programs` — business_id, type (points|stamp), config_json, active
@@ -162,8 +166,8 @@ quickarte/
 - `promo_codes` — id, business_id, code, discount_type, discount_value, active, expires_at
 
 ## What We Defer
-- Second payment provider (Mollie / Lyra) — abstraction only in v1
+- Customer-facing payment processing — no provider integrated, not on roadmap
 - Customer accounts (ordering is guest-first in v1; loyalty keys off phone number)
 - Staff/roles beyond owner (single-user in v1)
 - Multi-location (data model supports it via business_id, but UI is single-business)
-- Arabic locale — retained on disk to avoid breaking the build now; will be removed in a dedicated pass
+- ar-MA — scaffolding retained on disk, surfaced post-pilot after an RTL audit

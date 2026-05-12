@@ -1,13 +1,15 @@
 # Quickarte — Founding Product Brief
 
 ## Mission
-Build a premium, minimalist, mobile-first commerce operating system for independent French boulangeries, cafés, and brunch spots — significantly better designed and easier to use than Sunday, Zelty, Innovorder, Lightspeed, or Square.
+Build a premium, minimalist, mobile-first commerce operating system for independent Moroccan boulangeries, cafés, and salons de thé in Casablanca, Rabat, Marrakech, and Tangier.
 
 ## Context
-France has a dense, mature market of independent food merchants served by a crowded field of incumbents — Sunday (QR pay-at-table), Zelty and Innovorder (full POS suites), Lightspeed (enterprise POS), Square (hardware-first). Each solves part of the problem, but the tools feel dated, configuration-heavy, or bolted together. Owner-operated boulangeries and small cafés in Paris, Lyon, and Bordeaux routinely juggle two or three of them — a POS for the counter, a separate QR tool for tables, a third product for online orders — and still lack a calm, coherent view of their business. The wedge: one opinionated, beautifully designed tool that replaces the patchwork.
+Morocco's urban food merchants are digitizing from the outside in: Instagram drives discovery, WhatsApp handles pre-orders, QR codes are familiar after COVID, and many owner-operated shops still run their daily operation through a patchwork of legacy POS, spreadsheets, paper notes, and unbranded online-menu builders. Feadys is the primary direct competitor reference; the wider competitive set is still thin and uneven.
+
+The wedge is not to become a payments processor or a full POS replacement. The wedge is one opinionated, beautifully designed tool that lets a merchant publish a branded menu, capture orders, manage loyalty, and understand the week without stitching together ad-hoc tools.
 
 ## Thesis
-We do NOT want "another Zelty" or "another Sunday." We want a radically simpler, more premium, better-designed product — operationally powerful under the hood, with a calm, minimal frontend that a non-technical owner can run from a phone.
+We do NOT want "another legacy POS" or "another generic QR menu builder." We want a radically simpler, more premium, better-designed product — operationally powerful under the hood, with a calm, minimal frontend that a non-technical owner can run from a phone.
 
 ## Philosophy
 - Powerful backend, very simple UI
@@ -19,13 +21,13 @@ We do NOT want "another Zelty" or "another Sunday." We want a radically simpler,
 ## Design Taste
 Clean, boxy, sharp brutalist aesthetic. Premium, calm, sharp, minimal, architectural, modern, high-contrast, serious. NOT playful, bubbly, generic SaaS, cluttered, or cheap POS.
 
-Visual inspiration: Linear × Vercel × Stripe × Notion — adapted to independent French food merchants.
+Visual inspiration: Linear × Vercel × Stripe × Notion — adapted to independent food merchants.
 
 ## Core User
-Non-technical, owner-operated small business (boulangerie, café, brunch spot). Runs the counter and the back office from the same phone. Rarely sits at a desk.
+Non-technical, owner-operated small business (boulangerie, café, brunch spot, salon de thé). Runs the counter and the back office from the same phone. Rarely sits at a desk.
 
 ## Primary Direction
-Start with independent boulangeries and small cafés/brunch spots in Paris, Lyon, and Bordeaux as the wedge. Expand to adjacent food categories (cavistes, traiteurs, salons de thé) once the wedge is locked.
+Start with independent boulangeries, cafés, brunch spots, and salons de thé in Casablanca, Rabat, Marrakech, and Tangier as the wedge. Expand to adjacent food categories (traiteurs, juice bars, concept cafés, specialty grocery) once the wedge is locked.
 
 ## Product Principles
 - Create before configure
@@ -40,9 +42,10 @@ Start with independent boulangeries and small cafés/brunch spots in Paris, Lyon
 ## MVP Scope
 
 ### Customer-facing
-- Digital menu / storefront (EUR)
+- Digital menu / storefront (MAD)
 - QR menu page
-- Online ordering + checkout
+- Online ordering + checkout for order capture only
+- "À régler sur place" as the only payment path
 - Reservation request or table ordering
 - Simple branded mini website
 
@@ -52,8 +55,8 @@ Start with independent boulangeries and small cafés/brunch spots in Paris, Lyon
 - Order manager
 - Analytics (sales by day/week, top items, order mix, peak hours — real module, not a toy chart)
 - Loyalty (points or stamp card — simple, opinionated, owner-operated-friendly)
-- Per-tenant feature entitlements — each merchant subscribes to a custom subset of modules (Menu+QR / Online Ordering / Loyalty / Analytics). Pricing is modular; UI reacts to the merchant's active entitlements.
-- Payment configuration
+- Per-tenant feature entitlements — each merchant subscribes to a custom subset of modules (Menu+QR / Online Ordering / Loyalty / Analytics). Pricing is modular, MAD-denominated when locked; UI reacts to the merchant's active entitlements.
+- Out-of-band settlement instructions
 - Business profile
 - QR generation
 - Basic promotions
@@ -63,12 +66,14 @@ Start with independent boulangeries and small cafés/brunch spots in Paris, Lyon
 - Role-based access
 - Audit logs
 - Event tracking
-- Localization-ready architecture (French only for v1)
+- Localization-ready architecture (French (fr-MA) active; Arabic scaffolding retained, surfaced post-pilot)
+- Timezone default: Africa/Casablanca
 
 ## v1 Non-Goals
+- Customer-facing payment processing
 - Advanced CRM (segments, campaigns, lifecycle automation)
 - Marketplace / aggregator features
-- Deep accounting (journal entries, VAT declarations, export to accountant suites)
+- Deep accounting (journal entries, TVA declarations, export to accountant suites)
 - Marketing automation (email/SMS drip, behavioral triggers)
 - Multi-warehouse / inventory across locations
 - Giant website builder
