@@ -22,14 +22,14 @@ A one-time checklist. Follow top to bottom. Any step where the exact Coolify UI 
 10. **Production VAPID keys.** On your laptop: `npm run push -- vapid`. This prints two base64 strings. Paste into Coolify env vars as `VAPID_PRIVATE_KEY` and `NEXT_PUBLIC_VAPID_PUBLIC_KEY`. Also set `VAPID_SUBJECT=mailto:contact@quickarte.fr` (or whatever address Firefox push services should contact). **Do NOT reuse dev VAPID keys** — rotating them invalidates every subscribed device, so production must start with its own pair.
 11. **Resend domain verification.** resend.com → Domains → Add `quickarte.fr`. Resend displays three DNS records (SPF `TXT`, DKIM `CNAME`, DMARC `TXT`). Add them to Cloudflare DNS. Wait for Resend to flip the domain to "Verified" (usually < 10 min; can take an hour). Set `RESEND_API_KEY=re_…` and `CONTACT_EMAIL_FROM="Quickarte <bonjour@quickarte.fr>"` in Coolify env.
 12. **Sentry project.** sentry.io → + New Project → Platform: **Next.js** → Team. Name: `quickarte`. Copy the DSN. Set both `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN` to the same DSN. Then sentry.io → User Settings → Auth Tokens → Create New Token with scopes `project:releases` + `org:read`. Paste as `SENTRY_AUTH_TOKEN` in Coolify env (build-time only — source-map upload). Also set `SENTRY_ORG` and `SENTRY_PROJECT` env vars to your Sentry org slug and `quickarte` respectively.
-13. **Post-deploy migration hook.** Coolify → Quickarte app service → `{TODO: confirm exact Coolify UI path for post-deployment commands}` → set command: `npm run db:migrate`. If this Coolify version does not expose post-deploy hooks, fallback: after each deploy, SSH into the box and run `docker exec -it <quickarte-container> npm run db:migrate`. Document that in the `{TODO:}` marker so you remember.
+13. **Post-deploy migration hook.** Coolify → Quickarte app service → Post-deployment commands → set command: `npm run db:migrate:prod`. This uses the runtime Drizzle migrator shipped in the standalone image, so production does not need `drizzle-kit`. If this Coolify version does not expose post-deploy hooks, fallback: after each deploy, SSH into the box and run `docker exec -it <quickarte-container> npm run db:migrate:prod`.
 14. **First deploy.** Coolify → Quickarte app service → Deploy. Watch the build log for:
     - Docker build succeeds (no `lib/env.ts` validation error — all required prod vars set)
     - `next build` succeeds
     - Service starts; `curl https://quickarte.fr/api/health` returns `{"status":"ok","db":"connected",…}` within 2 minutes
     - `https://quickarte.fr/` renders the landing page
     - `https://quickarte.fr/fr/login` renders the login form
-15. **Run initial migrations.** If step 13 is wired, they already ran. Otherwise: `docker exec -it <quickarte-container> npm run db:migrate`. Verify migration file execution via `SELECT * FROM drizzle.__drizzle_migrations;`.
+15. **Run initial migrations.** If step 13 is wired, they already ran. Otherwise: `docker exec -it <quickarte-container> npm run db:migrate:prod`. Verify migration file execution via `SELECT * FROM drizzle.__drizzle_migrations;`.
 16. **Seed the first real merchant manually.** Do **not** run `npm run db:seed` in production — that inserts demo data. See [Seeding the first merchant](#seeding-the-first-merchant) below for the real flow.
 17. **Uptime monitor.** Follow README → "Uptime monitoring" to create the BetterStack monitor against `https://quickarte.fr/api/health`.
 
@@ -39,10 +39,23 @@ A one-time checklist. Follow top to bottom. Any step where the exact Coolify UI 
 
 - Push to `main`.
 - Coolify auto-deploys (or click Deploy in UI if auto-deploy is off).
-- Post-deploy hook runs `npm run db:migrate` automatically.
+- Post-deploy hook runs `npm run db:migrate:prod` automatically.
 - Within 2 minutes: `curl -fsS https://quickarte.fr/api/health | jq` — confirm `"status":"ok"` and a reasonable `latencyMs`.
 - Spot-check `https://quickarte.fr/` (landing) and `https://quickarte.fr/fr/login` (app entry) render without console errors.
 - Open sentry.io → Issues and scan the last 10 minutes. New unresolved issues during the window immediately following a deploy usually belong to that deploy.
+
+---
+
+## First-time activation of the migration hook
+
+Use this once before enabling the Coolify post-deploy migration hook on an existing production database where migrations were previously applied manually.
+
+1. SSH to the box.
+2. Connect to Quickarte's Postgres: `docker exec -it <quickarte-postgres-container> psql -U quickarte -d quickarte`.
+3. Capture the current migration journal: `SELECT id, hash, created_at FROM drizzle.__drizzle_migrations ORDER BY id;`.
+4. If rows are missing for migrations that are already physically applied, paste and run [scripts/prod-migration-backfill.sql](../scripts/prod-migration-backfill.sql) in the same `psql` session.
+5. Verify the journal has one row for every migration in `lib/db/migrations/`: `SELECT id, hash, created_at FROM drizzle.__drizzle_migrations ORDER BY id;`.
+6. Only after the journal is complete, enable the Coolify post-deploy command: `npm run db:migrate:prod`.
 
 ---
 
