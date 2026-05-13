@@ -8,9 +8,11 @@ import {
 } from "./schemas";
 import {
   areRequiredOptionsSatisfied,
+  getEffectiveMaxSelections,
   getDisplayableOptions,
   optionHasValues,
 } from "./option-guards";
+import { validateVariantOptionMaxSelectionsOverrides } from "./variant-option-overrides";
 
 test("variant input accepts a named price override", () => {
   const parsed = variantInputSchema.safeParse({
@@ -133,9 +135,120 @@ test("required option gating rejects exposed empty required options defensively"
   );
 });
 
+test("option gating rejects displayed multi-select selections above effective max", () => {
+  const option = {
+    id: "11111111-1111-4111-8111-111111111111",
+    required: false,
+    type: "multi_select" as const,
+    maxSelections: 2,
+    values: [{ id: "a" }, { id: "b" }, { id: "c" }],
+  };
+
+  assert.equal(
+    areRequiredOptionsSatisfied([option], { [option.id]: ["a", "b", "c"] }),
+    false,
+  );
+});
+
+
 test("per-option save validation requires at least one value", () => {
   assert.equal(optionHasValues({ values: [] }), false);
   assert.equal(optionHasValues({ values: [{ id: "small" }] }), true);
+});
+
+test("effective max selections prefers variant override, then base, then unlimited", () => {
+  const option = {
+    id: "11111111-1111-4111-8111-111111111111",
+    maxSelections: 3,
+  };
+
+  assert.equal(
+    getEffectiveMaxSelections(option, {
+      optionMaxSelectionsOverrides: { [option.id]: 1 },
+    }),
+    1,
+  );
+  assert.equal(getEffectiveMaxSelections(option, null), 3);
+  assert.equal(
+    getEffectiveMaxSelections(option, {
+      optionMaxSelectionsOverrides: {
+        "33333333-3333-4333-8333-333333333333": 1,
+      },
+    }),
+    3,
+  );
+  assert.equal(
+    getEffectiveMaxSelections({ ...option, maxSelections: null }, {
+      optionMaxSelectionsOverrides: {},
+    }),
+    Infinity,
+  );
+});
+
+test("variant max override validation rejects unknown options", () => {
+  const result = validateVariantOptionMaxSelectionsOverrides(
+    { "11111111-1111-4111-8111-111111111111": 1 },
+    [],
+    "22222222-2222-4222-8222-222222222222",
+  );
+
+  assert.equal(result.status, "error");
+});
+
+test("variant max override validation rejects single-select options", () => {
+  const productId = "22222222-2222-4222-8222-222222222222";
+  const optionId = "11111111-1111-4111-8111-111111111111";
+  const result = validateVariantOptionMaxSelectionsOverrides(
+    { [optionId]: 1 },
+    [{ id: optionId, productId, type: "single_select" }],
+    productId,
+  );
+
+  assert.equal(result.status, "error");
+});
+
+test("variant max override validation rejects options from another product", () => {
+  const optionId = "11111111-1111-4111-8111-111111111111";
+  const result = validateVariantOptionMaxSelectionsOverrides(
+    { [optionId]: 1 },
+    [
+      {
+        id: optionId,
+        productId: "33333333-3333-4333-8333-333333333333",
+        type: "multi_select",
+      },
+    ],
+    "22222222-2222-4222-8222-222222222222",
+  );
+
+  assert.equal(result.status, "error");
+});
+
+test("variant max override validation rejects non-positive values", () => {
+  const productId = "22222222-2222-4222-8222-222222222222";
+  const optionId = "11111111-1111-4111-8111-111111111111";
+  const result = validateVariantOptionMaxSelectionsOverrides(
+    { [optionId]: 0 },
+    [{ id: optionId, productId, type: "multi_select" }],
+    productId,
+  );
+
+  assert.equal(result.status, "error");
+});
+
+test("variant max override validation accepts multi-select options from the same product", () => {
+  const productId = "22222222-2222-4222-8222-222222222222";
+  const optionId = "11111111-1111-4111-8111-111111111111";
+  const result = validateVariantOptionMaxSelectionsOverrides(
+    { [optionId]: 2 },
+    [{ id: optionId, productId, type: "multi_select" }],
+    productId,
+  );
+
+  assert.deepEqual(result, {
+    status: "success",
+    overrides: { [optionId]: 2 },
+  });
 });
 
 test.skip("variant CRUD round-trip requires live Postgres on DATABASE_URL");

@@ -53,6 +53,7 @@ export default async function EditCatalogItemPage({ params }: Props) {
       id: true,
       name: true,
       priceOverride: true,
+      optionMaxSelectionsOverrides: true,
       position: true,
     },
   });

@@ -26,6 +26,7 @@ export type ProductCustomizationVariant = {
   name: string;
   priceOverride: string | null;
   position: number;
+  optionMaxSelectionsOverrides: Record<string, number>;
 };
 
 export type ProductCustomizationOptionValue = {
@@ -51,7 +52,11 @@ type Props = {
   options: ProductCustomizationOption[];
 };
 
-type VariantFormState = { name: string; priceOverride: string };
+type VariantFormState = {
+  name: string;
+  priceOverride: string;
+  optionMaxSelectionsOverrides: Record<string, string>;
+};
 type OptionFormState = {
   name: string;
   type: "single_select" | "multi_select";
@@ -60,7 +65,11 @@ type OptionFormState = {
 };
 type ValueFormState = { name: string; priceAddition: string };
 
-const emptyVariant: VariantFormState = { name: "", priceOverride: "" };
+const emptyVariant: VariantFormState = {
+  name: "",
+  priceOverride: "",
+  optionMaxSelectionsOverrides: {},
+};
 const emptyOption: OptionFormState = {
   name: "",
   type: "single_select",
@@ -133,6 +142,8 @@ export function ProductCustomizationsSection({
           variantDraft.priceOverride.trim() === ""
             ? null
             : Number(variantDraft.priceOverride),
+        option_max_selections_overrides:
+          buildOptionMaxSelectionsOverrides(variantDraft),
       }),
     );
 
@@ -191,6 +202,7 @@ export function ProductCustomizationsSection({
           <VariantRow
             key={variant.id}
             variant={variant}
+            options={localOptions}
             editing={editingVariantId === variant.id}
             pending={isPending}
             first={index === 0}
@@ -207,6 +219,8 @@ export function ProductCustomizationsSection({
                     draft.priceOverride.trim() === ""
                       ? null
                       : Number(draft.priceOverride),
+                  option_max_selections_overrides:
+                    buildOptionMaxSelectionsOverrides(draft),
                 }),
               )
             }
@@ -218,6 +232,7 @@ export function ProductCustomizationsSection({
         {addingVariant ? (
           <VariantForm
             value={variantDraft}
+            options={localOptions}
             pending={isPending}
             onChange={setVariantDraft}
             onCancel={() => {
@@ -333,6 +348,7 @@ export function ProductCustomizationsSection({
 
 function VariantRow({
   variant,
+  options,
   editing,
   pending,
   first,
@@ -346,6 +362,7 @@ function VariantRow({
   onDeleteTarget,
 }: {
   variant: ProductCustomizationVariant;
+  options: ProductCustomizationOption[];
   editing: boolean;
   pending: boolean;
   first: boolean;
@@ -363,6 +380,9 @@ function VariantRow({
     priceOverride: variant.priceOverride
       ? Number(variant.priceOverride).toString()
       : "",
+    optionMaxSelectionsOverrides: stringifyOptionMaxSelectionsOverrides(
+      variant.optionMaxSelectionsOverrides,
+    ),
   });
 
   useEffect(() => {
@@ -371,6 +391,9 @@ function VariantRow({
       priceOverride: variant.priceOverride
         ? Number(variant.priceOverride).toString()
         : "",
+      optionMaxSelectionsOverrides: stringifyOptionMaxSelectionsOverrides(
+        variant.optionMaxSelectionsOverrides,
+      ),
     });
   }, [variant]);
 
@@ -378,6 +401,7 @@ function VariantRow({
     return (
       <VariantForm
         value={draft}
+        options={options}
         pending={pending}
         onChange={setDraft}
         onCancel={onCancel}
@@ -573,17 +597,23 @@ function OptionBlock({
 
 function VariantForm({
   value,
+  options,
   pending,
   onChange,
   onCancel,
   onSubmit,
 }: {
   value: VariantFormState;
+  options: ProductCustomizationOption[];
   pending: boolean;
   onChange: (value: VariantFormState) => void;
   onCancel: () => void;
   onSubmit: () => void;
 }) {
+  const multiSelectOptions = options.filter(
+    (option) => option.type === "multi_select",
+  );
+
   return (
     <div className="border border-outline p-3 flex flex-col gap-3">
       <TextField
@@ -597,6 +627,42 @@ function VariantForm({
         value={value.priceOverride}
         onChange={(priceOverride) => onChange({ ...value, priceOverride })}
       />
+      {multiSelectOptions.length ? (
+        <div className="border border-outline p-3 flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-ink">
+              Limites par option (facultatif)
+            </p>
+            <p className="font-sans text-sm leading-snug text-ink/60">
+              Pour chaque option multi-sélection, vous pouvez plafonner le
+              nombre de choix pour cette variante.
+            </p>
+          </div>
+          {multiSelectOptions.map((option) => (
+            <div key={option.id} className="flex flex-col gap-2">
+              <TextField
+                label={`Option «${option.name}» - max pour cette variante`}
+                type="number"
+                min={1}
+                step={1}
+                value={value.optionMaxSelectionsOverrides[option.id] ?? ""}
+                onChange={(maxSelections) =>
+                  onChange({
+                    ...value,
+                    optionMaxSelectionsOverrides: {
+                      ...value.optionMaxSelectionsOverrides,
+                      [option.id]: maxSelections,
+                    },
+                  })
+                }
+              />
+              <p className="font-mono text-[10px] uppercase tracking-widest text-ink/50">
+                Par défaut : {option.maxSelections ?? "illimité"}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : null}
       <FormButtons pending={pending} onCancel={onCancel} onSubmit={onSubmit} />
     </div>
   );
@@ -829,12 +895,14 @@ function TextField({
   onChange,
   type = "text",
   min,
+  step,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   type?: "text" | "number";
   min?: number;
+  step?: number;
 }) {
   return (
     <label className="flex flex-col gap-2">
@@ -844,7 +912,7 @@ function TextField({
       <input
         type={type}
         min={min}
-        step={type === "number" ? "0.01" : undefined}
+        step={step ?? (type === "number" ? "0.01" : undefined)}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full border border-outline px-3 py-2.5 bg-base text-sm text-ink focus:outline-none focus:border-ink focus:bg-white"
@@ -939,4 +1007,25 @@ function move<T>(items: T[], index: number, direction: -1 | 1): T[] | null {
   next[index] = target;
   next[nextIndex] = current;
   return next;
+}
+
+function stringifyOptionMaxSelectionsOverrides(
+  overrides: Record<string, number>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(overrides).map(([optionId, maxSelections]) => [
+      optionId,
+      String(maxSelections),
+    ]),
+  );
+}
+
+function buildOptionMaxSelectionsOverrides(
+  draft: VariantFormState,
+): Record<string, number> {
+  return Object.fromEntries(
+    Object.entries(draft.optionMaxSelectionsOverrides)
+      .filter(([, value]) => value.trim() !== "")
+      .map(([optionId, value]) => [optionId, Number(value)]),
+  );
 }

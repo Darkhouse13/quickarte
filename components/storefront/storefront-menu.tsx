@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { CategoryPills } from "@/components/ui/category-pills";
@@ -9,7 +9,9 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { useCartStore, type CartItem } from "@/lib/ordering/cart-store";
 import {
   areRequiredOptionsSatisfied,
+  getEffectiveMaxSelections,
   getDisplayableOptions,
+  trimSelectionsToEffectiveMax,
 } from "@/lib/catalog/option-guards";
 import type {
   MenuItem,
@@ -275,7 +277,10 @@ function ProductConfigurationSheet({
   onAdd: (line: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
 }) {
   const variants = item.variants ?? [];
-  const options = getDisplayableOptions(item.options ?? []);
+  const options = useMemo(
+    () => getDisplayableOptions(item.options ?? []),
+    [item.options],
+  );
   const [variantId, setVariantId] = useState<string | null>(
     variants[0]?.id ?? null,
   );
@@ -296,13 +301,18 @@ function ProductConfigurationSheet({
       );
     }, 0);
 
-  const requiredSatisfied = areRequiredOptionsSatisfied(options, selected);
+  const requiredSatisfied = areRequiredOptionsSatisfied(
+    options,
+    selected,
+    selectedVariant,
+  );
 
   const total = unitPrice * quantity;
 
   const selectValue = (option: MenuItemOption, value: MenuItemOptionValue) => {
     setSelected((prev) => {
       const current = prev[option.id] ?? [];
+      const effectiveMax = getEffectiveMaxSelections(option, selectedVariant);
       if (option.type === "single_select") {
         return { ...prev, [option.id]: [value.id] };
       }
@@ -312,12 +322,33 @@ function ProductConfigurationSheet({
           [option.id]: current.filter((id) => id !== value.id),
         };
       }
-      if (option.maxSelections && current.length >= option.maxSelections) {
+      if (current.length >= effectiveMax) {
         return prev;
       }
       return { ...prev, [option.id]: [...current, value.id] };
     });
   };
+
+  useEffect(() => {
+    setSelected((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const option of options) {
+        if (option.type !== "multi_select") continue;
+        const current = next[option.id] ?? [];
+        const trimmed = trimSelectionsToEffectiveMax(
+          current,
+          option,
+          selectedVariant,
+        );
+        if (trimmed.length !== current.length) {
+          next[option.id] = trimmed;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [options, selectedVariant]);
 
   const selectedOptionsSummary = options
     .map((option) => {
@@ -396,10 +427,13 @@ function ProductConfigurationSheet({
 
           {options.map((option) => {
             const selectedIds = selected[option.id] ?? [];
+            const effectiveMax = getEffectiveMaxSelections(
+              option,
+              selectedVariant,
+            );
             const capReached = Boolean(
               option.type === "multi_select" &&
-                option.maxSelections &&
-                selectedIds.length >= option.maxSelections,
+                selectedIds.length >= effectiveMax,
             );
             return (
               <section key={option.id}>
@@ -407,8 +441,9 @@ function ProductConfigurationSheet({
                   title={option.name}
                   required={option.required}
                   maxSelections={
-                    option.type === "multi_select"
-                      ? option.maxSelections
+                    option.type === "multi_select" &&
+                    Number.isFinite(effectiveMax)
+                      ? effectiveMax
                       : null
                   }
                 />

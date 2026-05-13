@@ -65,6 +65,7 @@ export default async function StorefrontPage({ params }: Props) {
           name: variant.name,
           priceOverride:
             variant.priceOverride == null ? null : Number(variant.priceOverride),
+          optionMaxSelectionsOverrides: variant.optionMaxSelectionsOverrides,
         })),
         options: product.options.map((option) => ({
           id: option.id,

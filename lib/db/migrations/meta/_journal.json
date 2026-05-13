@@ -85,6 +85,13 @@
       "when": 1778716800000,
       "tag": "0011_order_preparing_ready_statuses",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1778670668519,
+      "tag": "0012_variant_option_max_overrides",
+      "breakpoints": true
     }
   ]
 }

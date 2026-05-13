@@ -35,6 +35,7 @@ export type StorefrontProduct = Product & {
     id: string;
     name: string;
     priceOverride: string | null;
+    optionMaxSelectionsOverrides: Record<string, number>;
     position: number;
   }>;
   options: Array<{
@@ -74,6 +75,7 @@ export async function getMenuByBusinessId(
               id: true,
               name: true,
               priceOverride: true,
+              optionMaxSelectionsOverrides: true,
               position: true,
             },
           },

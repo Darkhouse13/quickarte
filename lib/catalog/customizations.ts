@@ -25,6 +25,10 @@ import {
   type UpdateVariantInput,
   type VariantInput,
 } from "./schemas";
+import {
+  validateVariantOptionMaxSelectionsOverrides,
+  type OverrideValidationOption,
+} from "./variant-option-overrides";
 
 export type CustomizationActionResult =
   | { status: "success" }
@@ -77,6 +81,15 @@ async function requireOwnedProductFromVariant(variantId: string) {
     columns: { id: true },
   });
   return { business, product: product ?? null, variant };
+}
+
+async function getProductOptionsForOverrideValidation(
+  productId: string,
+): Promise<OverrideValidationOption[]> {
+  return db.query.productOptions.findMany({
+    where: eq(productOptions.productId, productId),
+    columns: { id: true, productId: true, type: true },
+  });
 }
 
 async function requireOwnedProductFromOption(optionId: string) {
@@ -163,11 +176,20 @@ export async function createVariant(
       orderBy: [desc(productVariants.position)],
     }))?.position ?? -1) + 1;
 
+  const overrides = parsed.data.option_max_selections_overrides ?? {};
+  const overrideValidation = validateVariantOptionMaxSelectionsOverrides(
+    overrides,
+    await getProductOptionsForOverrideValidation(productId),
+    productId,
+  );
+  if (overrideValidation.status === "error") return overrideValidation;
+
   await db.insert(productVariants).values({
     productId,
     name: parsed.data.name,
     priceOverride: formatPrice(parsed.data.price_override),
     position,
+    optionMaxSelectionsOverrides: overrideValidation.overrides,
   });
 
   revalidateCatalog(productId, business.slug);
@@ -191,6 +213,18 @@ export async function updateVariant(
     await requireOwnedProductFromVariant(variantId);
   if (!product || !variant) return validationError("Variante introuvable");
 
+  const overrideValidation = hasOwn(
+    parsed.data,
+    "option_max_selections_overrides",
+  )
+    ? validateVariantOptionMaxSelectionsOverrides(
+        parsed.data.option_max_selections_overrides ?? {},
+        await getProductOptionsForOverrideValidation(variant.productId),
+        variant.productId,
+      )
+    : null;
+  if (overrideValidation?.status === "error") return overrideValidation;
+
   await db
     .update(productVariants)
     .set({
@@ -200,6 +234,9 @@ export async function updateVariant(
         : {}),
       ...(hasOwn(parsed.data, "position")
         ? { position: parsed.data.position }
+        : {}),
+      ...(overrideValidation
+        ? { optionMaxSelectionsOverrides: overrideValidation.overrides }
         : {}),
       updatedAt: new Date(),
     })

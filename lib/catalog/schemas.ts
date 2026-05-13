@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { optionMaxSelectionsOverridesSchema } from "./variant-option-overrides";
 
 export const createProductSchema = z.object({
   name: z.string().trim().min(1, "Le nom est requis"),
@@ -46,6 +47,7 @@ const optionalPositionSchema = z.coerce
 export const variantInputSchema = z.object({
   name: z.string().trim().min(1, "Le nom est requis").max(60, "Nom trop long"),
   price_override: priceValueSchema.nullish(),
+  option_max_selections_overrides: optionMaxSelectionsOverridesSchema.optional(),
   position: optionalPositionSchema,
 });
 

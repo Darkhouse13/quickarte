@@ -1,6 +1,7 @@
 import {
   boolean,
   integer,
+  jsonb,
   numeric,
   pgEnum,
   pgTable,
@@ -63,6 +64,10 @@ export const productVariants = pgTable("product_variants", {
   name: text("name").notNull(),
   priceOverride: numeric("price_override", { precision: 10, scale: 2 }),
   position: integer("position").notNull().default(0),
+  optionMaxSelectionsOverrides: jsonb("option_max_selections_overrides")
+    .$type<Record<string, number>>()
+    .notNull()
+    .default(sql`'{}'::jsonb`),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
