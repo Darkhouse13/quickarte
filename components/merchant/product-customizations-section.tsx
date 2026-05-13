@@ -18,6 +18,7 @@ import {
   updateVariant,
   type CustomizationActionResult,
 } from "@/lib/catalog/customizations";
+import { optionHasValues } from "@/lib/catalog/option-guards";
 import { cn } from "@/lib/utils/cn";
 
 export type ProductCustomizationVariant = {
@@ -487,6 +488,8 @@ function OptionBlock({
             onChange={setDraft}
             onCancel={onCancelEdit}
             onSubmit={() => onSave(draft)}
+            saveDisabled={!optionHasValues(option)}
+            saveHint="Ajoutez au moins une valeur."
           />
         </div>
       ) : (
@@ -605,12 +608,16 @@ function OptionForm({
   onChange,
   onCancel,
   onSubmit,
+  saveDisabled = false,
+  saveHint,
 }: {
   value: OptionFormState;
   pending: boolean;
   onChange: (value: OptionFormState) => void;
   onCancel: () => void;
   onSubmit: () => void;
+  saveDisabled?: boolean;
+  saveHint?: string;
 }) {
   return (
     <div className="border border-outline p-3 flex flex-col gap-3">
@@ -669,7 +676,13 @@ function OptionForm({
           onChange={(maxSelections) => onChange({ ...value, maxSelections })}
         />
       ) : null}
-      <FormButtons pending={pending} onCancel={onCancel} onSubmit={onSubmit} />
+      <FormButtons
+        pending={pending}
+        submitDisabled={saveDisabled}
+        submitHint={saveHint}
+        onCancel={onCancel}
+        onSubmit={onSubmit}
+      />
     </div>
   );
 }
@@ -842,31 +855,40 @@ function TextField({
 
 function FormButtons({
   pending,
+  submitDisabled = false,
+  submitHint,
   onCancel,
   onSubmit,
 }: {
   pending: boolean;
+  submitDisabled?: boolean;
+  submitHint?: string;
   onCancel: () => void;
   onSubmit: () => void;
 }) {
   return (
-    <div className="grid grid-cols-2 border border-ink">
-      <button
-        type="button"
-        disabled={pending}
-        onClick={onCancel}
-        className="py-2.5 border-r border-ink font-mono text-[10px] uppercase tracking-widest font-bold text-ink hover:bg-black/[0.03] disabled:opacity-60"
-      >
-        Annuler
-      </button>
-      <button
-        type="button"
-        disabled={pending}
-        onClick={onSubmit}
-        className="py-2.5 bg-ink text-base font-mono text-[10px] uppercase tracking-widest font-bold hover:bg-accent disabled:opacity-60"
-      >
-        Enregistrer
-      </button>
+    <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-2 border border-ink">
+        <button
+          type="button"
+          disabled={pending}
+          onClick={onCancel}
+          className="py-2.5 border-r border-ink font-mono text-[10px] uppercase tracking-widest font-bold text-ink hover:bg-black/[0.03] disabled:opacity-60"
+        >
+          Annuler
+        </button>
+        <button
+          type="button"
+          disabled={pending || submitDisabled}
+          onClick={onSubmit}
+          className="py-2.5 bg-ink text-base font-mono text-[10px] uppercase tracking-widest font-bold hover:bg-accent disabled:opacity-60"
+        >
+          Enregistrer
+        </button>
+      </div>
+      {submitDisabled && submitHint ? (
+        <p className="font-sans text-sm text-accent">{submitHint}</p>
+      ) : null}
     </div>
   );
 }

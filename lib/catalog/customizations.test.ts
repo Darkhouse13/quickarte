@@ -6,6 +6,11 @@ import {
   updateOptionInputSchema,
   variantInputSchema,
 } from "./schemas";
+import {
+  areRequiredOptionsSatisfied,
+  getDisplayableOptions,
+  optionHasValues,
+} from "./option-guards";
 
 test("variant input accepts a named price override", () => {
   const parsed = variantInputSchema.safeParse({
@@ -56,6 +61,81 @@ test("option value input rejects negative price additions", () => {
     price_addition: -5,
   });
   assert.equal(parsed.success, false);
+});
+
+test("storefront display options filter out empty option value lists", () => {
+  const displayable = getDisplayableOptions([
+    {
+      id: "empty-required",
+      name: "Sauces",
+      type: "multi_select" as const,
+      required: true,
+      maxSelections: 2,
+      values: [],
+    },
+    {
+      id: "filled-required",
+      name: "Pain",
+      type: "single_select" as const,
+      required: true,
+      maxSelections: null,
+      values: [{ id: "white", name: "Blanc", priceAddition: 0 }],
+    },
+  ]);
+
+  assert.deepEqual(
+    displayable.map((option) => option.id),
+    ["filled-required"],
+  );
+});
+
+test("required option gating only passes when displayed required options have a valid selection", () => {
+  const options = [
+    {
+      id: "sauce",
+      required: true,
+      type: "multi_select" as const,
+      values: [{ id: "harissa" }, { id: "mayo" }],
+    },
+    {
+      id: "legacy-empty",
+      required: false,
+      type: "single_select" as const,
+      values: [],
+    },
+  ];
+
+  assert.equal(areRequiredOptionsSatisfied(options, {}), false);
+  assert.equal(
+    areRequiredOptionsSatisfied(options, { sauce: ["unknown"] }),
+    false,
+  );
+  assert.equal(
+    areRequiredOptionsSatisfied(options, { sauce: ["harissa"] }),
+    true,
+  );
+});
+
+test("required option gating rejects exposed empty required options defensively", () => {
+  assert.equal(
+    areRequiredOptionsSatisfied(
+      [
+        {
+          id: "legacy-empty",
+          required: true,
+          type: "single_select",
+          values: [],
+        },
+      ],
+      { "legacy-empty": ["missing"] },
+    ),
+    false,
+  );
+});
+
+test("per-option save validation requires at least one value", () => {
+  assert.equal(optionHasValues({ values: [] }), false);
+  assert.equal(optionHasValues({ values: [{ id: "small" }] }), true);
 });
 
 test.skip("variant CRUD round-trip requires live Postgres on DATABASE_URL");

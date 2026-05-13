@@ -320,6 +320,14 @@ export async function updateOption(
     };
   }
 
+  const existingValue = await db.query.optionValues.findFirst({
+    where: eq(optionValues.optionId, optionId),
+    columns: { id: true },
+  });
+  if (!existingValue) {
+    return validationError("Ajoutez au moins une valeur.");
+  }
+
   await db
     .update(productOptions)
     .set({

@@ -7,6 +7,10 @@ import { CategoryPills } from "@/components/ui/category-pills";
 import { MenuItemCard } from "@/components/ui/menu-item-card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { useCartStore, type CartItem } from "@/lib/ordering/cart-store";
+import {
+  areRequiredOptionsSatisfied,
+  getDisplayableOptions,
+} from "@/lib/catalog/option-guards";
 import type {
   MenuItem,
   MenuItemOption,
@@ -246,7 +250,9 @@ export function StorefrontMenu({ business, locale }: Props) {
 }
 
 function hasCustomizations(item: MenuItem): boolean {
-  return Boolean(item.variants?.length || item.options?.length);
+  return Boolean(
+    item.variants?.length || getDisplayableOptions(item.options ?? []).length,
+  );
 }
 
 function getMenuPriceLabel(item: MenuItem): string {
@@ -269,7 +275,7 @@ function ProductConfigurationSheet({
   onAdd: (line: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
 }) {
   const variants = item.variants ?? [];
-  const options = item.options ?? [];
+  const options = getDisplayableOptions(item.options ?? []);
   const [variantId, setVariantId] = useState<string | null>(
     variants[0]?.id ?? null,
   );
@@ -290,12 +296,7 @@ function ProductConfigurationSheet({
       );
     }, 0);
 
-  const requiredSatisfied = options.every((option) => {
-    if (!option.required) return true;
-    const count = selected[option.id]?.length ?? 0;
-    if (option.type === "single_select") return count === 1;
-    return count >= 1;
-  });
+  const requiredSatisfied = areRequiredOptionsSatisfied(options, selected);
 
   const total = unitPrice * quantity;
 
