@@ -12,6 +12,7 @@ import {
   getDisplayableOptions,
   optionHasValues,
 } from "./option-guards";
+import { buildStorefrontFixture } from "./storefront-dto";
 import { validateVariantOptionMaxSelectionsOverrides } from "./variant-option-overrides";
 
 test("variant input accepts a named price override", () => {
@@ -178,6 +179,12 @@ test("effective max selections prefers variant override, then base, then unlimit
     3,
   );
   assert.equal(
+    getEffectiveMaxSelections(option, {
+      option_max_selections_overrides: { [option.id]: 2 },
+    }),
+    2,
+  );
+  assert.equal(
     getEffectiveMaxSelections({ ...option, maxSelections: null }, {
       optionMaxSelectionsOverrides: {},
     }),
@@ -249,6 +256,57 @@ test("variant max override validation accepts multi-select options from the same
     status: "success",
     overrides: { [optionId]: 2 },
   });
+});
+
+test("storefront DTO preserves variant option max selection overrides", () => {
+  const optionId = "11111111-1111-4111-8111-111111111111";
+  const fixture = buildStorefrontFixture(
+    {
+      slug: "tacos-test",
+      name: "Tacos Test",
+      city: "Casablanca",
+      address: "Maarif",
+    } as Parameters<typeof buildStorefrontFixture>[0],
+    [
+      {
+        id: "category-1",
+        name: "Tacos",
+        products: [
+          {
+            id: "product-1",
+            name: "Tacos",
+            description: null,
+            price: "40.00",
+            image: null,
+            variants: [
+              {
+                id: "variant-1",
+                name: "1 Viande",
+                priceOverride: "45.00",
+                position: 0,
+                optionMaxSelectionsOverrides: { [optionId]: 1 },
+              },
+            ],
+            options: [
+              {
+                id: optionId,
+                name: "Sauce",
+                type: "multi_select",
+                required: true,
+                maxSelections: 2,
+                position: 0,
+                values: [],
+              },
+            ],
+          },
+        ],
+      },
+    ] as unknown as Parameters<typeof buildStorefrontFixture>[1],
+  );
+
+  const variant = fixture.sections[0]!.items[0]!.variants![0]!;
+  assert.deepEqual(variant.optionMaxSelectionsOverrides, { [optionId]: 1 });
+  assert.deepEqual(variant.option_max_selections_overrides, { [optionId]: 1 });
 });
 
 test.skip("variant CRUD round-trip requires live Postgres on DATABASE_URL");

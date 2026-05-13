@@ -15,6 +15,7 @@ export type MenuItemVariant = {
   name: string;
   priceOverride: number | null;
   optionMaxSelectionsOverrides: Record<string, number>;
+  option_max_selections_overrides?: Record<string, number>;
 };
 
 export type MenuItemOptionValue = {

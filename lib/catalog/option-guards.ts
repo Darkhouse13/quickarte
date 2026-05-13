@@ -12,6 +12,7 @@ export type VariantOptionMaxSelectionsOverrides = Record<string, number>;
 
 export type VariantWithOptionMaxOverrides = {
   optionMaxSelectionsOverrides?: VariantOptionMaxSelectionsOverrides | null;
+  option_max_selections_overrides?: VariantOptionMaxSelectionsOverrides | null;
 };
 
 export function optionHasValues(option: { values: readonly unknown[] }): boolean {
@@ -54,6 +55,7 @@ export function getEffectiveMaxSelections(
 ): number {
   return (
     variant?.optionMaxSelectionsOverrides?.[option.id] ??
+    variant?.option_max_selections_overrides?.[option.id] ??
     option.maxSelections ??
     Infinity
   );

@@ -6,7 +6,7 @@ import {
   getBusinessBySlug,
   getMenuByBusinessId,
 } from "@/lib/catalog/queries";
-import type { StorefrontFixture } from "@/lib/catalog/fixtures";
+import { buildStorefrontFixture } from "@/lib/catalog/storefront-dto";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -40,48 +40,7 @@ export default async function StorefrontPage({ params }: Props) {
   if (!business) notFound();
 
   const menu = await getMenuByBusinessId(business.id);
-
-  const location = [business.city, business.address]
-    .filter(Boolean)
-    .join(" · ");
-
-  const fixture: StorefrontFixture = {
-    slug: business.slug,
-    name: business.name,
-    location,
-    sections: menu.map((category) => ({
-      id: category.id,
-      label: category.name,
-      items: category.products.map((product) => ({
-        productId: product.id,
-        name: product.name,
-        description: product.description ?? "",
-        price: Number(product.price),
-        image: product.image
-          ? { src: product.image, alt: product.name }
-          : undefined,
-        variants: product.variants.map((variant) => ({
-          id: variant.id,
-          name: variant.name,
-          priceOverride:
-            variant.priceOverride == null ? null : Number(variant.priceOverride),
-          optionMaxSelectionsOverrides: variant.optionMaxSelectionsOverrides,
-        })),
-        options: product.options.map((option) => ({
-          id: option.id,
-          name: option.name,
-          type: option.type,
-          required: option.required,
-          maxSelections: option.maxSelections,
-          values: option.values.map((value) => ({
-            id: value.id,
-            name: value.name,
-            priceAddition: Number(value.priceAddition),
-          })),
-        })),
-      })),
-    })),
-  };
+  const fixture = buildStorefrontFixture(business, menu);
 
   return (
     <main className="w-full max-w-[480px] mx-auto bg-base min-h-screen relative flex flex-col border-x border-outline/50 shadow-2xl shadow-black/5">
