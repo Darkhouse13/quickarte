@@ -8,15 +8,6 @@ import { getCartLineKey, useCartStore } from "@/lib/ordering/cart-store";
 import { placeOrder } from "@/lib/ordering/actions";
 import { cn } from "@/lib/utils/cn";
 import { formatAmount } from "@/lib/utils/currency";
-import { StripePaymentStep } from "./stripe-payment-step";
-
-type PendingStripePayment = {
-  clientSecret: string;
-  publishableKey: string;
-  orderId: string;
-  orderNumber: string;
-  totalAmount: number;
-};
 
 type Props = {
   businessId: string;
@@ -62,30 +53,12 @@ export function CheckoutForm({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [pendingPayment, setPendingPayment] =
-    useState<PendingStripePayment | null>(null);
 
   useEffect(() => {
-    // Keep the "cart empty → back to menu" redirect, but skip it once the
-    // user has moved on to the Stripe step (we intentionally cleared the
-    // cart at that point).
-    if (
-      hydrated &&
-      getItemCount() === 0 &&
-      !isPending &&
-      pendingPayment === null
-    ) {
+    if (hydrated && getItemCount() === 0 && !isPending) {
       router.replace(`/${locale}/${businessSlug}`);
     }
-  }, [
-    hydrated,
-    getItemCount,
-    isPending,
-    router,
-    locale,
-    businessSlug,
-    pendingPayment,
-  ]);
+  }, [hydrated, getItemCount, isPending, router, locale, businessSlug]);
 
   const itemCount = hydrated ? getItemCount() : 0;
   const total = hydrated ? getTotal() : 0;
@@ -114,8 +87,6 @@ export function CheckoutForm({
       })),
     };
 
-    const capturedTotal = total;
-
     startTransition(async () => {
       const result = await placeOrder(payload);
       if (result.status === "error") {
@@ -123,21 +94,7 @@ export function CheckoutForm({
         setFormError(result.message);
         return;
       }
-
-      // Order is persisted either way — clear the cart now so the cart
-      // doesn't hang around if the user abandons the Stripe step.
       clearCart();
-
-      if (result.payment.mode === "stripe") {
-        setPendingPayment({
-          clientSecret: result.payment.clientSecret,
-          publishableKey: result.payment.publishableKey,
-          orderId: result.orderId,
-          orderNumber: result.orderNumber,
-          totalAmount: capturedTotal,
-        });
-        return;
-      }
 
       router.replace(
         `/${locale}/${businessSlug}/order/confirmation?orderId=${result.orderId}`,
@@ -147,21 +104,6 @@ export function CheckoutForm({
 
   const fieldError = (name: string): string | undefined =>
     fieldErrors[name]?.[0];
-
-  if (pendingPayment) {
-    return (
-      <StripePaymentStep
-        clientSecret={pendingPayment.clientSecret}
-        publishableKey={pendingPayment.publishableKey}
-        orderId={pendingPayment.orderId}
-        orderNumber={pendingPayment.orderNumber}
-        totalAmount={pendingPayment.totalAmount}
-        locale={locale}
-        businessSlug={businessSlug}
-        onBack={() => setPendingPayment(null)}
-      />
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col min-h-screen">

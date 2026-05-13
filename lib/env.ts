@@ -52,16 +52,6 @@ const adminEmailsSchema = z
     ),
   );
 
-const platformFeeBpsSchema = z
-  .string()
-  .optional()
-  .transform((v) => {
-    if (!v) return 0;
-    const n = Number(v);
-    if (!Number.isFinite(n) || n < 0 || n > 10000) return 0;
-    return Math.floor(n);
-  });
-
 const schema = z
   .object({
     NODE_ENV: z
@@ -85,18 +75,6 @@ const schema = z
     NEXT_PUBLIC_CANONICAL_URL: httpsUrlSchema,
 
     // Required in production only
-    STRIPE_SECRET_KEY: z
-      .string()
-      .regex(/^sk_/, "must start with sk_")
-      .optional(),
-    STRIPE_PUBLISHABLE_KEY: z
-      .string()
-      .regex(/^pk_/, "must start with pk_")
-      .optional(),
-    STRIPE_WEBHOOK_SECRET: z
-      .string()
-      .regex(/^whsec_/, "must start with whsec_")
-      .optional(),
     VAPID_PRIVATE_KEY: base64Schema.optional(),
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: base64Schema.optional(),
     VAPID_SUBJECT: vapidSubjectSchema.optional(),
@@ -115,7 +93,6 @@ const schema = z
     NEXT_PUBLIC_SENTRY_DSN: urlSchema.optional(),
 
     // Optional
-    QUICKARTE_PLATFORM_FEE_BPS: platformFeeBpsSchema,
     QUICKARTE_ADMIN_EMAILS: adminEmailsSchema,
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
     NEXT_PUBLIC_SALES_CONTACT: z.string().optional(),
@@ -132,9 +109,6 @@ const schema = z
     // required vars (DATABASE_URL etc.) still fail the build if missing.
     if (process.env.NEXT_PHASE === "phase-production-build") return;
     const prodRequired = [
-      "STRIPE_SECRET_KEY",
-      "STRIPE_PUBLISHABLE_KEY",
-      "STRIPE_WEBHOOK_SECRET",
       "VAPID_PRIVATE_KEY",
       "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
       "VAPID_SUBJECT",
@@ -194,7 +168,6 @@ export const env = (parsed.success
       BETTER_AUTH_URL: "https://build.local",
       NEXT_PUBLIC_APP_URL: "https://build.local",
       NEXT_PUBLIC_CANONICAL_URL: "https://build.local",
-      QUICKARTE_PLATFORM_FEE_BPS: 0,
       QUICKARTE_ADMIN_EMAILS: [],
       NEXT_PUBLIC_ENABLE_SW_IN_DEV: false,
     } as unknown as z.infer<typeof schema>)) as z.infer<typeof schema>;

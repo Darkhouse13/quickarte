@@ -3,8 +3,6 @@ import { env } from "@/lib/env";
 import { requireBusiness } from "@/lib/auth/get-business";
 import { SectionHeader } from "@/components/ui/section-header";
 import { hasEntitlement } from "@/lib/entitlements/queries";
-import { getConnectStatus } from "@/lib/payments";
-import { PaymentsSection } from "@/components/merchant/payments-section";
 import { NotificationsSettings } from "@/components/merchant/notifications-settings";
 import { BusinessProfileSection } from "@/components/merchant/business-profile-section";
 
@@ -15,24 +13,15 @@ export const metadata = { title: "Quickarte — Paramètres" };
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ stripe?: string }>;
 };
 
-export default async function SettingsPage({ params, searchParams }: Props) {
-  const [{ locale }, { stripe: stripeFlag }] = await Promise.all([
-    params,
-    searchParams,
-  ]);
+export default async function SettingsPage({ params }: Props) {
+  const { locale } = await params;
   setRequestLocale(locale);
 
   const { business } = await requireBusiness();
 
-  const [hasOrdering, connectStatus] = await Promise.all([
-    hasEntitlement(business.id, "online_ordering"),
-    hasEntitlement(business.id, "online_ordering").then((ok) =>
-      ok ? getConnectStatus(business.id) : null,
-    ),
-  ]);
+  const hasOrdering = await hasEntitlement(business.id, "online_ordering");
 
   const locationLabel =
     [business.city, business.address].filter(Boolean).join(" · ") ||
@@ -59,13 +48,6 @@ export default async function SettingsPage({ params, searchParams }: Props) {
             locationLabel={locationLabel}
           />
         </section>
-
-        {hasOrdering && connectStatus ? (
-          <PaymentsSection
-            status={connectStatus}
-            stripeQueryFlag={stripeFlag}
-          />
-        ) : null}
 
         {hasOrdering && env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ? (
           <NotificationsSettings
