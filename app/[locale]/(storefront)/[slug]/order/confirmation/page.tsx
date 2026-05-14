@@ -22,8 +22,8 @@ type Props = {
 };
 
 const TYPE_LABELS = {
-  dine_in: "Sur Place",
-  takeaway: "À Emporter",
+  dine_in: "Sur place",
+  takeaway: "À emporter",
   delivery: "Livraison",
 } as const;
 

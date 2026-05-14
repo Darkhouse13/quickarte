@@ -24,13 +24,14 @@ export const placeOrderSchema = z
             .number({ invalid_type_error: "Quantité invalide" })
             .int()
             .positive(),
-          variant_id: z.string().uuid("Variante invalide").nullable(),
+          variant_id: z.string().uuid("Variante invalide").nullable().default(null),
           selected_option_value_ids: z
             .array(z.string().uuid("Choix invalide"))
             .default([]),
           unit_price: z
             .number({ invalid_type_error: "Prix invalide" })
-            .nonnegative("Prix invalide"),
+            .optional()
+            .default(0),
         }),
       )
       .min(1, "Panier vide"),

@@ -10,8 +10,8 @@ export const ORDER_STATUS_TRANSITIONS: Record<
   OrderLifecycleStatus,
   OrderLifecycleStatus[]
 > = {
-  pending: ["confirmed", "cancelled"],
-  confirmed: ["preparing", "cancelled"],
+  pending: ["confirmed", "preparing", "cancelled"],
+  confirmed: ["preparing", "ready", "cancelled"],
   preparing: ["ready", "cancelled"],
   ready: ["completed", "cancelled"],
   completed: [],

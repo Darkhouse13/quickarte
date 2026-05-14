@@ -1,0 +1,224 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e72]:
+      - heading "Catalogue" [level=1] [ref=e73]
+      - generic [ref=e74]: 21 articles
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - heading "01 / Viennoiseries" [level=2] [ref=e78]
+        - generic [ref=e79]:
+          - generic [ref=e80]:
+            - link "Modifier Croissant" [ref=e81] [cursor=pointer]:
+              - /url: /catalog/9b28e7f3-8438-4752-928d-ccb7a53240fd/edit
+            - generic:
+              - generic: Croissant
+              - generic: 1,30 €
+            - generic [ref=e82]:
+              - switch "Disponibilité" [checked] [ref=e83] [cursor=pointer]
+              - generic: →
+          - generic [ref=e85]:
+            - link "Modifier Pain au chocolat" [ref=e86] [cursor=pointer]:
+              - /url: /catalog/fc90addd-57fc-460d-be22-8eb1ab4dc1b8/edit
+            - generic:
+              - generic: Pain au chocolat
+              - generic: 1,40 €
+            - generic [ref=e87]:
+              - switch "Disponibilité" [checked] [ref=e88] [cursor=pointer]
+              - generic: →
+          - generic [ref=e90]:
+            - link "Modifier Chausson aux pommes" [ref=e91] [cursor=pointer]:
+              - /url: /catalog/f1e09cf3-b698-4258-90a2-8b4e431a604e/edit
+            - generic:
+              - generic: Chausson aux pommes
+              - generic: 2,20 €
+            - generic [ref=e92]:
+              - switch "Disponibilité" [checked] [ref=e93] [cursor=pointer]
+              - generic: →
+          - generic [ref=e95]:
+            - link "Modifier Brioche" [ref=e96] [cursor=pointer]:
+              - /url: /catalog/5222bae3-669e-4f16-88e5-00a5d5b1cf78/edit
+            - generic:
+              - generic: Brioche
+              - generic: 3,50 €
+            - generic [ref=e97]:
+              - switch "Disponibilité" [checked] [ref=e98] [cursor=pointer]
+              - generic: →
+          - generic [ref=e100]:
+            - link "Modifier Audit Cookie" [ref=e101] [cursor=pointer]:
+              - /url: /catalog/1316ee80-cfe3-4b0d-93aa-cb8599441fbf/edit
+            - generic:
+              - generic: Audit Cookie
+              - generic: 2,90 €
+            - generic [ref=e102]:
+              - switch "Disponibilité" [checked] [ref=e103] [cursor=pointer]
+              - generic: →
+      - generic [ref=e105]:
+        - heading "02 / Pains" [level=2] [ref=e107]
+        - generic [ref=e108]:
+          - generic [ref=e109]:
+            - link "Modifier Baguette tradition" [ref=e110] [cursor=pointer]:
+              - /url: /catalog/b26588c0-848e-47b5-87f9-6bacccc9396a/edit
+            - generic:
+              - generic: Baguette tradition
+              - generic: 1,50 €
+            - generic [ref=e111]:
+              - switch "Disponibilité" [checked] [ref=e112] [cursor=pointer]
+              - generic: →
+          - generic [ref=e114]:
+            - link "Modifier Baguette classique" [ref=e115] [cursor=pointer]:
+              - /url: /catalog/5f07e06e-fd2a-45bf-a89f-98bcf5fb81e4/edit
+            - generic:
+              - generic: Baguette classique
+              - generic: 1,10 €
+            - generic [ref=e116]:
+              - switch "Disponibilité" [checked] [ref=e117] [cursor=pointer]
+              - generic: →
+          - generic [ref=e119]:
+            - link "Modifier Pain de campagne" [ref=e120] [cursor=pointer]:
+              - /url: /catalog/96cf0c3f-545d-489d-a69a-26a5a27496ca/edit
+            - generic:
+              - generic: Pain de campagne
+              - generic: 4,50 €
+            - generic [ref=e121]:
+              - switch "Disponibilité" [checked] [ref=e122] [cursor=pointer]
+              - generic: →
+          - generic [ref=e124]:
+            - link "Modifier Pain complet" [ref=e125] [cursor=pointer]:
+              - /url: /catalog/c632530b-9cde-4bbf-8944-f8774db436ef/edit
+            - generic:
+              - generic: Pain complet
+              - generic: 4,00 €
+            - generic [ref=e126]:
+              - switch "Disponibilité" [checked] [ref=e127] [cursor=pointer]
+              - generic: →
+      - generic [ref=e129]:
+        - heading "03 / Pâtisseries" [level=2] [ref=e131]
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - link "Modifier Éclair au chocolat" [ref=e134] [cursor=pointer]:
+              - /url: /catalog/cbdc0aa5-ddc3-4fc9-9947-da8e61bec8f1/edit
+            - generic:
+              - generic: Éclair au chocolat
+              - generic: 3,50 €
+            - generic [ref=e135]:
+              - switch "Disponibilité" [checked] [ref=e136] [cursor=pointer]
+              - generic: →
+          - generic [ref=e138]:
+            - link "Modifier Tarte aux fruits" [ref=e139] [cursor=pointer]:
+              - /url: /catalog/6de6f744-ef4e-4bb1-ba43-53649cd12587/edit
+            - generic:
+              - generic: Tarte aux fruits
+              - generic: 4,00 €
+            - generic [ref=e140]:
+              - switch "Disponibilité" [checked] [ref=e141] [cursor=pointer]
+              - generic: →
+          - generic [ref=e143]:
+            - link "Modifier Mille-feuille" [ref=e144] [cursor=pointer]:
+              - /url: /catalog/29b34716-25fb-4052-b9a2-c29e1f45e743/edit
+            - generic:
+              - generic: Mille-feuille
+              - generic: 4,00 €
+            - generic [ref=e145]:
+              - switch "Disponibilité" [checked] [ref=e146] [cursor=pointer]
+              - generic: →
+          - generic [ref=e148]:
+            - link "Modifier Flan pâtissier" [ref=e149] [cursor=pointer]:
+              - /url: /catalog/279debc5-8e1b-40a3-b063-4610731f06c1/edit
+            - generic:
+              - generic: Flan pâtissier
+              - generic: 3,00 €
+            - generic [ref=e150]:
+              - switch "Disponibilité" [checked] [ref=e151] [cursor=pointer]
+              - generic: →
+      - generic [ref=e153]:
+        - heading "04 / Boissons" [level=2] [ref=e155]
+        - generic [ref=e156]:
+          - generic [ref=e157]:
+            - link "Modifier Café expresso" [ref=e158] [cursor=pointer]:
+              - /url: /catalog/70a2c8eb-c230-4812-a1a7-1bb1f69ed360/edit
+            - generic:
+              - generic: Café expresso
+              - generic: 1,50 €
+            - generic [ref=e159]:
+              - switch "Disponibilité" [checked] [ref=e160] [cursor=pointer]
+              - generic: →
+          - generic [ref=e162]:
+            - link "Modifier Café allongé" [ref=e163] [cursor=pointer]:
+              - /url: /catalog/5778b6fb-6682-4914-8c02-16363c9924dd/edit
+            - generic:
+              - generic: Café allongé
+              - generic: 1,80 €
+            - generic [ref=e164]:
+              - switch "Disponibilité" [checked] [ref=e165] [cursor=pointer]
+              - generic: →
+          - generic [ref=e167]:
+            - link "Modifier Thé" [ref=e168] [cursor=pointer]:
+              - /url: /catalog/2cc986a0-23c5-407a-9085-25ac593f40b9/edit
+            - generic:
+              - generic: Thé
+              - generic: 2,50 €
+            - generic [ref=e169]:
+              - switch "Disponibilité" [checked] [ref=e170] [cursor=pointer]
+              - generic: →
+          - generic [ref=e172]:
+            - link "Modifier Chocolat chaud" [ref=e173] [cursor=pointer]:
+              - /url: /catalog/416c2e57-87c3-424d-b890-0ff3a15713f2/edit
+            - generic:
+              - generic: Chocolat chaud
+              - generic: 3,00 €
+            - generic [ref=e174]:
+              - switch "Disponibilité" [checked] [ref=e175] [cursor=pointer]
+              - generic: →
+      - generic [ref=e177]:
+        - heading "05 / Sandwichs & en-cas" [level=2] [ref=e179]
+        - generic [ref=e180]:
+          - generic [ref=e181]:
+            - link "Modifier Jambon beurre" [ref=e182] [cursor=pointer]:
+              - /url: /catalog/a5df1102-95a4-46bd-8d6d-a2c9a83ac807/edit
+            - generic:
+              - generic: Jambon beurre
+              - generic: 4,50 €
+            - generic [ref=e183]:
+              - switch "Disponibilité" [checked] [ref=e184] [cursor=pointer]
+              - generic: →
+          - generic [ref=e186]:
+            - link "Modifier Poulet crudités" [ref=e187] [cursor=pointer]:
+              - /url: /catalog/10d7f7e8-3411-4c2b-828f-208828afb928/edit
+            - generic:
+              - generic: Poulet crudités
+              - generic: 5,50 €
+            - generic [ref=e188]:
+              - switch "Disponibilité" [checked] [ref=e189] [cursor=pointer]
+              - generic: →
+          - generic [ref=e191]:
+            - link "Modifier Sandwich au thon" [ref=e192] [cursor=pointer]:
+              - /url: /catalog/a3bbf5f2-1770-4165-a578-5966f083fef2/edit
+            - generic:
+              - generic: Sandwich au thon
+              - generic: 5,00 €
+            - generic [ref=e193]:
+              - switch "Disponibilité" [checked] [ref=e194] [cursor=pointer]
+              - generic: →
+          - generic [ref=e196]:
+            - link "Modifier Quiche lorraine" [ref=e197] [cursor=pointer]:
+              - /url: /catalog/3bed6c1a-29a4-4229-9e15-547c22ed497e/edit
+            - generic:
+              - generic: Quiche lorraine
+              - generic: 4,00 €
+            - generic [ref=e198]:
+              - switch "Disponibilité" [checked] [ref=e199] [cursor=pointer]
+              - generic: →
+    - link "+ Nouvel Article" [ref=e202] [cursor=pointer]:
+      - /url: /catalog/new
+      - generic [ref=e203]: + Nouvel Article
+    - navigation:
+      - generic [ref=e59]:
+        - link "Accueil" [ref=e60] [cursor=pointer]:
+          - /url: /home
+          - img [ref=e62]
+          - generic [ref=e65]: Accueil
+        - link "Catalogue" [ref=e66] [cursor=pointer]:
+          - /url: /catalog
+          - img [ref=e68]
+          - generic [ref=e70]: Catalogue
+  - alert [ref=e71]: Quickarte — Catalogue

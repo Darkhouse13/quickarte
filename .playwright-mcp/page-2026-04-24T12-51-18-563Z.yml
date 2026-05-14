@@ -1,0 +1,9 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - main [ref=e3]:
+    - generic [ref=e4]: "404"
+    - generic [ref=e5]:
+      - paragraph [ref=e6]: Page introuvable
+      - paragraph [ref=e7]: Le lien demandé n'existe pas ou a été déplacé.
+    - link "Retour à l'accueil" [ref=e8] [cursor=pointer]:
+      - /url: /

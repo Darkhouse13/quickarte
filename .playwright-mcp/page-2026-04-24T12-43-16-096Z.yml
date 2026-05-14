@@ -1,0 +1,27 @@
+- generic [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - heading "Quickarte" [level=1] [ref=e5]
+        - paragraph [ref=e6]: Créez votre espace marchand
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - generic [ref=e10]: Nom
+          - textbox "Nom" [active] [ref=e12]:
+            - /placeholder: Camille
+        - generic [ref=e13]:
+          - generic [ref=e15]: Email
+          - textbox "Email" [ref=e17]:
+            - /placeholder: camille@cafedesarts.fr
+        - generic [ref=e18]:
+          - generic [ref=e19]:
+            - generic [ref=e20]: Mot de passe
+            - generic [ref=e21]: Min. 8 caractères
+          - textbox "Mot de passe" [ref=e23]:
+            - /placeholder: Min. 8 caractères
+        - paragraph [ref=e24]:
+          - text: Déjà un compte ?
+          - link "Se connecter →" [ref=e25] [cursor=pointer]:
+            - /url: /login
+      - button "Créer mon compte" [ref=e27]
+  - alert [ref=e28]

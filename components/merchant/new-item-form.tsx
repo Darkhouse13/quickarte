@@ -8,7 +8,7 @@ import {
   useState,
   useTransition,
 } from "react";
-import { ArrowLeft, Camera, Plus, Minus } from "lucide-react";
+import { ArrowLeft, Camera } from "lucide-react";
 import { FormInput } from "@/components/ui/form-input";
 import { FormTextarea } from "@/components/ui/form-textarea";
 import { FormSelect } from "@/components/ui/form-select";
@@ -19,7 +19,6 @@ import {
   type ProductCustomizationOption,
   type ProductCustomizationVariant,
 } from "@/components/merchant/product-customizations-section";
-import { cn } from "@/lib/utils/cn";
 import {
   createProduct,
   updateProduct,
@@ -44,6 +43,7 @@ type ExistingProduct = {
 type Props = {
   categories: Category[];
   product?: ExistingProduct;
+  businessSlug?: string;
   variants?: ProductCustomizationVariant[];
   options?: ProductCustomizationOption[];
 };
@@ -51,6 +51,7 @@ type Props = {
 export function NewItemForm({
   categories: initialCategories,
   product,
+  businessSlug,
   variants = [],
   options = [],
 }: Props) {
@@ -59,7 +60,6 @@ export function NewItemForm({
   const nameRef = useRef<HTMLInputElement>(null);
 
   const [categories, setCategories] = useState<Category[]>(initialCategories);
-  const [optionsOpen, setOptionsOpen] = useState(false);
   const [available, setAvailable] = useState(product?.available ?? true);
   const [categoryId, setCategoryId] = useState<string>(
     product?.categoryId ?? "",
@@ -215,6 +215,13 @@ export function NewItemForm({
               {fieldErrors.price[0]}
             </p>
           ) : null}
+          {variants.length > 0 ? (
+            <p className="font-sans text-xs text-ink/50 leading-snug -mt-3">
+              Le prix de base est utilisé quand aucune taille n&apos;est
+              définie. Sinon, c&apos;est le prix de la taille par défaut qui
+              s&apos;applique.
+            </p>
+          ) : null}
 
           <div>
             <FormSelect
@@ -298,47 +305,12 @@ export function NewItemForm({
 
         <div className="w-full h-px bg-outline my-8" />
 
-        <button
-          type="button"
-          onClick={() => setOptionsOpen((v) => !v)}
-          aria-expanded={optionsOpen}
-          className="w-full text-left py-5 px-4 -mx-4 border-y border-transparent hover:bg-black/[0.02] hover:border-outline transition-colors group flex justify-between items-center bg-base focus:outline-none focus:border-ink"
-        >
-          <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-sm font-bold uppercase tracking-widest text-ink/80 group-hover:text-ink transition-colors">
-              Options & Variantes
-            </span>
-            <span className="font-sans text-xs text-ink/50">
-              Tailles, suppléments, choix…
-            </span>
-          </div>
-          {optionsOpen ? (
-            <Minus
-              className="w-6 h-6 text-ink/40 group-hover:text-accent transition-colors"
-              strokeWidth={2}
-              strokeLinecap="square"
-            />
-          ) : (
-            <Plus
-              className="w-6 h-6 text-ink/40 group-hover:text-accent transition-colors"
-              strokeWidth={2}
-              strokeLinecap="square"
-            />
-          )}
-        </button>
-
-        <div
-          className={cn(
-            "overflow-hidden transition-all",
-            optionsOpen ? "max-h-[4000px] mt-6" : "max-h-0",
-          )}
-        >
-          <ProductCustomizationsSection
-            productId={product?.id}
-            variants={variants}
-            options={options}
-          />
-        </div>
+        <ProductCustomizationsSection
+          productId={product?.id}
+          businessSlug={businessSlug}
+          variants={variants}
+          options={options}
+        />
 
         {errorMessage ? (
           <p className="mt-6 font-mono text-xs uppercase tracking-widest text-accent border border-accent px-4 py-3">

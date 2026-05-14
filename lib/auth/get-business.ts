@@ -1,10 +1,19 @@
 import "server-only";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { businesses, type Business } from "@/lib/db/schema";
+import {
+  businesses,
+  staffMembers,
+  type Business,
+  type BusinessSettings,
+} from "@/lib/db/schema";
 import { auth, type AuthSession } from "./server";
+
+export type BusinessWithSettings = Business & {
+  settings: BusinessSettings | null;
+};
 
 export type CurrentSession = AuthSession;
 
@@ -21,23 +30,43 @@ export async function requireSession(): Promise<CurrentSession> {
 
 export async function getCurrentBusiness(): Promise<{
   session: CurrentSession;
-  business: Business | null;
+  business: BusinessWithSettings | null;
 } | null> {
   const session = await getSession();
   if (!session) return null;
+  const membership = await db.query.staffMembers.findFirst({
+    where: and(
+      eq(staffMembers.userId, session.user.id),
+      isNull(staffMembers.revokedAt),
+    ),
+    columns: { businessId: true },
+  });
   const business = await db.query.businesses.findFirst({
-    where: eq(businesses.ownerId, session.user.id),
+    where: membership
+      ? eq(businesses.id, membership.businessId)
+      : eq(businesses.ownerId, session.user.id),
+    with: { settings: true },
   });
   return { session, business: business ?? null };
 }
 
 export async function requireBusiness(): Promise<{
   session: CurrentSession;
-  business: Business;
+  business: BusinessWithSettings;
 }> {
   const session = await requireSession();
+  const membership = await db.query.staffMembers.findFirst({
+    where: and(
+      eq(staffMembers.userId, session.user.id),
+      isNull(staffMembers.revokedAt),
+    ),
+    columns: { businessId: true },
+  });
   const business = await db.query.businesses.findFirst({
-    where: eq(businesses.ownerId, session.user.id),
+    where: membership
+      ? eq(businesses.id, membership.businessId)
+      : eq(businesses.ownerId, session.user.id),
+    with: { settings: true },
   });
   if (!business) redirect("/onboarding");
   return { session, business };

@@ -102,7 +102,7 @@ Use this once before enabling the Coolify post-deploy migration hook on an exist
 
 ## Seeding the first merchant
 
-Do **not** run `npm run db:seed` in production — that script is for dev and creates fake demo data (Camille at Café des Arts, etc.). The production-first-merchant flow:
+Do **not** run `npm run db:seed` in production — that script is for dev and creates fake demo data (Salma at Cafe Maarif, etc.). The production-first-merchant flow:
 
 1. Merchant opens `https://quickarte.fr/fr/register` and creates an account.
 2. Merchant completes `/onboarding`, which creates their `businesses` row and `<slug>`.

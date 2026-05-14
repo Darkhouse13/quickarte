@@ -34,6 +34,19 @@
   filter: contrast(1.1) saturate(0.9);
 }
 
+/* Customer order page — calm fade as the status word swaps in. */
+@keyframes order-status-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.order-status-fade {
+  animation: order-status-fade-in 180ms ease-out;
+}
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -41,6 +54,43 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+@media print {
+  body {
+    background: #fff !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .order-ticket-print,
+  .order-ticket-print *,
+  .table-qr-print,
+  .table-qr-print * {
+    visibility: visible;
+  }
+
+  .order-ticket-print,
+  .table-qr-print {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    position: relative;
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  .order-ticket-print {
+    width: 76mm;
+    padding: 0;
+    border: 0 !important;
+  }
+
+  .table-qr-print {
+    width: 90mm;
+    margin: 0 0 8mm;
+  }
 }
 
 /* Marketing landing — scoped qk-* rules from the design bundle */
@@ -150,5 +200,44 @@ input[type="number"] {
     grid-template-columns: 6fr 4fr;
     gap: 64px;
     align-items: start;
+  }
+}
+
+@keyframes qk-saved-flash {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.qk-saved-flash {
+  animation: qk-saved-flash 1.5s ease-in-out forwards;
+}
+
+/* Close-of-day — paper printout for the owner's daybook. Keeps the hero KPIs
+   and breakdowns; drops the filter bar, day-nav arrows, and CSV button. */
+@media print {
+  main:has(.cloture-print) {
+    max-width: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding-bottom: 0 !important;
+  }
+  .cloture-print,
+  .cloture-print * {
+    visibility: visible;
+  }
+  .cloture-print-hide {
+    display: none !important;
+  }
+  .cloture-orders-scroll {
+    overflow: visible !important;
   }
 }

@@ -1,9 +1,9 @@
 type Item = { name: string; price: string };
 
 const pains: Item[] = [
-  { name: "Pain au levain", price: "4,50 €" },
-  { name: "Pain de campagne", price: "5,80 €" },
-  { name: "Baguette tradition", price: "1,40 €" },
+  { name: "Msemen miel", price: "12 MAD" },
+  { name: "The a la menthe", price: "14 MAD" },
+  { name: "Tacos poulet", price: "45 MAD" },
 ];
 
 function Row({ item }: { item: Item }) {
@@ -22,31 +22,31 @@ export function StorefrontPhone() {
         <div className="h-full w-full flex flex-col">
           <div className="px-5 pt-5 pb-3 border-b border-outline text-center">
             <div className="font-mono font-bold text-xs uppercase tracking-widest text-ink">
-              BOULANGERIE CAMILLE
+              CAFE MAARIF
             </div>
             <div
               className="mt-1 font-mono uppercase tracking-widest text-ink/40"
               style={{ fontSize: "10px" }}
             >
-              PARIS 11e
+              CASABLANCA
             </div>
           </div>
 
           <div className="px-4 pt-4 pb-3 flex items-center gap-2">
             <span className="bg-ink text-base font-mono text-xs uppercase tracking-widest px-3 py-1.5">
-              PAINS
+              PETIT DEJ
             </span>
             <span className="bg-base text-ink border border-outline font-mono text-xs uppercase tracking-widest px-3 py-1.5">
-              VIENNOISERIES
+              TACOS
             </span>
             <span className="bg-base text-ink border border-outline font-mono text-xs uppercase tracking-widest px-3 py-1.5">
-              CAFÉS
+              CAFES
             </span>
           </div>
 
           <div className="px-4 pt-2 pb-2">
             <div className="font-mono font-bold text-xs uppercase tracking-widest text-ink/40">
-              01 / PAINS
+              01 / PETIT DEJ
             </div>
           </div>
 

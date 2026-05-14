@@ -35,6 +35,8 @@ export type StorefrontProduct = Product & {
     id: string;
     name: string;
     priceOverride: string | null;
+    isDefault: boolean;
+    available: boolean;
     optionMaxSelectionsOverrides: Record<string, number>;
     position: number;
   }>;
@@ -43,12 +45,15 @@ export type StorefrontProduct = Product & {
     name: string;
     type: "single_select" | "multi_select";
     required: boolean;
-    maxSelections: number | null;
+    minSelect: number;
+    maxSelect: number | null;
+    available: boolean;
     position: number;
     values: Array<{
       id: string;
       name: string;
       priceAddition: string;
+      available: boolean;
       position: number;
     }>;
   }>;
@@ -75,6 +80,8 @@ export async function getMenuByBusinessId(
               id: true,
               name: true,
               priceOverride: true,
+              isDefault: true,
+              available: true,
               optionMaxSelectionsOverrides: true,
               position: true,
             },
@@ -86,7 +93,9 @@ export async function getMenuByBusinessId(
               name: true,
               type: true,
               required: true,
-              maxSelections: true,
+              minSelect: true,
+              maxSelect: true,
+              available: true,
               position: true,
             },
             with: {
@@ -96,6 +105,7 @@ export async function getMenuByBusinessId(
                   id: true,
                   name: true,
                   priceAddition: true,
+                  available: true,
                   position: true,
                 },
               },

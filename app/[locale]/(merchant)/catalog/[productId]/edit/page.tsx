@@ -9,6 +9,7 @@ import {
   productVariants,
 } from "@/lib/db/schema";
 import { requireBusiness } from "@/lib/auth/get-business";
+import { assertRole } from "@/lib/identity/permissions";
 import { NewItemForm } from "@/components/merchant/new-item-form";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +23,8 @@ type Props = {
 
 export default async function EditCatalogItemPage({ params }: Props) {
   const { productId } = await params;
-  const { business } = await requireBusiness();
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
 
   const product = await db.query.products.findFirst({
     where: and(
@@ -53,6 +55,8 @@ export default async function EditCatalogItemPage({ params }: Props) {
       id: true,
       name: true,
       priceOverride: true,
+      isDefault: true,
+      available: true,
       optionMaxSelectionsOverrides: true,
       position: true,
     },
@@ -66,7 +70,9 @@ export default async function EditCatalogItemPage({ params }: Props) {
       name: true,
       type: true,
       required: true,
-      maxSelections: true,
+      minSelect: true,
+      maxSelect: true,
+      available: true,
       position: true,
     },
     with: {
@@ -76,6 +82,7 @@ export default async function EditCatalogItemPage({ params }: Props) {
           id: true,
           name: true,
           priceAddition: true,
+          available: true,
           position: true,
         },
       },
@@ -86,8 +93,12 @@ export default async function EditCatalogItemPage({ params }: Props) {
     <NewItemForm
       categories={rows}
       product={product}
+      businessSlug={business.slug}
       variants={variants}
-      options={options}
+      options={options.map((option) => ({
+        ...option,
+        maxSelections: option.maxSelect,
+      }))}
     />
   );
 }

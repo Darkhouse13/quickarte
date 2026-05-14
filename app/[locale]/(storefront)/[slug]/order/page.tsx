@@ -4,16 +4,19 @@ import { getBusinessBySlug } from "@/lib/catalog/queries";
 import { CheckoutForm } from "@/components/storefront/checkout-form";
 import { hasEntitlement } from "@/lib/entitlements/queries";
 import { getProgram } from "@/lib/loyalty/queries";
+import { parseTableNumber } from "@/lib/ordering/table";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams?: Promise<{ table?: string | string[] }>;
 };
 
-export default async function CheckoutPage({ params }: Props) {
+export default async function CheckoutPage({ params, searchParams }: Props) {
   const { locale, slug } = await params;
+  const tableNumber = parseTableNumber((await searchParams)?.table);
   setRequestLocale(locale);
 
   const business = await getBusinessBySlug(slug);
@@ -48,6 +51,10 @@ export default async function CheckoutPage({ params }: Props) {
         businessSlug={business.slug}
         locale={locale}
         loyaltyHint={loyaltyHint}
+        initialTableNumber={tableNumber}
+        orderingEnabled={business.settings?.orderingEnabled !== false}
+        dineInEnabled={business.settings?.dineInEnabled !== false}
+        takeawayEnabled={business.settings?.takeawayEnabled !== false}
       />
     </main>
   );

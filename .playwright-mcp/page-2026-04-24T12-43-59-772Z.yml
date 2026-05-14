@@ -1,0 +1,44 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - heading "Bienvenue" [level=1] [ref=e31]
+        - paragraph [ref=e32]: Créez votre établissement
+      - generic [ref=e33]:
+        - heading "01 / Votre établissement" [level=2] [ref=e35]
+        - generic [ref=e36]:
+          - generic [ref=e38]:
+            - generic [ref=e40]: Nom de l'établissement
+            - textbox "Nom de l'établissement" [ref=e42]:
+              - /placeholder: Café des Arts
+              - text: Audit Boulangerie 20260424
+          - generic [ref=e43]:
+            - generic [ref=e44]: Type
+            - generic [ref=e45]:
+              - button "Boulangerie" [pressed] [ref=e46]:
+                - generic [ref=e47]: Boulangerie
+              - button "Café" [ref=e48]:
+                - generic [ref=e49]: Café
+              - button "Restaurant" [ref=e50]:
+                - generic [ref=e51]: Restaurant
+              - button "Autre" [ref=e52]:
+                - generic [ref=e53]: Autre
+          - generic [ref=e54]:
+            - generic [ref=e55]:
+              - generic [ref=e56]: Adresse
+              - textbox "Adresse" [ref=e58]:
+                - /placeholder: 12 rue des Artistes, Paris
+                - text: 10 Rue de Rivoli, 75004 Paris
+            - paragraph [ref=e59]: Sélectionnez votre établissement dans la liste.
+      - generic [ref=e60]:
+        - heading "02 / Votre identité en ligne" [level=2] [ref=e62]
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - generic [ref=e66]: Adresse publique
+            - textbox "Adresse publique" [ref=e68]:
+              - /placeholder: cafe-des-arts
+              - text: audit-boulangerie-20260424-1244
+          - paragraph [ref=e69]: quickarte.app/audit-boulangerie-20260424-1244
+          - paragraph [ref=e72]: Disponible ✓
+      - button "Créer mon établissement" [ref=e71]
+  - alert [ref=e28]: Quickarte — Création

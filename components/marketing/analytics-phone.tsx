@@ -1,9 +1,9 @@
 type TopProduct = { rank: string; name: string; sold: string };
 
 const topProducts: TopProduct[] = [
-  { rank: "01", name: "Pain au levain", sold: "42 VENDUS" },
-  { rank: "02", name: "Croissant beurre AOP", sold: "38 VENDUS" },
-  { rank: "03", name: "Café allongé", sold: "34 VENDUS" },
+  { rank: "01", name: "Tacos poulet", sold: "42 VENDUS" },
+  { rank: "02", name: "The a la menthe", sold: "38 VENDUS" },
+  { rank: "03", name: "Msemen miel", sold: "34 VENDUS" },
 ];
 
 export function AnalyticsPhone() {
@@ -34,7 +34,7 @@ export function AnalyticsPhone() {
               className="font-mono font-bold text-ink"
               style={{ marginTop: "8px", fontSize: "28px", letterSpacing: "-0.01em" }}
             >
-              1&#8239;247,80&nbsp;€
+              1&#8239;247,80&nbsp;MAD
             </div>
             <div
               className="font-mono font-bold uppercase tracking-widest text-accent"

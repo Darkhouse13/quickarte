@@ -1,37 +1,85 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { formatAmount, formatAmountCompact } from "@/lib/utils/currency";
 import { StatusBadge, type OrderStatus } from "@/components/ui/status-badge";
-import { cancelOrder, transitionOrderStatus } from "@/lib/ordering/actions";
-import { parseOrderItemOptions } from "@/lib/ordering/options-summary";
+import {
+  cancelOrder,
+  markOrderEnteredInPos,
+  revertOrderPosStatus,
+  transitionOrderStatus,
+} from "@/lib/ordering/actions";
+import { enqueuePrintJob } from "@/lib/printing/actions";
+import { summarizeOrderItemOptions } from "@/lib/ordering/order-item-options";
 import {
   isTerminalOrderStatus,
   PRIMARY_ORDER_ACTIONS,
   type OrderLifecycleStatus,
 } from "@/lib/ordering/status";
 import type { OrderWithItems } from "@/lib/ordering/queries";
+import type { StaffRole } from "@/lib/identity/permissions";
+import type { JournalEvent } from "@/lib/ordering/event-queries";
+import {
+  eventLabelFr,
+  formatCasablancaTimestamp,
+  roleLabelFr,
+  summarisePayload,
+} from "@/lib/ordering/journal-format";
 
 type OrderRowProps = {
   order: OrderWithItems;
+  events: JournalEvent[];
   expanded: boolean;
   onToggle: () => void;
+  role: StaffRole;
+  posCoexistenceEnabled: boolean;
 };
 
-export function OrdersPoller() {
+export function OrdersPoller({ pendingOrderIds }: { pendingOrderIds: string[] }) {
   const router = useRouter();
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const previousPending = useRef(new Set(pendingOrderIds));
 
   useEffect(() => {
     const id = window.setInterval(() => router.refresh(), 15_000);
     return () => window.clearInterval(id);
   }, [router]);
 
-  return null;
+  useEffect(() => {
+    const next = new Set(pendingOrderIds);
+    const hasNew = pendingOrderIds.some((id) => !previousPending.current.has(id));
+    previousPending.current = next;
+    if (hasNew && soundEnabled) playOrderTone();
+  }, [pendingOrderIds, soundEnabled]);
+
+  if (soundEnabled) return null;
+  return (
+    <div className="px-6 py-3 border-b border-outline bg-black/[0.02]">
+      <button
+        type="button"
+        onClick={() => {
+          setSoundEnabled(true);
+          playOrderTone();
+        }}
+        className="font-mono text-[11px] uppercase tracking-widest text-ink hover:text-accent"
+      >
+        Activer le son des commandes
+      </button>
+    </div>
+  );
 }
 
-export function OrderRow({ order, expanded, onToggle }: OrderRowProps) {
+export function OrderRow({
+  order,
+  events,
+  expanded,
+  onToggle,
+  role,
+  posCoexistenceEnabled,
+}: OrderRowProps) {
   const status = order.status as OrderStatus;
   const barColor = getBarColor(status);
   const total = Number(order.total);
@@ -81,11 +129,23 @@ export function OrderRow({ order, expanded, onToggle }: OrderRowProps) {
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
             <PaymentPill status={order.paymentStatus} />
             <StatusBadge status={status} />
+            {posCoexistenceEnabled && order.posStatus === "pending" ? (
+              <span className="px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-outline text-ink/55">
+                À entrer en caisse
+              </span>
+            ) : null}
           </div>
         </div>
       </button>
 
-      {expanded ? <OrderDetail order={order} /> : null}
+      {expanded ? (
+        <OrderDetail
+          order={order}
+          events={events}
+          role={role}
+          posCoexistenceEnabled={posCoexistenceEnabled}
+        />
+      ) : null}
     </div>
   );
 }
@@ -131,8 +191,8 @@ function OrderTypeBadge({
   tableNumber: string | null;
 }) {
   const label = dineIn
-    ? `Sur Place${tableNumber ? ` / T${tableNumber}` : ""}`
-    : "\u00c0 Emporter";
+    ? `Sur place${tableNumber ? ` / T${tableNumber}` : ""}`
+    : "\u00c0 emporter";
   return (
     <span className="bg-ink text-base text-[10px] uppercase font-mono px-1.5 py-0.5 leading-none">
       {label}
@@ -140,16 +200,26 @@ function OrderTypeBadge({
   );
 }
 
-function OrderDetail({ order }: { order: OrderWithItems }) {
+function OrderDetail({
+  order,
+  events,
+  role,
+  posCoexistenceEnabled,
+}: {
+  order: OrderWithItems;
+  events: JournalEvent[];
+  role: StaffRole;
+  posCoexistenceEnabled: boolean;
+}) {
   const status = order.status as OrderLifecycleStatus;
   const isDineIn = order.type === "dine_in";
 
   return (
-    <div className="bg-black/[0.01] border-t border-outline px-6 py-5 flex flex-col gap-5">
+    <div className="order-ticket-print bg-black/[0.01] border-t border-outline px-6 py-5 flex flex-col gap-5">
       <section className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3 font-mono text-[12px] uppercase tracking-widest">
         <DetailPair label="Client" value={order.customerName} />
         <DetailPair label={"T\u00e9l"} value={order.customerPhone ?? "-"} />
-        <DetailPair label="Type" value={isDineIn ? "Sur Place" : "\u00c0 Emporter"} />
+        <DetailPair label="Type" value={isDineIn ? "Sur place" : "\u00c0 emporter"} />
         {isDineIn ? (
           <DetailPair label="Table" value={order.tableNumber ?? "-"} />
         ) : null}
@@ -171,11 +241,234 @@ function OrderDetail({ order }: { order: OrderWithItems }) {
         <span>{formatAmount(Number(order.total))}</span>
       </div>
 
+      {events.length > 0 ? <OrderJournal events={events} /> : null}
+
+      <PrintTicketButton orderId={order.id} />
+
+      {posCoexistenceEnabled ? (
+        <PosReconciliationControl order={order} role={role} />
+      ) : null}
+
       {!isTerminalOrderStatus(status) ? (
         <OrderActions orderId={order.id} status={status} />
       ) : null}
     </div>
   );
+}
+
+function PosReconciliationControl({
+  order,
+  role,
+}: {
+  order: OrderWithItems;
+  role: StaffRole;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [editing, setEditing] = useState(false);
+  const [posReference, setPosReference] = useState(order.posReference ?? "");
+  const canMark =
+    role === "owner" || role === "manager" || role === "cashier";
+  const canRevert = role === "owner" || role === "manager";
+
+  if (order.posStatus === "not_required") return null;
+
+  const markEntered = () => {
+    startTransition(async () => {
+      const result = await markOrderEnteredInPos(order.id, { posReference });
+      if (result.status === "error") window.alert(result.message);
+      else setEditing(false);
+    });
+  };
+
+  const revert = () => {
+    if (!window.confirm("Annuler l'entrée en caisse ?")) return;
+    startTransition(async () => {
+      const result = await revertOrderPosStatus(order.id);
+      if (result.status === "error") window.alert(result.message);
+    });
+  };
+
+  if (order.posStatus === "entered") {
+    return (
+      <section className="border-t border-outline pt-4 flex flex-col gap-2">
+        <p className="font-mono text-[11px] uppercase tracking-widest text-ink/55">
+          Entrée en caisse
+          {order.posEnteredAt ? ` · ${formatCasablancaTimestamp(String(order.posEnteredAt))}` : ""}
+          {order.posEnteredByDisplayName
+            ? ` · ${order.posEnteredByDisplayName}`
+            : ""}
+          {order.posReference ? ` · ${order.posReference}` : ""}
+        </p>
+        {canRevert ? (
+          <button
+            type="button"
+            onClick={revert}
+            disabled={pending}
+            className="self-start font-mono text-[11px] uppercase tracking-widest text-ink/50 hover:text-accent underline underline-offset-4 disabled:opacity-60"
+          >
+            Annuler
+          </button>
+        ) : null}
+      </section>
+    );
+  }
+
+  if (!canMark || order.posStatus !== "pending") return null;
+
+  return (
+    <section className="border-t border-outline pt-4 flex flex-col gap-3">
+      <p className="font-mono text-[11px] uppercase tracking-widest text-ink/55">
+        À entrer en caisse
+      </p>
+      {editing ? (
+        <div className="flex flex-col min-[420px]:flex-row gap-2">
+          <input
+            type="text"
+            maxLength={64}
+            value={posReference}
+            onChange={(event) => setPosReference(event.target.value)}
+            placeholder="Réf caisse (optionnel)"
+            className="min-h-[44px] flex-1 border border-outline bg-white px-3 py-2 font-mono text-[12px] focus:border-ink focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={markEntered}
+            disabled={pending}
+            className="px-5 py-3 font-mono font-bold uppercase tracking-widest text-[12px] transition-colors border-2 border-ink bg-ink text-base hover:bg-accent hover:text-base focus:outline-none focus:ring-4 focus:ring-accent/20 disabled:opacity-60"
+          >
+            {pending ? "..." : "Confirmer"}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="self-start px-5 py-3 font-mono font-bold uppercase tracking-widest text-[12px] transition-colors border-2 border-ink bg-base text-ink hover:bg-ink hover:text-base focus:outline-none focus:ring-4 focus:ring-accent/20"
+        >
+          Entrée en caisse
+        </button>
+      )}
+    </section>
+  );
+}
+
+function OrderJournal({ events }: { events: JournalEvent[] }) {
+  return (
+    <section className="border-t-2 border-ink pt-4 flex flex-col gap-3">
+      <h3 className="font-mono font-bold text-[11px] uppercase tracking-widest text-ink/40">
+        Journal
+      </h3>
+      <ol className="flex flex-col">
+        {events.map((event, index) => (
+          <JournalEntry
+            key={event.id}
+            event={event}
+            isFirst={index === 0}
+            isLast={index === events.length - 1}
+          />
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function JournalEntry({
+  event,
+  isFirst,
+  isLast,
+}: {
+  event: JournalEvent;
+  isFirst: boolean;
+  isLast: boolean;
+}) {
+  const actor = formatActor(event);
+  const summary = summarisePayload(event.payload);
+  return (
+    <li className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0">
+      <div className="relative flex flex-col items-center pt-1">
+        <span className="w-2 h-2 bg-ink" aria-hidden />
+        {!isLast ? (
+          <span className="flex-1 w-px bg-outline mt-1" aria-hidden />
+        ) : null}
+      </div>
+      <div className={cn("pb-4", isFirst ? "pt-0" : "pt-0")}>
+        <p className="font-sans text-[14px] font-bold text-ink leading-tight">
+          {eventLabelFr(event.eventType)}
+        </p>
+        <p className="font-mono text-[11px] uppercase tracking-widest text-ink/50 mt-1">
+          {formatCasablancaTimestamp(event.createdAt)} \u00b7 {actor}
+        </p>
+        {summary ? (
+          <p className="font-sans text-[12px] text-ink/55 leading-snug mt-1">
+            {summary}
+          </p>
+        ) : null}
+      </div>
+    </li>
+  );
+}
+
+function formatActor(event: JournalEvent): string {
+  if (!event.actorDisplayName && event.actorRole === "customer") return "Client";
+  if (!event.actorDisplayName && event.actorRole === "system") return "Syst\u00e8me";
+  if (!event.actorDisplayName && !event.actorRole) return "\u2014";
+  const role = roleLabelFr(event.actorRole);
+  if (event.actorDisplayName && role) {
+    return `${event.actorDisplayName} (${role})`;
+  }
+  return event.actorDisplayName ?? role ?? "\u2014";
+}
+
+function PrintTicketButton({ orderId }: { orderId: string }) {
+  const [pending, startTransition] = useTransition();
+
+  const print = () => {
+    startTransition(async () => {
+      const result = await enqueuePrintJob(orderId);
+      if (result.status === "error") {
+        window.alert(result.message);
+        return;
+      }
+      printPlainTextTicket(result.payloadText);
+    });
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={print}
+      disabled={pending}
+      className="px-5 py-3 font-mono font-bold uppercase tracking-widest text-[12px] transition-colors border-2 border-ink bg-base text-ink hover:bg-ink hover:text-base focus:outline-none focus:ring-4 focus:ring-accent/20 disabled:opacity-60 disabled:cursor-not-allowed"
+    >
+      {pending ? "..." : "Imprimer / reimprimer"}
+    </button>
+  );
+}
+
+function printPlainTextTicket(payloadText: string): void {
+  const win = window.open("", "_blank", "width=420,height=640");
+  if (!win) {
+    window.alert("Fenetre d'impression bloquee");
+    return;
+  }
+  const escaped = payloadText
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  win.document.write(`<!doctype html>
+<html>
+<head>
+  <title>Ticket</title>
+  <style>
+    body { margin: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    pre { font-size: 13px; line-height: 1.35; white-space: pre; }
+  </style>
+</head>
+<body><pre>${escaped}</pre></body>
+</html>`);
+  win.document.close();
+  win.focus();
+  win.print();
 }
 
 function DetailPair({ label, value }: { label: string; value: string }) {
@@ -188,7 +481,7 @@ function DetailPair({ label, value }: { label: string; value: string }) {
 }
 
 function OrderLineItem({ item }: { item: OrderWithItems["items"][number] }) {
-  const parsed = parseOrderItemOptions(item.optionsJson);
+  const optionLines = summarizeOrderItemOptions(item.optionsJson);
 
   return (
     <li className="border border-outline p-3 flex flex-col gap-2">
@@ -202,24 +495,12 @@ function OrderLineItem({ item }: { item: OrderWithItems["items"][number] }) {
         </span>
       </div>
 
-      {parsed.variantName ? (
-        <p className="font-mono text-[11px] uppercase tracking-widest text-ink/55 leading-snug">
-          Variante : {parsed.variantName}
-        </p>
-      ) : null}
-      {parsed.options.map((option) => (
+      {optionLines.map((line) => (
         <p
-          key={option.optionName}
+          key={line}
           className="font-mono text-[11px] uppercase tracking-widest text-ink/55 leading-snug"
         >
-          {option.optionName} :{" "}
-          {option.values
-            .map((value) =>
-              value.priceAddition > 0
-                ? `${value.valueName} (+${formatAmount(value.priceAddition)})`
-                : value.valueName,
-            )
-            .join(", ")}
+          {line.trim()}
         </p>
       ))}
 
@@ -282,22 +563,37 @@ function OrderActions({
 
 type OrdersBoardProps = {
   orders: OrderWithItems[];
+  eventsByOrderId?: Record<string, JournalEvent[]>;
+  role: StaffRole;
+  posCoexistenceEnabled: boolean;
 };
 
-export function OrdersBoard({ orders }: OrdersBoardProps) {
+export function OrdersBoard({
+  orders,
+  eventsByOrderId,
+  role,
+  posCoexistenceEnabled,
+}: OrdersBoardProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const toggle = (id: string) =>
     setExpandedId((curr) => (curr === id ? null : id));
 
   if (orders.length === 0) {
     return (
-      <div className="px-6 py-20 flex flex-col items-center text-center gap-4">
+      <div className="px-6 py-20 flex flex-col items-center text-center gap-5">
         <div className="w-12 h-12 border-2 border-ink flex items-center justify-center">
           <div className="w-3 h-3 bg-accent" />
         </div>
-        <p className="font-mono text-[12px] uppercase tracking-widest text-ink/50 font-bold">
-          Aucune commande pour le moment
+        <p className="font-sans text-[15px] text-ink/60 leading-snug max-w-[320px]">
+          Aucune commande pour le moment — partagez votre QR code pour recevoir
+          des commandes !
         </p>
+        <Link
+          href="/home"
+          className="bg-ink text-base px-5 py-3 font-mono font-bold uppercase tracking-widest text-[12px] hover:bg-accent transition-colors border-2 border-ink focus:outline-none focus:ring-4 focus:ring-accent/20"
+        >
+          Voir le QR code
+        </Link>
       </div>
     );
   }
@@ -308,8 +604,11 @@ export function OrdersBoard({ orders }: OrdersBoardProps) {
         <OrderRow
           key={order.id}
           order={order}
+          events={eventsByOrderId?.[order.id] ?? []}
           expanded={expandedId === order.id}
           onToggle={() => toggle(order.id)}
+          role={role}
+          posCoexistenceEnabled={posCoexistenceEnabled}
         />
       ))}
     </div>
@@ -336,4 +635,29 @@ function formatRelativeTime(input: Date | string): string {
   if (diffHours < 24) return `il y a ${diffHours} h`;
   const diffDays = Math.floor(diffHours / 24);
   return `il y a ${diffDays} j`;
+}
+
+function playOrderTone() {
+  try {
+    const AudioContextImpl =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AudioContextImpl) return;
+    const ctx = new AudioContextImpl();
+    const gain = ctx.createGain();
+    const osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(1174, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.38);
+  } catch {
+    // Browsers may block audio until a merchant explicitly interacts.
+  }
 }

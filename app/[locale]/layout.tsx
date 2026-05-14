@@ -65,8 +65,10 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const messages = await getMessages();
 
+  const dir = locale === "ar" ? "rtl" : "ltr";
+
   return (
-    <html lang={locale} className={cn(inter.variable, spaceMono.variable)}>
+    <html lang={locale} dir={dir} className={cn(inter.variable, spaceMono.variable)}>
       <body className="bg-base text-ink font-sans antialiased w-full h-full min-h-screen">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}

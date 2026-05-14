@@ -1,0 +1,302 @@
+- main [ref=e2]:
+  - generic [ref=e4]:
+    - link "QUICKARTE" [ref=e5] [cursor=pointer]:
+      - /url: "#"
+    - generic [ref=e6]:
+      - navigation [ref=e7]:
+        - link "LE PRODUIT" [ref=e8] [cursor=pointer]:
+          - /url: "#produit"
+        - link "LE MODÈLE" [ref=e9] [cursor=pointer]:
+          - /url: "#modele"
+        - link "POURQUOI" [ref=e10] [cursor=pointer]:
+          - /url: "#pourquoi"
+        - link "CONTACT" [ref=e11] [cursor=pointer]:
+          - /url: "#contact"
+      - link "SE CONNECTER" [ref=e12] [cursor=pointer]:
+        - /url: /fr/login
+  - generic [ref=e14]:
+    - generic [ref=e15]:
+      - heading "Le système de commerce des restaurants et cafés qui se respectent." [level=1] [ref=e16]
+      - paragraph [ref=e17]: Menu, commandes, fidélité, analyses. Quatre modules, un abonnement, zéro commission.
+      - generic [ref=e18]:
+        - link "CRÉER MON ÉTABLISSEMENT →" [ref=e19] [cursor=pointer]:
+          - /url: /fr/register
+        - link "NOUS CONTACTER →" [ref=e20] [cursor=pointer]:
+          - /url: "#contact"
+    - generic [ref=e23]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]: CAFE MAARIF
+          - generic [ref=e28]: CASABLANCA
+        - generic [ref=e29]:
+          - generic [ref=e30]: PETIT DEJ
+          - generic [ref=e31]: TACOS
+          - generic [ref=e32]: CAFES
+        - generic [ref=e34]: 01 / PETIT DEJ
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e37]: Msemen miel
+            - generic [ref=e38]: 12 MAD
+          - generic [ref=e39]:
+            - generic [ref=e40]: The a la menthe
+            - generic [ref=e41]: 14 MAD
+          - generic [ref=e42]:
+            - generic [ref=e43]: Tacos poulet
+            - generic [ref=e44]: 45 MAD
+        - generic [ref=e46]: COMMANDER →
+      - generic [ref=e47]: VUE CLIENT
+  - generic [ref=e49]:
+    - generic [ref=e50]: 01 / LE PRODUIT
+    - heading "Quatre modules, indépendants. Vous activez ce que vous utilisez." [level=2] [ref=e51]
+    - paragraph [ref=e52]: Chaque module fonctionne seul ou avec les autres. Pas de bundle imposé, pas de fonctionnalité que vous payez sans jamais ouvrir.
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - generic [ref=e55]: "01"
+        - generic [ref=e56]: MENU & QR
+        - paragraph [ref=e57]: Un menu digital soigné, un QR code par table, un mini-site qui reflète votre maison.
+      - generic [ref=e58]:
+        - generic [ref=e59]: "02"
+        - generic [ref=e60]: COMMANDE EN LIGNE
+        - paragraph [ref=e61]: Click-and-collect et commande sur place. Paiement intégré. Vos commandes arrivent sur votre téléphone.
+      - generic [ref=e62]:
+        - generic [ref=e63]: "03"
+        - generic [ref=e64]: FIDÉLITÉ
+        - paragraph [ref=e65]: Une carte de fidélité au numéro de téléphone. Simple, respectée, sans application à télécharger.
+      - generic [ref=e66]:
+        - generic [ref=e67]: "04"
+        - generic [ref=e68]: ANALYSES
+        - paragraph [ref=e69]: Votre chiffre, vos produits qui marchent, vos heures fortes. Lisible en un coup d'œil.
+  - generic [ref=e71]:
+    - generic [ref=e72]: 02 / LE MODÈLE
+    - heading "Vos commandes, votre argent." [level=2] [ref=e73]
+    - paragraph [ref=e74]: Quickarte fonctionne avec un abonnement mensuel. Rien d'autre. Aucune commission sur vos ventes, aucun pourcentage sur vos commandes. Ce que vos clients paient chez vous reste chez vous.
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - generic [ref=e77]: "01"
+        - generic [ref=e78]: UN ABONNEMENT MENSUEL
+        - paragraph [ref=e79]: Vous payez pour les modules que vous activez. Un tarif mensuel, établi ensemble. Aucun engagement long, aucun palier forcé.
+        - paragraph [ref=e81]: Vous pouvez commencer avec un seul module et ajouter les autres quand vous voulez. Aucune re-configuration, aucun plan à migrer.
+      - generic [ref=e82]:
+        - generic [ref=e83]: "02"
+        - generic [ref=e84]: ZÉRO COMMISSION
+        - paragraph [ref=e85]: Nous ne prélevons rien sur vos ventes. Pas sur la première commande, pas sur la millième. Nos revenus viennent de votre abonnement — uniquement.
+        - paragraph [ref=e87]: Aucun frais de transaction prélevé par Quickarte.
+      - generic [ref=e88]:
+        - generic [ref=e89]: "03"
+        - generic [ref=e90]: PAIEMENTS DIRECTS
+        - paragraph [ref=e91]: Vos clients vous paient via Stripe. L'argent arrive sur votre compte bancaire. Nous n'en voyons pas un centime.
+        - paragraph [ref=e93]: Stripe, notre prestataire de paiement, applique ses frais de traitement bancaire standard. Quickarte n'intervient pas dans cette relation.
+  - generic [ref=e95]:
+    - generic [ref=e96]: 03 / POURQUOI QUICKARTE
+    - heading "Moins de fonctionnalités, mieux faites." [level=2] [ref=e97]
+    - paragraph [ref=e98]: "Le marché français est bruyant et chargé. Quickarte prend le contre-pied : un outil court, soigné, opinionné, que vos clients remarquent et que vous gardez ouvert sans y penser."
+    - generic [ref=e99]:
+      - generic [ref=e100]:
+        - generic [ref=e101]: "01"
+        - generic [ref=e102]: SIMPLICITÉ
+        - paragraph [ref=e103]: Pensé pour être utile, pas pour faire la liste. Un menu en ligne en cinq minutes, une commande qui arrive sur votre téléphone, un rapport de fin de journée que vous lisez vraiment. Rien d'autre.
+      - generic [ref=e104]:
+        - generic [ref=e105]: "02"
+        - generic [ref=e106]: ESTHÉTIQUE
+        - paragraph [ref=e107]: Votre menu digital mérite d'être aussi soigné que votre vitrine. Tout ce que vos clients voient — storefront, QR, page de commande — est dessiné avec la même exigence que vos produits.
+      - generic [ref=e108]:
+        - generic [ref=e109]: "03"
+        - generic [ref=e110]: MODULARITÉ
+        - paragraph [ref=e111]: Quatre modules indépendants. Vous activez ce qui compte pour vous, et rien d'autre. Chaque module tient debout seul et s'assemble proprement avec les autres.
+  - generic [ref=e114]:
+    - generic [ref=e115]:
+      - generic [ref=e116]: 04 / VOTRE JOURNÉE EN UN COUP D'ŒIL
+      - heading "Ce qui compte, et rien d'autre." [level=2] [ref=e117]
+      - paragraph [ref=e118]: Le chiffre du jour. Les produits qui marchent. Les heures fortes. Une phrase qui résume votre journée, en français clair. Pas de graphique à déchiffrer, pas de rapport à télécharger, pas d'Excel.
+      - generic [ref=e119]:
+        - generic [ref=e120]:
+          - generic [ref=e121]: "01"
+          - generic [ref=e122]: Revenu du jour, comparé à la même journée la semaine passée.
+        - generic [ref=e123]:
+          - generic [ref=e124]: "02"
+          - generic [ref=e125]: Produits en tête, classés par ventes et par marge.
+        - generic [ref=e126]:
+          - generic [ref=e127]: "03"
+          - generic [ref=e128]: Résumé en une phrase, écrit en français, lisible en dix secondes.
+        - generic [ref=e129]:
+          - generic [ref=e130]: CE QU'ON VOIT RAREMENT
+          - paragraph [ref=e131]: La plupart des outils vous donnent des graphiques. Quickarte vous donne une phrase. Celle que vous auriez écrite vous-même si vous aviez eu le temps de regarder vos chiffres.
+    - generic [ref=e133]:
+      - generic [ref=e135]:
+        - generic [ref=e136]:
+          - generic [ref=e137]: ANALYSES
+          - generic [ref=e138]: MARDI 14 AVRIL
+        - generic [ref=e139]:
+          - generic [ref=e140]: REVENU DU JOUR
+          - generic [ref=e141]: 1 247,80 MAD
+          - generic [ref=e142]: +18 % VS MARDI DERNIER
+        - generic [ref=e143]:
+          - generic [ref=e144]: 7 DERNIERS JOURS
+          - img [ref=e145]
+        - generic [ref=e147]:
+          - generic [ref=e148]: TROIS PRODUITS EN TÊTE
+          - generic [ref=e149]:
+            - generic [ref=e150]: "01"
+            - generic [ref=e151]: Tacos poulet
+            - generic [ref=e152]: 42 VENDUS
+          - generic [ref=e153]:
+            - generic [ref=e154]: "02"
+            - generic [ref=e155]: The a la menthe
+            - generic [ref=e156]: 38 VENDUS
+          - generic [ref=e157]:
+            - generic [ref=e158]: "03"
+            - generic [ref=e159]: Msemen miel
+            - generic [ref=e160]: 34 VENDUS
+        - generic [ref=e161]:
+          - generic [ref=e162]: HEURE FORTE
+          - generic [ref=e163]: 8 h – 9 h · 42 commandes
+        - generic [ref=e164]:
+          - generic [ref=e165]: RÉSUMÉ
+          - paragraph [ref=e166]: Matinée solide, portée par le pain au levain et le café. Le rush habituel avant l'école, plus calme après 11 h.
+      - generic [ref=e167]: VUE COMMERÇANT
+  - generic [ref=e169]:
+    - generic [ref=e170]: SANS APPLI · SANS MATÉRIEL
+    - paragraph [ref=e171]: Installez Quickarte sur votre téléphone en deux secondes. Pas d'App Store, pas d'installation.
+    - paragraph [ref=e172]: Un onglet ouvert sur votre navigateur devient l'application. Votre téléphone — celui que vous avez déjà dans la poche — devient le système.
+  - generic [ref=e174]:
+    - generic [ref=e175]: 05 / COMMENT ÇA MARCHE
+    - heading "En quatre étapes." [level=2] [ref=e176]
+    - paragraph [ref=e177]: De la première conversation à la première commande, en quelques jours.
+    - generic [ref=e178]:
+      - generic [ref=e179]:
+        - generic [ref=e180]:
+          - generic [ref=e181]: ÉTAPE 01
+          - generic [ref=e182]: Vous nous parlez de votre carte.
+          - paragraph [ref=e183]: Un appel ou une visite. On comprend votre commerce, vos produits, votre manière de travailler.
+        - generic [ref=e184]:
+          - generic [ref=e185]: ÉTAPE 02
+          - generic [ref=e186]: Votre menu est en ligne en quelques minutes.
+          - paragraph [ref=e187]: On importe votre carte, on génère vos QR codes, on vous remet les clés. Pas de configuration interminable.
+        - generic [ref=e188]:
+          - generic [ref=e189]: ÉTAPE 03
+          - generic [ref=e190]: Vos clients scannent, commandent, reviennent.
+          - paragraph [ref=e191]: Sur place ou en click-and-collect. La fidélité s'active au numéro de téléphone, sans application.
+        - generic [ref=e192]:
+          - generic [ref=e193]: ÉTAPE 04
+          - generic [ref=e194]: Vous gérez tout depuis votre téléphone.
+          - paragraph [ref=e195]: Les commandes arrivent, les analyses se mettent à jour, le rapport du soir est prêt avant que vous ne fermiez.
+      - generic [ref=e197]:
+        - generic [ref=e198]:
+          - generic [ref=e199]:
+            - generic [ref=e200]:
+              - generic [ref=e201]: COMMANDES
+              - generic [ref=e202]: MARDI 14 AVRIL · 9 COMMANDES
+            - generic [ref=e204]: EN ATTENTE
+            - generic [ref=e205]:
+              - generic [ref=e206]:
+                - generic [ref=e207]: "#0042 · 12H42"
+                - generic [ref=e208]: Salma B.
+              - generic [ref=e209]: Tacos poulet, The menthe x2
+              - generic [ref=e210]:
+                - generic [ref=e211]: EN ATTENTE
+                - generic [ref=e212]: 73 MAD
+            - generic [ref=e213]:
+              - generic [ref=e214]:
+                - generic [ref=e215]: "#0041 · 12H38"
+                - generic [ref=e216]: Yassine D.
+              - generic [ref=e217]: Harira x2, Msemen
+              - generic [ref=e218]:
+                - generic [ref=e219]: EN ATTENTE
+                - generic [ref=e220]: 52 MAD
+            - generic [ref=e221]:
+              - generic [ref=e222]:
+                - generic [ref=e223]: "#0040 · 12H31"
+                - generic [ref=e224]: Ines A.
+              - generic [ref=e225]: Tajine kefta, Raib
+              - generic [ref=e226]:
+                - generic [ref=e227]: EN ATTENTE
+                - generic [ref=e228]: 68 MAD
+            - generic [ref=e230]: TERMINÉE
+            - generic [ref=e231]:
+              - generic [ref=e232]:
+                - generic [ref=e233]: "#0039 · 12H25"
+                - generic [ref=e234]: Omar T.
+              - generic [ref=e235]: Beldi breakfast
+              - generic [ref=e236]:
+                - generic [ref=e237]: TERMINÉE
+                - generic [ref=e238]: 38 MAD
+            - generic [ref=e239]:
+              - generic [ref=e240]:
+                - generic [ref=e241]: "#0038 · 12H19"
+                - generic [ref=e242]: Nora M.
+              - generic [ref=e243]: Jus orange x2
+              - generic [ref=e244]:
+                - generic [ref=e245]: TERMINÉE
+                - generic [ref=e246]: 36 MAD
+            - generic [ref=e247]:
+              - generic [ref=e248]:
+                - generic [ref=e249]: "#0037 · 12H12"
+                - generic [ref=e250]: Mehdi S.
+              - generic [ref=e251]: Tacos mixte x3
+              - generic [ref=e252]:
+                - generic [ref=e253]: TERMINÉE
+                - generic [ref=e254]: 150 MAD
+            - generic [ref=e255]:
+              - generic [ref=e256]:
+                - generic [ref=e257]: "#0036 · 12H05"
+                - generic [ref=e258]: Sara V.
+              - generic [ref=e259]: Cafe noir x2, Msemen x1
+              - generic [ref=e260]:
+                - generic [ref=e261]: TERMINÉE
+                - generic [ref=e262]: 32 MAD
+          - generic [ref=e263]:
+            - generic [ref=e264]:
+              - img [ref=e266]
+              - generic [ref=e269]: ACCUEIL
+            - generic [ref=e270]:
+              - img [ref=e272]
+              - generic [ref=e273]: CATALOGUE
+            - generic [ref=e274]:
+              - img [ref=e276]
+              - generic [ref=e279]: COMMANDES
+            - generic [ref=e280]:
+              - img [ref=e282]
+              - generic [ref=e284]: FIDÉLITÉ
+        - generic [ref=e285]: VUE COMMERÇANT
+  - generic [ref=e287]:
+    - generic [ref=e288]: 06 / PRENONS CONTACT
+    - heading "Dites-nous qui vous êtes." [level=2] [ref=e289]
+    - paragraph [ref=e290]: On vous rappelle sous 48 heures. Un humain au téléphone, pas de newsletter, pas de suite commerciale automatisée.
+    - generic [ref=e291]:
+      - generic [ref=e292]:
+        - generic [ref=e293]: VOTRE NOM
+        - textbox "VOTRE NOM" [ref=e294]
+      - generic [ref=e295]:
+        - generic [ref=e296]: NOM DE VOTRE COMMERCE
+        - textbox "NOM DE VOTRE COMMERCE" [ref=e297]
+      - generic [ref=e298]:
+        - generic [ref=e299]: VILLE
+        - textbox "VILLE" [ref=e300]
+      - generic [ref=e301]:
+        - generic [ref=e302]: TÉLÉPHONE
+        - textbox "TÉLÉPHONE" [ref=e303]
+      - generic [ref=e304]:
+        - generic [ref=e305]: MESSAGE (OPTIONNEL)
+        - textbox "MESSAGE (OPTIONNEL)" [ref=e306]
+      - button "DEMANDER UN ACCÈS →" [ref=e307]
+      - generic [ref=e308]: RGPD — VOS DONNÉES NE SONT JAMAIS PARTAGÉES.
+  - generic [ref=e310]:
+    - generic [ref=e311]:
+      - generic [ref=e312]:
+        - generic [ref=e313]: QUICKARTE
+        - paragraph [ref=e314]: Le système des commerces qui se respectent.
+      - generic [ref=e315]:
+        - generic [ref=e316]: NOUS SUIVRE
+        - list [ref=e317]:
+          - listitem [ref=e318]:
+            - link "Se connecter" [ref=e319] [cursor=pointer]:
+              - /url: /fr/login
+          - listitem [ref=e320]:
+            - link "Instagram" [ref=e321] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e322]:
+            - link "LinkedIn" [ref=e323] [cursor=pointer]:
+              - /url: "#"
+        - link "bonjour@quickarte.fr" [ref=e325] [cursor=pointer]:
+          - /url: mailto:bonjour@quickarte.fr
+    - generic [ref=e327]: © 2026 QUICKARTE

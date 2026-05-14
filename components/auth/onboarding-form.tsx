@@ -38,6 +38,7 @@ export function OnboardingForm() {
   const [name, setName] = useState("");
   const [type, setType] = useState<BusinessType>("restaurant");
   const [place, setPlace] = useState<PlaceSelection | null>(null);
+  const [manualAddress, setManualAddress] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [slugCheck, setSlugCheck] = useState<SlugCheck>({ state: "idle" });
@@ -86,18 +87,21 @@ export function OnboardingForm() {
     setFormError(null);
     setFieldErrors({});
 
-    if (!place) {
-      setFormError("Sélectionnez une adresse dans la liste");
+    const formattedAddress = place?.formattedAddress ?? manualAddress.trim();
+    if (!formattedAddress) {
+      setFormError("Renseignez une adresse");
       return;
     }
 
     const payload: CreateBusinessInput = {
       name: name.trim(),
       type,
-      googlePlaceId: place.placeId,
-      formattedAddress: place.formattedAddress,
-      lat: place.lat,
-      lng: place.lng,
+      googlePlaceId: place?.placeId ?? null,
+      formattedAddress,
+      city: inferCity(formattedAddress),
+      address: formattedAddress,
+      lat: place?.lat ?? null,
+      lng: place?.lng ?? null,
       slug: slug.trim(),
     };
 
@@ -162,12 +166,17 @@ export function OnboardingForm() {
           </div>
 
           <div>
-            <AddressAutocomplete onSelect={handlePlaceSelect} required />
+            <AddressAutocomplete
+              onSelect={handlePlaceSelect}
+              onManualChange={setManualAddress}
+              allowManualFallback
+              required
+            />
             <p className="mt-2 font-mono text-[11px] uppercase tracking-widest text-ink/50">
-              Sélectionnez votre établissement dans la liste.
+              Selectionnez votre etablissement dans la liste, ou saisissez
+              l'adresse manuellement.
             </p>
             <FieldError message={fieldError("formattedAddress")} />
-            <FieldError message={fieldError("googlePlaceId")} />
           </div>
         </div>
       </section>
@@ -213,7 +222,7 @@ export function OnboardingForm() {
             type="submit"
             disabled={
               isPending ||
-              !place ||
+              (!place && manualAddress.trim().length === 0) ||
               slugCheck.state === "taken" ||
               slugCheck.state === "invalid"
             }
@@ -262,6 +271,14 @@ function TypeButton({
       </span>
     </button>
   );
+}
+
+function inferCity(address: string): string | null {
+  const parts = address
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return parts.at(-1) ?? null;
 }
 
 function SlugStatus({ check }: { check: SlugCheck }) {

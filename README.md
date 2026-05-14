@@ -28,7 +28,7 @@ The payment flow uses Express connected accounts with destination charges. To ex
 
 Handy once live: `npm run stripe -- status <slug>` prints cached + live Stripe account state for a merchant, and `npm run stripe -- sync <slug>` force-refreshes the cached flags from Stripe. Useful when a merchant says "I finished onboarding but the app still says incomplete."
 
-The seed marks Camille's (`cafe-des-arts`) Stripe fields as already connected with a fake `acct_DEMO_cafe_des_arts` account id, so her `/settings` shows the "Paiements activés" card without real Stripe onboarding. About half her seeded historical orders are flagged paid (with `pi_DEMO_…` / `ch_DEMO_…` fake ids) so the orders board and analytics show a realistic mix. The fake account id can't process real charges — use a real test account for end-to-end payment testing.
+The seed marks Salma's (`cafe-maarif`) Stripe fields as already connected with a fake `acct_DEMO_cafe_des_arts` account id, so her `/settings` shows the "Paiements activés" card without real Stripe onboarding. About half her seeded historical orders are flagged paid (with `pi_DEMO_…` / `ch_DEMO_…` fake ids) so the orders board and analytics show a realistic mix. The fake account id can't process real charges — use a real test account for end-to-end payment testing.
 
 ### PWA: install + web push
 

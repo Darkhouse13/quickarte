@@ -1,1 +1,84 @@
-{}
+{
+  "app": {
+    "name": "Quickarte",
+    "currency": "MAD"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "catalog": "القائمة",
+    "orders": "الطلبات",
+    "loyalty": "الوفاء"
+  },
+  "userMenu": {
+    "settings": "الإعدادات",
+    "signOut": "تسجيل الخروج"
+  },
+  "businessTypes": {
+    "restaurant": "مطعم",
+    "cafe": "مقهى",
+    "autre": "آخر"
+  },
+  "status": {
+    "pending": "في الانتظار",
+    "confirmed": "مؤكد",
+    "preparing": "قيد التحضير",
+    "ready": "جاهز",
+    "completed": "مكتمل",
+    "cancelled": "ملغى"
+  },
+  "storefront": {
+    "viewOrder": "عرض الطلب",
+    "items": "{count, plural, =0 {0 منتج} one {# منتج} other {# منتجات}}",
+    "popular": "شائع"
+  },
+  "merchant": {
+    "greeting": "مرحبا، {name}",
+    "sections": {
+      "today": "اليوم",
+      "quickActions": "إجراءات سريعة",
+      "recentOrders": "آخر الطلبات"
+    },
+    "stats": {
+      "orders": "الطلبات",
+      "revenue": "المداخيل",
+      "pending": "في الانتظار"
+    },
+    "actions": {
+      "manageOrders": "إدارة الطلبات",
+      "editCatalog": "تعديل القائمة"
+    }
+  },
+  "form": {
+    "sections": {
+      "information": "المعلومات",
+      "saleDetails": "تفاصيل البيع",
+      "optionsVariants": "الخيارات والأحجام"
+    },
+    "fields": {
+      "photo": "الصورة",
+      "name": "الاسم",
+      "description": "الوصف",
+      "price": "الثمن",
+      "category": "الفئة",
+      "available": "متوفر"
+    },
+    "placeholders": {
+      "name": "طاجين الدجاج",
+      "description": "وصف مختصر للطبق",
+      "price": "45",
+      "selectCategory": "اختر فئة..."
+    },
+    "hints": {
+      "optional": "اختياري",
+      "optionsSubtitle": "الأحجام، الإضافات، الاختيارات..."
+    },
+    "actions": {
+      "save": "حفظ",
+      "cancel": "إلغاء",
+      "back": "رجوع"
+    },
+    "title": {
+      "newItem": "منتج جديد"
+    }
+  }
+}

@@ -9,9 +9,11 @@ const MERCHANT_PATHS = [
   "/home",
   "/catalog",
   "/orders",
+  "/cloture",
   "/loyalty",
   "/settings",
   "/onboarding",
+  "/kitchen",
 ];
 
 function stripLocale(pathname: string): string {
@@ -45,5 +47,7 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  // `print` is the non-localized kiosk bridge — it must bypass the intl
+  // middleware so it is never redirected under a /[locale] prefix.
+  matcher: ["/((?!api|_next|_vercel|print|.*\\..*).*)"],
 };

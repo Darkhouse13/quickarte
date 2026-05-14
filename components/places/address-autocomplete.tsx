@@ -14,6 +14,8 @@ type Props = {
   onSelect: (place: PlaceSelection | null) => void;
   defaultValue?: string;
   required?: boolean;
+  onManualChange?: (value: string) => void;
+  allowManualFallback?: boolean;
 };
 
 declare global {
@@ -83,6 +85,8 @@ export function AddressAutocomplete({
   onSelect,
   defaultValue,
   required,
+  onManualChange,
+  allowManualFallback = false,
 }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const autocompleteRef = useRef<GoogleAutocomplete | null>(null);
@@ -90,6 +94,7 @@ export function AddressAutocomplete({
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
+  const [manual, setManual] = useState(false);
   const [enterError, setEnterError] = useState(false);
   const id = useId();
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -147,7 +152,7 @@ export function AddressAutocomplete({
     };
   }, [apiKey, onSelect]);
 
-  if (status === "error") {
+  if (status === "error" && !allowManualFallback) {
     return (
       <div className="border-2 border-ink bg-base p-4">
         <p className="font-mono text-[11px] uppercase tracking-widest text-ink">
@@ -180,9 +185,10 @@ export function AddressAutocomplete({
               selectedRef.current = null;
               onSelect(null);
             }
+            onManualChange?.(inputRef.current?.value ?? "");
           }}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !selectedRef.current) {
+            if (e.key === "Enter" && !selectedRef.current && !manual) {
               e.preventDefault();
               setEnterError(true);
             }
@@ -199,6 +205,27 @@ export function AddressAutocomplete({
           className="mt-2 font-mono text-[11px] uppercase tracking-widest text-accent"
         >
           Sélectionnez une adresse dans la liste.
+        </p>
+      ) : null}
+      {allowManualFallback ? (
+        <button
+          type="button"
+          onClick={() => {
+            setManual((value) => !value);
+            setEnterError(false);
+            if (!manual) onSelect(null);
+          }}
+          className="mt-3 font-mono text-[11px] uppercase tracking-widest text-ink/60 hover:text-accent"
+        >
+          {manual || status === "error"
+            ? "Utiliser la recherche Google"
+            : "Saisir l'adresse manuellement"}
+        </button>
+      ) : null}
+      {(manual || status === "error") && allowManualFallback ? (
+        <p className="mt-2 font-sans text-xs text-ink/50 leading-snug">
+          L'adresse saisie sera affichee sur votre menu. Vous pourrez la
+          corriger plus tard dans les parametres.
         </p>
       ) : null}
     </div>

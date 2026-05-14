@@ -1,0 +1,45 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e22]: Quickarte — Accueil
+  - main [ref=e23]:
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - heading "Bonjour, Audit" [level=1] [ref=e28]
+          - generic [ref=e29]: 24 AVR 2026
+        - paragraph [ref=e30]: Audit Boulangerie 20260424 MAJ
+      - button "Menu utilisateur" [ref=e32]: A
+    - generic [ref=e33]:
+      - generic [ref=e35]:
+        - img "QR code pour Audit Boulangerie 20260424 MAJ" [ref=e37]
+        - generic [ref=e38]:
+          - generic [ref=e39]: Votre menu en ligne
+          - button "Copier quickarte.fr/audit-boulangerie-20260424-1244" [ref=e40]:
+            - generic [ref=e41]: quickarte.fr/audit-boulangerie-20260424-1244
+            - generic [ref=e42]: Copier
+          - link "Télécharger le QR →" [ref=e43] [cursor=pointer]:
+            - /url: data:image/png;base64,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
+      - generic [ref=e44]:
+        - heading "01 / Aujourd'hui" [level=2] [ref=e46]
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - generic [ref=e50]: Commandes
+            - generic [ref=e51]: "1"
+          - generic [ref=e52]:
+            - generic [ref=e54]: Revenu€
+            - generic [ref=e55]: "1"
+      - generic [ref=e56]:
+        - heading "02 / Actions Rapides" [level=2] [ref=e58]
+        - link "Modifier le catalogue →" [ref=e60] [cursor=pointer]:
+          - /url: /catalog
+          - generic [ref=e61]: Modifier le catalogue
+          - generic [ref=e63]: →
+    - navigation:
+      - generic [ref=e64]:
+        - link "Accueil" [ref=e65] [cursor=pointer]:
+          - /url: /home
+          - img [ref=e67]
+          - generic [ref=e70]: Accueil
+        - link "Catalogue" [ref=e71] [cursor=pointer]:
+          - /url: /catalog
+          - img [ref=e73]
+          - generic [ref=e75]: Catalogue

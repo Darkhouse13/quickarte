@@ -6,6 +6,7 @@ import {
   updateOptionInputSchema,
   variantInputSchema,
 } from "./schemas";
+import { USED_OPTION_FALLBACK_MESSAGE } from "./customization-messages";
 import {
   areRequiredOptionsSatisfied,
   getEffectiveMaxSelections,
@@ -27,16 +28,18 @@ test("variant input accepts a named price override", () => {
   }
 });
 
-test("option input accepts required multi-select with max selections", () => {
+test("option input accepts required multi-select with min/max selections", () => {
   const parsed = optionInputSchema.safeParse({
     name: "Sauces",
     type: "multi_select",
     required: true,
-    max_selections: "2",
+    min_select: "1",
+    max_select: "2",
   });
   assert.equal(parsed.success, true);
   if (parsed.success) {
-    assert.equal(parsed.data.max_selections, 2);
+    assert.equal(parsed.data.min_select, 1);
+    assert.equal(parsed.data.max_select, 2);
   }
 });
 
@@ -58,12 +61,12 @@ test("single-select update with max selections is rejected by the validator", ()
   assert.equal(parsed.success, false);
 });
 
-test("option value input rejects negative price additions", () => {
+test("option value input accepts negative price additions for discounts", () => {
   const parsed = optionValueInputSchema.safeParse({
-    name: "Cordon bleu",
+    name: "Sans fromage",
     price_addition: -5,
   });
-  assert.equal(parsed.success, false);
+  assert.equal(parsed.success, true);
 });
 
 test("storefront display options filter out empty option value lists", () => {
@@ -283,6 +286,8 @@ test("storefront DTO preserves variant option max selection overrides", () => {
                 id: "variant-1",
                 name: "1 Viande",
                 priceOverride: "45.00",
+                isDefault: true,
+                available: true,
                 position: 0,
                 optionMaxSelectionsOverrides: { [optionId]: 1 },
               },
@@ -293,9 +298,19 @@ test("storefront DTO preserves variant option max selection overrides", () => {
                 name: "Sauce",
                 type: "multi_select",
                 required: true,
-                maxSelections: 2,
+                minSelect: 1,
+                maxSelect: 2,
+                available: true,
                 position: 0,
-                values: [],
+                values: [
+                  {
+                    id: "value-1",
+                    name: "Samourai",
+                    priceAddition: "0.00",
+                    available: false,
+                    position: 0,
+                  },
+                ],
               },
             ],
           },
@@ -305,8 +320,22 @@ test("storefront DTO preserves variant option max selection overrides", () => {
   );
 
   const variant = fixture.sections[0]!.items[0]!.variants![0]!;
+  const item = fixture.sections[0]!.items[0]!;
+  assert.equal(item.hasConfiguration, true);
   assert.deepEqual(variant.optionMaxSelectionsOverrides, { [optionId]: 1 });
   assert.deepEqual(variant.option_max_selections_overrides, { [optionId]: 1 });
+  assert.equal(variant.isDefault, true);
+  assert.equal(variant.available, true);
+  assert.equal(item.options![0]!.minSelect, 1);
+  assert.equal(item.options![0]!.maxSelect, 2);
+  assert.equal(item.options![0]!.values[0]!.available, false);
+});
+
+test("used option delete fallback message is safe to surface in French", () => {
+  assert.equal(
+    USED_OPTION_FALLBACK_MESSAGE,
+    "Cette option est utilisee dans des commandes passees. Elle a ete desactivee au lieu d'etre supprimee.",
+  );
 });
 
 test.skip("variant CRUD round-trip requires live Postgres on DATABASE_URL");

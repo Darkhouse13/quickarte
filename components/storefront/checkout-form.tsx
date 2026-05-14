@@ -4,7 +4,12 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { FormInput } from "@/components/ui/form-input";
 import { FormTextarea } from "@/components/ui/form-textarea";
-import { getCartLineKey, useCartStore } from "@/lib/ordering/cart-store";
+import {
+  getCartLineKey,
+  useCartStore,
+  type CartItem,
+} from "@/lib/ordering/cart-store";
+import { summarizeOrderItemOptions } from "@/lib/ordering/order-item-options";
 import { placeOrder } from "@/lib/ordering/actions";
 import { cn } from "@/lib/utils/cn";
 import { formatAmount } from "@/lib/utils/currency";
@@ -19,6 +24,10 @@ type Props = {
     accrualRate: number;
     rewardDescription: string;
   } | null;
+  initialTableNumber?: number | null;
+  orderingEnabled?: boolean;
+  dineInEnabled?: boolean;
+  takeawayEnabled?: boolean;
 };
 
 type OrderType = "dine_in" | "takeaway";
@@ -29,6 +38,10 @@ export function CheckoutForm({
   businessSlug,
   locale,
   loyaltyHint,
+  initialTableNumber,
+  orderingEnabled = true,
+  dineInEnabled = true,
+  takeawayEnabled = true,
 }: Props) {
   const router = useRouter();
 
@@ -46,8 +59,11 @@ export function CheckoutForm({
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [orderType, setOrderType] = useState<OrderType>("dine_in");
-  const [tableNumber, setTableNumber] = useState("");
+  const defaultOrderType: OrderType = dineInEnabled ? "dine_in" : "takeaway";
+  const [orderType, setOrderType] = useState<OrderType>(defaultOrderType);
+  const [tableNumber, setTableNumber] = useState(
+    initialTableNumber ? String(initialTableNumber) : "",
+  );
   const [notes, setNotes] = useState("");
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -67,6 +83,11 @@ export function CheckoutForm({
     e.preventDefault();
     setFieldErrors({});
     setFormError(null);
+
+    if (!orderingEnabled) {
+      setFormError("Commande en ligne desactivee pour ce restaurant");
+      return;
+    }
 
     const payload = {
       businessId,
@@ -172,21 +193,27 @@ export function CheckoutForm({
 
       <section className="px-6 py-6 border-b-4 border-outline">
         <SectionLabel index={2} title="Mode" />
-        <div className="grid grid-cols-2 gap-0 border-2 border-ink">
-          <OrderTypeOption
-            active={orderType === "dine_in"}
-            label="Sur Place"
-            sub="Sur place"
-            onClick={() => setOrderType("dine_in")}
-          />
-          <OrderTypeOption
-            active={orderType === "takeaway"}
-            label="À Emporter"
-            sub="À emporter"
-            onClick={() => setOrderType("takeaway")}
-            bordered
-          />
-        </div>
+        {dineInEnabled && takeawayEnabled ? (
+          <div className="grid grid-cols-2 gap-0 border-2 border-ink">
+            <OrderTypeOption
+              active={orderType === "dine_in"}
+              label="Sur place"
+              sub="Sur place"
+              onClick={() => setOrderType("dine_in")}
+            />
+            <OrderTypeOption
+              active={orderType === "takeaway"}
+              label="A emporter"
+              sub="A emporter"
+              onClick={() => setOrderType("takeaway")}
+              bordered
+            />
+          </div>
+        ) : (
+          <div className="border-2 border-ink px-4 py-3 font-mono text-[12px] uppercase tracking-widest font-bold">
+            {orderType === "dine_in" ? "Sur place" : "A emporter"}
+          </div>
+        )}
 
         {orderType === "dine_in" ? (
           <div className="mt-4">
@@ -228,7 +255,7 @@ export function CheckoutForm({
             <FormInput
               label="Nom"
               name="customerName"
-              placeholder="ex: Camille"
+              placeholder="ex: Salma"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               autoComplete="name"
@@ -277,7 +304,7 @@ export function CheckoutForm({
         <div className="w-full max-w-[480px] bg-base border-t-2 border-ink p-4 pointer-events-auto shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
           <button
             type="submit"
-            disabled={isPending || itemCount === 0}
+            disabled={isPending || itemCount === 0 || !orderingEnabled}
             className={cn(
               "w-full px-6 py-4 flex justify-between items-center border-2 border-transparent transition-colors focus:outline-none focus:ring-4 focus:ring-accent/20",
               isPending
@@ -287,7 +314,7 @@ export function CheckoutForm({
           >
             <div className="flex flex-col items-start">
               <span className="font-bold uppercase tracking-widest text-sm">
-                {isPending ? "Envoi…" : "Passer Commande"}
+                {isPending ? "Envoi…" : "Passer commande"}
               </span>
               <span className="font-mono text-xs opacity-90 mt-0.5">
                 {itemCount} {itemCount === 1 ? "ARTICLE" : "ARTICLES"}
@@ -321,28 +348,24 @@ export function CheckoutForm({
   );
 }
 
-function ConfigurationSummary({
-  item,
-}: {
-  item: {
-    variant_name: string | null;
-    selected_options_summary: Array<{
-      option_name: string;
-      values: Array<{ value_name: string }>;
-    }>;
-  };
-}) {
-  const parts: string[] = [];
-  if (item.variant_name) parts.push(item.variant_name);
-  for (const option of item.selected_options_summary) {
-    const values = option.values.map((value) => value.value_name).join(", ");
-    if (values) parts.push(`${option.option_name}: ${values}`);
-  }
-  if (parts.length === 0) return null;
+function ConfigurationSummary({ item }: { item: CartItem }) {
+  // Shared with the kitchen ticket, kitchen view, and customer tracker — paper
+  // and screen stay in sync everywhere.
+  const lines = summarizeOrderItemOptions(item.options_json);
+  if (lines.length === 0 && !item.notes) return null;
   return (
-    <p className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mt-1 truncate">
-      {parts.join(" • ")}
-    </p>
+    <div className="mt-1 flex flex-col gap-0.5">
+      {lines.length > 0 ? (
+        <p className="font-mono text-[10px] uppercase tracking-widest text-ink/40">
+          {lines.map((line) => line.trim()).join(" • ")}
+        </p>
+      ) : null}
+      {item.notes ? (
+        <p className="font-sans text-[11px] italic text-ink/50">
+          « {item.notes} »
+        </p>
+      ) : null}
+    </div>
   );
 }
 

@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { categories, products } from "@/lib/db/schema";
 
-type DefaultItem = { name: string; priceEUR: number };
+type DefaultItem = { name: string; priceMAD: number };
 type DefaultCategory = {
   name: string;
   order: number;
@@ -60,7 +60,7 @@ export async function seedDefaultCatalog(
         categoryId: cat.id,
         name: item.name,
         description: null,
-        price: item.priceEUR.toFixed(2),
+        price: item.priceMAD.toFixed(2),
         image: null,
         available: true,
         position: i,

@@ -6,6 +6,7 @@ export type MenuItem = {
   image?: { src: string; alt: string };
   badge?: string;
   isSignature?: boolean;
+  hasConfiguration?: boolean;
   variants?: MenuItemVariant[];
   options?: MenuItemOption[];
 };
@@ -14,6 +15,8 @@ export type MenuItemVariant = {
   id: string;
   name: string;
   priceOverride: number | null;
+  isDefault?: boolean;
+  available?: boolean;
   optionMaxSelectionsOverrides: Record<string, number>;
   option_max_selections_overrides?: Record<string, number>;
 };
@@ -22,6 +25,7 @@ export type MenuItemOptionValue = {
   id: string;
   name: string;
   priceAddition: number;
+  available?: boolean;
 };
 
 export type MenuItemOption = {
@@ -29,7 +33,10 @@ export type MenuItemOption = {
   name: string;
   type: "single_select" | "multi_select";
   required: boolean;
+  minSelect?: number;
+  maxSelect?: number | null;
   maxSelections: number | null;
+  available?: boolean;
   values: MenuItemOptionValue[];
 };
 
@@ -44,46 +51,49 @@ export type StorefrontFixture = {
   name: string;
   location: string;
   description?: string;
+  orderingEnabled?: boolean;
+  dineInEnabled?: boolean;
+  takeawayEnabled?: boolean;
   sections: MenuSection[];
 };
 
 export const cafeDesArts: StorefrontFixture = {
-  slug: "cafe-des-arts",
-  name: "Café des Arts",
-  location: "Rue Oberkampf, Paris 11e",
+  slug: "cafe-maarif",
+  name: "Cafe Maarif",
+  location: "Maarif, Casablanca",
   sections: [
     {
       id: "viennoiseries",
-      label: "Viennoiseries",
+      label: "Petit dej",
       items: [
         {
-          name: "Croissant au beurre",
-          description: "Pur beurre d'Isigny AOP, cuit chaque matin.",
+          name: "Msemen miel",
+          description: "Msemen chaud, miel et beurre fondu.",
           price: 1.6,
           isSignature: true,
           image: {
             src: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=160&q=80",
-            alt: "Croissant",
+            alt: "Msemen",
           },
         },
         {
-          name: "Pain au chocolat",
-          description: "Viennoiserie pur beurre, feuilletée à la main.",
+          name: "Harcha fromage",
+          description: "Semoule fine, fromage frais, servie chaude.",
           price: 1.8,
         },
         {
-          name: "Pain aux raisins",
-          description: "Pâte feuilletée, crème pâtissière, raisins de Corinthe.",
+          name: "Baghrir amlou",
+          description: "Crepes mille trous, amlou et miel.",
           price: 2.2,
         },
         {
-          name: "Chausson aux pommes",
+          name: "Meloui nature",
           description:
             "Feuilletage pur beurre, pommes du Limousin légèrement caramélisées.",
           price: 2.4,
         },
         {
-          name: "Kouign-amann",
+          name: "Raib maison",
           description:
             "Spécialité bretonne, beurre demi-sel, caramélisation lente.",
           price: 2.8,
@@ -96,8 +106,8 @@ export const cafeDesArts: StorefrontFixture = {
       label: "Boissons Chaudes",
       items: [
         {
-          name: "Café",
-          description: "Espresso, torréfaction artisanale parisienne.",
+          name: "Cafe noir",
+          description: "Espresso court, torrefaction locale.",
           price: 1.8,
           badge: "Populaire",
         },
@@ -107,7 +117,7 @@ export const cafeDesArts: StorefrontFixture = {
           price: 2.2,
         },
         {
-          name: "Café crème",
+          name: "Cafe creme",
           description: "Espresso allongé, lait entier frais, microfoam.",
           price: 3.2,
           image: {
@@ -126,8 +136,8 @@ export const cafeDesArts: StorefrontFixture = {
           price: 3.9,
         },
         {
-          name: "Thé vert menthe",
-          description: "Thé vert bio infusé à la menthe fraîche.",
+          name: "The vert menthe",
+          description: "The vert infuse a la menthe fraiche.",
           price: 3.5,
         },
       ],
@@ -137,9 +147,9 @@ export const cafeDesArts: StorefrontFixture = {
       label: "Petit-Déjeuner",
       items: [
         {
-          name: "Tartine beurre-confiture",
+          name: "Petit dej beldi",
           description:
-            "Baguette tradition, beurre demi-sel, confiture maison du jour.",
+            "Msemen, oeuf, olives, fromage frais et the a la menthe.",
           price: 4.5,
           image: {
             src: "https://images.unsplash.com/photo-1528207776546-32248a4f1ce4?auto=format&fit=crop&w=160&q=80",
@@ -147,9 +157,9 @@ export const cafeDesArts: StorefrontFixture = {
           },
         },
         {
-          name: "Œufs brouillés, pain de campagne",
+          name: "Oeufs khlii",
           description:
-            "Œufs fermiers brouillés, pain de campagne toasté, ciboulette.",
+            "Oeufs, khlii, huile d'olive et pain maison.",
           price: 9.5,
         },
       ],
@@ -176,12 +186,12 @@ export const cafeDesArts: StorefrontFixture = {
     },
     {
       id: "sandwiches",
-      label: "Sandwiches",
+      label: "Tacos & Sandwiches",
       items: [
         {
-          name: "Jambon-beurre",
+          name: "Tacos poulet",
           description:
-            "Baguette tradition, jambon supérieur, beurre d'Isigny AOP.",
+            "Poulet marine, frites, fromage et sauces au choix.",
           price: 5.9,
           isSignature: true,
           image: {
@@ -190,21 +200,21 @@ export const cafeDesArts: StorefrontFixture = {
           },
         },
         {
-          name: "Poulet-crudités",
+          name: "Sandwich kefta",
           description:
             "Poulet rôti, salade, tomate, mayonnaise maison, pain ciabatta.",
           price: 6.5,
         },
         {
-          name: "Thon-crudités",
+          name: "Sandwich thon",
           description:
             "Thon à l'huile d'olive, œuf dur, salade, tomate, baguette.",
           price: 6.5,
         },
         {
-          name: "Croque-monsieur",
+          name: "Panini dinde fumee",
           description:
-            "Pain de mie, jambon blanc, emmental, béchamel, gratiné au four.",
+            "Pain grille, dinde fumee, fromage et sauce maison.",
           price: 8.9,
         },
       ],
@@ -214,13 +224,13 @@ export const cafeDesArts: StorefrontFixture = {
       label: "Salades",
       items: [
         {
-          name: "Salade de chèvre chaud",
+          name: "Salade marocaine",
           description:
-            "Mesclun, toasts de chèvre, miel, noix, vinaigrette balsamique.",
+            "Tomate, concombre, oignon, olives et herbes fraiches.",
           price: 11.5,
         },
         {
-          name: "Salade niçoise",
+          name: "Salade poulet avocat",
           description:
             "Thon, œuf, haricots verts, olives, anchois, tomate, pomme de terre.",
           price: 12.0,

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpen,
+  ChefHat,
+  ClipboardCheck,
   House,
   ReceiptText,
   Star,
@@ -28,11 +30,17 @@ type MerchantNavProps = {
   pendingOrders?: number;
   showOrders?: boolean;
   showLoyalty?: boolean;
+  showKitchen?: boolean;
+  showClose?: boolean;
 };
 
 export function MerchantNav({
   className,
   pendingOrders = 0,
+  showOrders = true,
+  showLoyalty = true,
+  showKitchen = false,
+  showClose = false,
 }: MerchantNavProps) {
   const pathname = usePathname();
 
@@ -40,12 +48,20 @@ export function MerchantNav({
     home: House,
     catalog: BookOpen,
     orders: ReceiptText,
+    kitchen: ChefHat,
+    cloture: ClipboardCheck,
     loyalty: Star,
   };
   const tabs: MerchantTab[] = getMerchantTabs(pendingOrders).map((tab) => ({
     ...tab,
     icon: icons[tab.id],
-  }));
+  })).filter((tab) => {
+    if (tab.id === "orders") return showOrders;
+    if (tab.id === "loyalty") return showLoyalty;
+    if (tab.id === "kitchen") return showKitchen;
+    if (tab.id === "cloture") return showClose;
+    return true;
+  });
 
   return (
     <nav

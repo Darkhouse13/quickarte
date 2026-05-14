@@ -1,12 +1,13 @@
 "use server";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import {
   businesses,
   orderItems,
   orders,
+  printers,
   products,
 } from "@/lib/db/schema";
 import { placeOrderSchema } from "./schemas";
@@ -15,13 +16,25 @@ import { hasEntitlement } from "@/lib/entitlements/queries";
 import { recordAccrual } from "@/lib/loyalty/service";
 import { getProgram } from "@/lib/loyalty/queries";
 import { sendOrderNotification } from "@/lib/push/send";
+import { assertRole } from "@/lib/identity/permissions";
+import { recordOrderEvent } from "@/lib/ordering/events";
+import { transitionOrder } from "@/lib/ordering/transitions";
 import {
-  canTransitionOrderStatus,
+  markEnteredInPos,
+  markSkippedInPos,
+  revertPosStatus,
+  type PosActionResult,
+} from "@/lib/ordering/pos-reconciliation";
+import { ensureDefaultCounterPrinter } from "@/lib/printing/printers";
+import { enqueuePrintJobsForOrder } from "@/lib/printing/pipeline";
+import {
   type OrderLifecycleStatus,
 } from "./status";
+import { generateCustomerAccessToken } from "./customer-token";
 import {
   validateConfiguredLine,
   type DbProductForOrder,
+  type OrderPlacementErrorCode,
   type ValidatedOrderLine,
 } from "./line-validation";
 
@@ -30,6 +43,7 @@ export type PlaceOrderSuccess = {
   orderId: string;
   orderNumber: string;
   businessSlug: string;
+  customerUrl: string;
   payment: { mode: "cash" };
 };
 
@@ -38,6 +52,7 @@ export type PlaceOrderResult =
   | {
       status: "error";
       message: string;
+      code?: OrderPlacementErrorCode;
       statusCode?: 422;
       fieldErrors?: Record<string, string[]>;
     };
@@ -61,6 +76,9 @@ type PlaceOrderPayload = {
 export async function placeOrder(
   payload: PlaceOrderPayload,
 ): Promise<PlaceOrderResult> {
+  // POS coexistence is snapshotted at insert time: new orders become
+  // `pending` only when the setting is enabled right now. Later setting
+  // changes never auto-migrate historical orders between POS dispositions.
   const parsed = placeOrderSchema.safeParse(payload);
   if (!parsed.success) {
     return {
@@ -79,10 +97,31 @@ export async function placeOrder(
     columns: {
       id: true,
       slug: true,
+      locale: true,
+    },
+    with: {
+      settings: {
+        columns: {
+          orderingEnabled: true,
+          dineInEnabled: true,
+          takeawayEnabled: true,
+          posCoexistenceEnabled: true,
+        },
+      },
     },
   });
   if (!business) {
     return { status: "error", message: "Boutique introuvable" };
+  }
+  const hasOrdering = await hasEntitlement(business.id, "online_ordering");
+  if (!hasOrdering || business.settings?.orderingEnabled === false) {
+    return { status: "error", message: "Commande en ligne desactivee" };
+  }
+  if (data.orderType === "dine_in" && business.settings?.dineInEnabled === false) {
+    return { status: "error", message: "Commande sur place desactivee" };
+  }
+  if (data.orderType === "takeaway" && business.settings?.takeawayEnabled === false) {
+    return { status: "error", message: "Commande a emporter desactivee" };
   }
 
   const productIds = [...new Set(data.items.map((i) => i.product_id))];
@@ -91,33 +130,40 @@ export async function placeOrder(
       eq(products.businessId, business.id),
       inArray(products.id, productIds),
     ),
-    columns: { id: true, price: true, available: true },
+    columns: { id: true, name: true, price: true, available: true },
     with: {
       variants: {
+        orderBy: (table, { asc }) => [asc(table.position)],
         columns: {
           id: true,
           productId: true,
           name: true,
           priceOverride: true,
-          optionMaxSelectionsOverrides: true,
+          isDefault: true,
+          available: true,
         },
       },
       options: {
+        orderBy: (table, { asc }) => [asc(table.position)],
         columns: {
           id: true,
           productId: true,
           name: true,
           type: true,
           required: true,
-          maxSelections: true,
+          minSelect: true,
+          maxSelect: true,
+          available: true,
         },
         with: {
           values: {
+            orderBy: (table, { asc }) => [asc(table.position)],
             columns: {
               id: true,
               optionId: true,
               name: true,
               priceAddition: true,
+              available: true,
             },
           },
         },
@@ -130,9 +176,10 @@ export async function placeOrder(
 
   for (const item of data.items) {
     const product = productById.get(item.product_id);
-    if (!product || !product.available) {
+    if (!product) {
       return {
         status: "error",
+        code: "PRODUCT_UNAVAILABLE",
         message: "Un ou plusieurs articles sont indisponibles",
       };
     }
@@ -144,15 +191,20 @@ export async function placeOrder(
 
   const total = itemLines.reduce((sum, l) => sum + l.subtotal, 0);
 
-  const orderId = await db.transaction(async (tx) => {
+  const insertedOrder = await db.transaction(async (tx) => {
+    const customerAccessToken = generateCustomerAccessToken();
     const [order] = await tx
       .insert(orders)
       .values({
         businessId: business.id,
         customerName: data.customerName,
         customerPhone: data.customerPhone,
+        customerAccessToken,
         type: data.orderType,
         status: "pending",
+        posStatus: business.settings?.posCoexistenceEnabled
+          ? "pending"
+          : "not_required",
         total: total.toFixed(2),
         notes: data.notes ?? null,
         tableNumber:
@@ -175,8 +227,48 @@ export async function placeOrder(
       })),
     );
 
-    return order.id;
+    await recordOrderEvent(order.id, "order.created", {
+      actor: { userId: null, role: "customer" },
+      payload: { order_type: data.orderType, total: total.toFixed(2) },
+      tx,
+    });
+
+    return { id: order.id, customerAccessToken };
   });
+  const orderId = insertedOrder.id;
+
+  try {
+    await db.transaction(async (tx) => {
+      const existingPrinter = await tx.query.printers.findFirst({
+        where: and(
+          eq(printers.businessId, business.id),
+          isNull(printers.deletedAt),
+        ),
+        columns: { id: true },
+      });
+      if (!existingPrinter) {
+        await ensureDefaultCounterPrinter(business.id, tx);
+      }
+    });
+
+    const printResult = await enqueuePrintJobsForOrder(orderId, business.id);
+    if (!printResult.ok) {
+      console.error("[printing] auto-enqueue failed (non-fatal):", printResult.error);
+    }
+  } catch (err) {
+    console.error("[printing] auto-enqueue failed (non-fatal):", err);
+    try {
+      await recordOrderEvent(orderId, "order.printed", {
+        actor: { userId: null, role: "system" },
+        payload: {
+          status: "enqueue_failed",
+          error: err instanceof Error ? err.message : "Unknown print error",
+        },
+      });
+    } catch (eventErr) {
+      console.error("[printing] failed to record enqueue failure:", eventErr);
+    }
+  }
 
   revalidatePath("/orders");
   revalidatePath("/home");
@@ -221,6 +313,7 @@ export async function placeOrder(
     orderId,
     orderNumber,
     businessSlug: business.slug,
+    customerUrl: `/${business.locale.split("-")[0] ?? "fr"}/o/${insertedOrder.customerAccessToken}`,
     payment: { mode: "cash" },
   };
 }
@@ -233,24 +326,24 @@ export async function transitionOrderStatus(
   orderId: string,
   nextStatus: OrderLifecycleStatus,
 ): Promise<OrderTransitionResult> {
-  const { business } = await requireBusiness();
-  const order = await db.query.orders.findFirst({
-    where: and(eq(orders.id, orderId), eq(orders.businessId, business.id)),
-    columns: { id: true, status: true },
-  });
-  if (!order) {
+  const { session, business } = await requireBusiness();
+  const role = await assertRole(session.user.id, business.id, [
+    "owner",
+    "manager",
+    "waiter",
+  ]);
+  const result = await transitionOrder(
+    orderId,
+    nextStatus,
+    { userId: session.user.id, role },
+    { businessId: business.id },
+  );
+  if (result.status === "not_found") {
     return { status: "error", message: "Commande introuvable" };
   }
-
-  const currentStatus = order.status as OrderLifecycleStatus;
-  if (!canTransitionOrderStatus(currentStatus, nextStatus)) {
+  if (result.status === "invalid_transition") {
     return { status: "error", message: "Transition de statut invalide" };
   }
-
-  await db
-    .update(orders)
-    .set({ status: nextStatus, updatedAt: new Date() })
-    .where(and(eq(orders.id, orderId), eq(orders.businessId, business.id)));
   revalidatePath("/orders");
   revalidatePath("/home");
   return { status: "success" };
@@ -260,7 +353,12 @@ export async function cancelOrder(
   orderId: string,
   reason?: string,
 ): Promise<OrderTransitionResult> {
-  const { business } = await requireBusiness();
+  const { session, business } = await requireBusiness();
+  const role = await assertRole(session.user.id, business.id, [
+    "owner",
+    "manager",
+    "waiter",
+  ]);
   const order = await db.query.orders.findFirst({
     where: and(eq(orders.id, orderId), eq(orders.businessId, business.id)),
     columns: { id: true, status: true, notes: true },
@@ -269,20 +367,27 @@ export async function cancelOrder(
     return { status: "error", message: "Commande introuvable" };
   }
 
-  const currentStatus = order.status as OrderLifecycleStatus;
-  if (!canTransitionOrderStatus(currentStatus, "cancelled")) {
-    return { status: "error", message: "Transition de statut invalide" };
-  }
-
   const trimmedReason = reason?.trim();
   const notes = trimmedReason
     ? [order.notes, `Annulation: ${trimmedReason}`].filter(Boolean).join("\n")
     : order.notes;
 
-  await db
-    .update(orders)
-    .set({ status: "cancelled", notes, updatedAt: new Date() })
-    .where(and(eq(orders.id, orderId), eq(orders.businessId, business.id)));
+  const result = await transitionOrder(
+    orderId,
+    "cancelled",
+    { userId: session.user.id, role },
+    {
+      businessId: business.id,
+      notes,
+      payload: trimmedReason ? { reason: trimmedReason } : undefined,
+    },
+  );
+  if (result.status === "invalid_transition") {
+    return { status: "error", message: "Transition de statut invalide" };
+  }
+  if (result.status === "not_found") {
+    return { status: "error", message: "Commande introuvable" };
+  }
   revalidatePath("/orders");
   revalidatePath("/home");
   return { status: "success" };
@@ -294,4 +399,63 @@ export async function confirmOrder(orderId: string): Promise<void> {
 
 export async function completeOrder(orderId: string): Promise<void> {
   await transitionOrderStatus(orderId, "completed");
+}
+
+export async function markOrderEnteredInPos(
+  orderId: string,
+  input: { posReference?: string } = {},
+): Promise<PosActionResult> {
+  const { session, business } = await requireBusiness();
+  const role = await assertRole(session.user.id, business.id, [
+    "owner",
+    "manager",
+    "cashier",
+  ]);
+  const result = await markEnteredInPos(
+    orderId,
+    business.id,
+    { userId: session.user.id, role },
+    input,
+  );
+  revalidatePath("/orders");
+  revalidatePath("/cloture");
+  return result;
+}
+
+export async function markOrderPosSkipped(
+  orderId: string,
+  input: { posReference?: string; reason?: string } = {},
+): Promise<PosActionResult> {
+  const { session, business } = await requireBusiness();
+  const role = await assertRole(session.user.id, business.id, [
+    "owner",
+    "manager",
+    "cashier",
+  ]);
+  const result = await markSkippedInPos(
+    orderId,
+    business.id,
+    { userId: session.user.id, role },
+    input,
+  );
+  revalidatePath("/orders");
+  revalidatePath("/cloture");
+  return result;
+}
+
+export async function revertOrderPosStatus(
+  orderId: string,
+): Promise<PosActionResult> {
+  const { session, business } = await requireBusiness();
+  const role = await assertRole(session.user.id, business.id, [
+    "owner",
+    "manager",
+  ]);
+  const result = await revertPosStatus(orderId, business.id, {
+    userId: session.user.id,
+    role,
+  });
+  revalidatePath("/orders");
+  revalidatePath("/cloture");
+  return result;
 }

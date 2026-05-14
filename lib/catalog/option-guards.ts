@@ -4,6 +4,8 @@ type OptionLike = {
   id: string;
   required: boolean;
   type: "single_select" | "multi_select";
+  minSelect?: number | null;
+  maxSelect?: number | null;
   maxSelections?: number | null;
   values: readonly OptionValueLike[];
 };
@@ -45,17 +47,18 @@ export function areRequiredOptionsSatisfied(
       return false;
     }
     if (!option.required) return true;
-    return validSelections.length >= 1;
+    return validSelections.length >= Math.max(1, option.minSelect ?? 0);
   });
 }
 
 export function getEffectiveMaxSelections(
-  option: { id: string; maxSelections?: number | null },
+  option: { id: string; maxSelect?: number | null; maxSelections?: number | null },
   variant?: VariantWithOptionMaxOverrides | null,
 ): number {
   return (
     variant?.optionMaxSelectionsOverrides?.[option.id] ??
     variant?.option_max_selections_overrides?.[option.id] ??
+    option.maxSelect ??
     option.maxSelections ??
     Infinity
   );
@@ -63,7 +66,7 @@ export function getEffectiveMaxSelections(
 
 export function trimSelectionsToEffectiveMax(
   selectedIds: readonly string[],
-  option: { id: string; maxSelections?: number | null },
+  option: { id: string; maxSelect?: number | null; maxSelections?: number | null },
   variant?: VariantWithOptionMaxOverrides | null,
 ): string[] {
   const effectiveMax = getEffectiveMaxSelections(option, variant);

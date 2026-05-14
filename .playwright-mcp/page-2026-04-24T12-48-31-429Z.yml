@@ -1,0 +1,119 @@
+- generic [ref=e1]:
+  - main [ref=e5]:
+    - generic [ref=e8]:
+      - heading "Audit Boulangerie 20260424 MAJ" [level=1] [ref=e9]
+      - paragraph
+    - navigation [ref=e12]:
+      - generic [ref=e14]:
+        - button "Viennoiseries" [ref=e15]
+        - button "Pains" [ref=e16]
+        - button "Pâtisseries" [ref=e17]
+        - button "Boissons" [ref=e18]
+        - button "Sandwichs & en-cas" [ref=e19]
+        - button "Audit Catégorie" [ref=e20]
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - heading "01 / Viennoiseries" [level=2] [ref=e24]
+        - generic [ref=e25]:
+          - button "Croissant 1,30 € 1 in cart" [active] [ref=e155] [cursor=pointer]:
+            - generic [ref=e28]:
+              - heading "Croissant" [level=3] [ref=e29]
+              - generic [ref=e30]: 1,30 €
+            - generic "1 in cart" [ref=e158]: "1"
+          - button "Pain au chocolat 1,40 €" [ref=e31] [cursor=pointer]:
+            - generic [ref=e33]:
+              - heading "Pain au chocolat" [level=3] [ref=e34]
+              - generic [ref=e35]: 1,40 €
+          - button "Chausson aux pommes 2,20 €" [ref=e36] [cursor=pointer]:
+            - generic [ref=e38]:
+              - heading "Chausson aux pommes" [level=3] [ref=e39]
+              - generic [ref=e40]: 2,20 €
+          - button "Brioche 3,50 €" [ref=e41] [cursor=pointer]:
+            - generic [ref=e44]:
+              - heading "Brioche" [level=3] [ref=e45]
+              - generic [ref=e46]: 3,50 €
+      - generic [ref=e47]:
+        - heading "02 / Pains" [level=2] [ref=e49]
+        - generic [ref=e50]:
+          - button "Baguette tradition 1,50 €" [ref=e51] [cursor=pointer]:
+            - generic [ref=e53]:
+              - heading "Baguette tradition" [level=3] [ref=e54]
+              - generic [ref=e55]: 1,50 €
+          - button "Baguette classique 1,10 €" [ref=e56] [cursor=pointer]:
+            - generic [ref=e58]:
+              - heading "Baguette classique" [level=3] [ref=e59]
+              - generic [ref=e60]: 1,10 €
+          - button "Pain de campagne 4,50 €" [ref=e61] [cursor=pointer]:
+            - generic [ref=e63]:
+              - heading "Pain de campagne" [level=3] [ref=e64]
+              - generic [ref=e65]: 4,50 €
+          - button "Pain complet 4,00 €" [ref=e66] [cursor=pointer]:
+            - generic [ref=e68]:
+              - heading "Pain complet" [level=3] [ref=e69]
+              - generic [ref=e70]: 4,00 €
+      - generic [ref=e71]:
+        - heading "03 / Pâtisseries" [level=2] [ref=e73]
+        - generic [ref=e74]:
+          - button "Éclair au chocolat 3,50 €" [ref=e75] [cursor=pointer]:
+            - generic [ref=e77]:
+              - heading "Éclair au chocolat" [level=3] [ref=e78]
+              - generic [ref=e79]: 3,50 €
+          - button "Tarte aux fruits 4,00 €" [ref=e80] [cursor=pointer]:
+            - generic [ref=e82]:
+              - heading "Tarte aux fruits" [level=3] [ref=e83]
+              - generic [ref=e84]: 4,00 €
+          - button "Mille-feuille 4,00 €" [ref=e85] [cursor=pointer]:
+            - generic [ref=e87]:
+              - heading "Mille-feuille" [level=3] [ref=e88]
+              - generic [ref=e89]: 4,00 €
+          - button "Flan pâtissier 3,00 €" [ref=e90] [cursor=pointer]:
+            - generic [ref=e92]:
+              - heading "Flan pâtissier" [level=3] [ref=e93]
+              - generic [ref=e94]: 3,00 €
+      - generic [ref=e95]:
+        - heading "04 / Boissons" [level=2] [ref=e97]
+        - generic [ref=e98]:
+          - button "Café expresso 1,50 €" [ref=e99] [cursor=pointer]:
+            - generic [ref=e101]:
+              - heading "Café expresso" [level=3] [ref=e102]
+              - generic [ref=e103]: 1,50 €
+          - button "Café allongé 1,80 €" [ref=e104] [cursor=pointer]:
+            - generic [ref=e106]:
+              - heading "Café allongé" [level=3] [ref=e107]
+              - generic [ref=e108]: 1,80 €
+          - button "Thé 2,50 €" [ref=e109] [cursor=pointer]:
+            - generic [ref=e111]:
+              - heading "Thé" [level=3] [ref=e112]
+              - generic [ref=e113]: 2,50 €
+          - button "Chocolat chaud 3,00 €" [ref=e114] [cursor=pointer]:
+            - generic [ref=e116]:
+              - heading "Chocolat chaud" [level=3] [ref=e117]
+              - generic [ref=e118]: 3,00 €
+      - generic [ref=e119]:
+        - heading "05 / Sandwichs & en-cas" [level=2] [ref=e121]
+        - generic [ref=e122]:
+          - button "Jambon beurre 4,50 €" [ref=e123] [cursor=pointer]:
+            - generic [ref=e125]:
+              - heading "Jambon beurre" [level=3] [ref=e126]
+              - generic [ref=e127]: 4,50 €
+          - button "Poulet crudités 5,50 €" [ref=e128] [cursor=pointer]:
+            - generic [ref=e130]:
+              - heading "Poulet crudités" [level=3] [ref=e131]
+              - generic [ref=e132]: 5,50 €
+          - button "Sandwich au thon 5,00 €" [ref=e133] [cursor=pointer]:
+            - generic [ref=e135]:
+              - heading "Sandwich au thon" [level=3] [ref=e136]
+              - generic [ref=e137]: 5,00 €
+          - button "Quiche lorraine 4,00 €" [ref=e138] [cursor=pointer]:
+            - generic [ref=e140]:
+              - heading "Quiche lorraine" [level=3] [ref=e141]
+              - generic [ref=e142]: 4,00 €
+      - heading "06 / Audit Catégorie" [level=2] [ref=e145]
+    - button "Voir la commande 1 ARTICLE 1,30 €" [ref=e159]:
+      - generic [ref=e148]:
+        - generic [ref=e149]: Voir la commande
+        - generic [ref=e150]: 1 ARTICLE
+      - generic [ref=e151]:
+        - generic [ref=e152]: 1,30 €
+        - img [ref=e153]
+  - alert [ref=e4]

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { setRequestLocale } from "next-intl/server";
 import { getAllProductsByBusinessId } from "@/lib/catalog/queries";
 import { requireBusiness } from "@/lib/auth/get-business";
+import { assertRole } from "@/lib/identity/permissions";
 import { SectionHeader } from "@/components/ui/section-header";
 import { BottomBar } from "@/components/ui/bottom-bar";
 import { ProductAvailabilityToggle } from "@/components/merchant/product-availability-toggle";
@@ -19,7 +20,8 @@ export default async function CatalogIndexPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const { business } = await requireBusiness();
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
   const menu = await getAllProductsByBusinessId(business.id);
   const productCount = menu.reduce((n, c) => n + c.products.length, 0);
 

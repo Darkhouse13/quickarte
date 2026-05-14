@@ -125,7 +125,7 @@ export function LoyaltyAccrualPanel({
         <FormInput
           label="Nom"
           name="name"
-          placeholder="ex: Camille"
+          placeholder="ex: Salma"
           value={name}
           onChange={(e) => setName(e.target.value)}
           hint="Optionnel"

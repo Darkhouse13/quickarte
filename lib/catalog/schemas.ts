@@ -10,8 +10,8 @@ export const createProductSchema = z.object({
     .optional(),
   price: z.coerce
     .number({ invalid_type_error: "Prix invalide" })
-    .positive("Le prix doit être positif"),
-  categoryId: z.string().uuid("Catégorie invalide"),
+    .positive("Le prix doit etre positif"),
+  categoryId: z.string().uuid("Categorie invalide"),
   available: z
     .union([z.boolean(), z.literal("true"), z.literal("false"), z.literal("on")])
     .transform((v) => v === true || v === "true" || v === "on")
@@ -35,7 +35,11 @@ export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 
 const priceValueSchema = z.coerce
   .number({ invalid_type_error: "Prix invalide" })
-  .nonnegative("Le prix doit être positif ou nul")
+  .nonnegative("Le prix doit etre positif ou nul")
+  .finite("Prix invalide");
+
+const priceDeltaSchema = z.coerce
+  .number({ invalid_type_error: "Prix invalide" })
   .finite("Prix invalide");
 
 const optionalPositionSchema = z.coerce
@@ -47,6 +51,8 @@ const optionalPositionSchema = z.coerce
 export const variantInputSchema = z.object({
   name: z.string().trim().min(1, "Le nom est requis").max(60, "Nom trop long"),
   price_override: priceValueSchema.nullish(),
+  is_default: z.boolean().optional(),
+  available: z.boolean().optional(),
   option_max_selections_overrides: optionMaxSelectionsOverridesSchema.optional(),
   position: optionalPositionSchema,
 });
@@ -56,44 +62,82 @@ export const updateVariantInputSchema = variantInputSchema.partial().refine(
   "Aucune modification",
 );
 
+const optionalSelectionLimitSchema = z.coerce
+  .number({ invalid_type_error: "Maximum invalide" })
+  .int("Maximum invalide")
+  .positive("Maximum invalide")
+  .nullish();
+
 const optionBaseSchema = z.object({
   name: z.string().trim().min(1, "Le nom est requis").max(60, "Nom trop long"),
   type: z.enum(["single_select", "multi_select"]),
   required: z.boolean(),
-  max_selections: z.coerce
-    .number({ invalid_type_error: "Maximum invalide" })
-    .int("Maximum invalide")
-    .positive("Maximum invalide")
-    .nullish(),
+  min_select: z.coerce
+    .number({ invalid_type_error: "Minimum invalide" })
+    .int("Minimum invalide")
+    .nonnegative("Minimum invalide")
+    .optional(),
+  max_select: optionalSelectionLimitSchema,
+  // Legacy UI field retained as an alias while the DB/API move to max_select.
+  max_selections: optionalSelectionLimitSchema,
   position: optionalPositionSchema,
 });
 
-export const optionInputSchema = optionBaseSchema.superRefine((value, ctx) => {
-    if (value.type === "single_select" && value.max_selections != null) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["max_selections"],
-        message: "Maximum réservé aux choix multiples",
-      });
-    }
-  });
+export const optionInputSchema = optionBaseSchema.superRefine(
+  validateOptionSelectionRules,
+);
 
 export const updateOptionInputSchema = optionBaseSchema
   .partial()
-  .superRefine((value, ctx) => {
-    if (value.type === "single_select" && value.max_selections != null) {
+  .superRefine(validateOptionSelectionRules)
+  .refine((value) => Object.keys(value).length > 0, "Aucune modification");
+
+function validateOptionSelectionRules(
+  value: Partial<z.infer<typeof optionBaseSchema>>,
+  ctx: z.RefinementCtx,
+) {
+  const minSelect = value.min_select ?? 0;
+  const maxSelect = value.max_select ?? value.max_selections ?? null;
+
+  if (value.type === "single_select") {
+    if (value.min_select != null) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["max_selections"],
-        message: "Maximum réservé aux choix multiples",
+        path: ["min_select"],
+        message: "Minimum reserve aux choix multiples",
       });
     }
-  })
-  .refine((value) => Object.keys(value).length > 0, "Aucune modification");
+    if (maxSelect != null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: value.max_select != null ? ["max_select"] : ["max_selections"],
+        message: "Maximum reserve aux choix multiples",
+      });
+    }
+  }
+
+  if (value.type === "multi_select") {
+    if (maxSelect != null && maxSelect < minSelect) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["max_select"],
+        message: "Le maximum doit etre superieur au minimum",
+      });
+    }
+    if (minSelect > 0 && value.required === false) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["required"],
+        message: "Une option avec minimum doit etre obligatoire",
+      });
+    }
+  }
+}
 
 export const optionValueInputSchema = z.object({
   name: z.string().trim().min(1, "Le nom est requis").max(60, "Nom trop long"),
-  price_addition: priceValueSchema,
+  price_addition: priceDeltaSchema,
+  available: z.boolean().optional(),
   position: optionalPositionSchema,
 });
 

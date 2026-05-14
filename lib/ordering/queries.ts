@@ -1,8 +1,9 @@
 import "server-only";
-import { and, desc, eq, gte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { orders, type Order, type OrderItem } from "@/lib/db/schema";
+import { orders, staffMembers, type Order, type OrderItem } from "@/lib/db/schema";
 import type { OrderLifecycleStatus } from "./status";
+import type { PosStatus } from "./pos-reconciliation";
 
 export type OrderItemWithProduct = OrderItem & {
   product: { id: string; name: string } | null;
@@ -10,6 +11,8 @@ export type OrderItemWithProduct = OrderItem & {
 
 export type OrderWithItems = Order & {
   items: OrderItemWithProduct[];
+  posStatus: PosStatus;
+  posEnteredByDisplayName: string | null;
 };
 
 export async function getOrdersByBusinessId(
@@ -33,7 +36,7 @@ export async function getOrdersByBusinessId(
       },
     },
   });
-  return rows as OrderWithItems[];
+  return attachPosDisplayNames(businessId, rows as OrderWithItems[]);
 }
 
 export async function getOrderById(
@@ -49,7 +52,11 @@ export async function getOrderById(
       },
     },
   });
-  return (row as OrderWithItems | undefined) ?? null;
+  if (!row) return null;
+  const [withName] = await attachPosDisplayNames(row.businessId, [
+    row as OrderWithItems,
+  ]);
+  return withName ?? null;
 }
 
 export type OrderStats = {
@@ -111,7 +118,51 @@ export async function getRecentOrders(
       },
     },
   });
-  return rows as OrderWithItems[];
+  return attachPosDisplayNames(businessId, rows as OrderWithItems[]);
+}
+
+async function attachPosDisplayNames(
+  businessId: string,
+  rows: OrderWithItems[],
+): Promise<OrderWithItems[]> {
+  const userIds = Array.from(
+    new Set(
+      rows
+        .map((order) => order.posEnteredByUserId)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+  if (userIds.length === 0) {
+    return rows.map((order) => ({ ...order, posEnteredByDisplayName: null }));
+  }
+
+  const staffRows = await db
+    .select({
+      userId: staffMembers.userId,
+      displayName: staffMembers.displayName,
+    })
+    .from(staffMembers)
+    .where(
+      and(
+        eq(staffMembers.businessId, businessId),
+        inArray(staffMembers.userId, userIds),
+        isNull(staffMembers.revokedAt),
+      ),
+    );
+  const byUserId = new Map(
+    staffRows
+      .filter((row): row is { userId: string; displayName: string } =>
+        Boolean(row.userId),
+      )
+      .map((row) => [row.userId, row.displayName]),
+  );
+
+  return rows.map((order) => ({
+    ...order,
+    posEnteredByDisplayName: order.posEnteredByUserId
+      ? byUserId.get(order.posEnteredByUserId) ?? null
+      : null,
+  }));
 }
 
 export type { OrderItem, Order };

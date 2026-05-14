@@ -1,4 +1,10 @@
-export type MerchantTabId = "home" | "catalog" | "orders" | "loyalty";
+export type MerchantTabId =
+  | "home"
+  | "catalog"
+  | "orders"
+  | "kitchen"
+  | "cloture"
+  | "loyalty";
 
 export type MerchantTabDefinition = {
   id: MerchantTabId;
@@ -17,6 +23,8 @@ export function getMerchantTabs(pendingOrders = 0): MerchantTabDefinition[] {
       href: "/orders",
       hasNotification: pendingOrders > 0,
     },
+    { id: "kitchen", label: "Cuisine", href: "/kitchen" },
+    { id: "cloture", label: "Clôture", href: "/cloture" },
     { id: "loyalty", label: "Fid\u00e9lit\u00e9", href: "/loyalty" },
   ];
 }

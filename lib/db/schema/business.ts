@@ -1,5 +1,6 @@
 import {
   boolean,
+  integer,
   numeric,
   pgEnum,
   pgTable,
@@ -8,7 +9,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
-import { users } from "./identity";
+import { staffMembers, users } from "./identity";
 import { categories, products } from "./catalog";
 import { orders, reservations } from "./ordering";
 import { promoCodes } from "./growth";
@@ -62,13 +63,22 @@ export const businessSettings = pgTable("business_settings", {
     .notNull()
     .unique()
     .references(() => businesses.id, { onDelete: "cascade" }),
+  menuQrEnabled: boolean("menu_qr_enabled").notNull().default(true),
   orderingEnabled: boolean("ordering_enabled").notNull().default(true),
+  loyaltyEnabled: boolean("loyalty_enabled").notNull().default(true),
+  analyticsEnabled: boolean("analytics_enabled").notNull().default(true),
   reservationsEnabled: boolean("reservations_enabled")
     .notNull()
     .default(false),
   dineInEnabled: boolean("dine_in_enabled").notNull().default(true),
   takeawayEnabled: boolean("takeaway_enabled").notNull().default(true),
   deliveryEnabled: boolean("delivery_enabled").notNull().default(false),
+  tableQrCount: integer("table_qr_count").notNull().default(0),
+  whatsappNumber: text("whatsapp_number"),
+  customerPostOrderMessage: text("customer_post_order_message"),
+  posCoexistenceEnabled: boolean("pos_coexistence_enabled")
+    .notNull()
+    .default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -91,6 +101,7 @@ export const businessesRelations = relations(businesses, ({ one, many }) => ({
   orders: many(orders),
   reservations: many(reservations),
   promoCodes: many(promoCodes),
+  staffMembers: many(staffMembers),
 }));
 
 export const businessSettingsRelations = relations(

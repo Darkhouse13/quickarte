@@ -86,8 +86,8 @@ export function LoyaltyCustomerList({
       </form>
 
       {customers.length === 0 ? (
-        <p className="px-6 py-10 text-center font-sans text-sm text-ink/50">
-          Aucun client fidèle pour le moment
+        <p className="px-6 py-10 text-center font-sans text-sm text-ink/50 leading-snug">
+          Vos clients apparaîtront ici une fois les premières commandes reçues
         </p>
       ) : (
         <ul className="flex flex-col">

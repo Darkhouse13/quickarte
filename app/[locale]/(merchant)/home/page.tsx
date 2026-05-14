@@ -111,7 +111,7 @@ export default async function MerchantHomePage({
     session.user.name?.trim().split(/\s+/)[0] ?? "Marchand";
 
   const appUrl = env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
-  const publicUrl = `${appUrl}/${business.slug}`;
+  const publicUrl = `${appUrl}/${locale}/${business.slug}`;
   const displayUrl = publicUrl.replace(/^https?:\/\//, "");
   const qrDataUrl = business.slug ? await generateQRDataURL(publicUrl) : null;
   const qrFileName = `${business.slug || "quickarte"}-qr.png`;
@@ -248,24 +248,30 @@ async function TodayBody({
     return (
       <section>
         <SectionHeader index={1} title="Démarrage" />
-        <Link
-          href="/catalog/new"
-          className="p-6 flex flex-col gap-2 hover:bg-black/[0.02] transition-colors group relative"
-        >
-          <div className="absolute left-0 top-0 w-1 h-full bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top" />
-          <span className="font-mono text-[10px] uppercase tracking-widest text-accent font-bold">
-            Étape 1
-          </span>
-          <h2 className="font-sans text-[17px] font-bold leading-tight">
-            Ajoutez votre premier article
-          </h2>
-          <p className="font-sans text-sm text-ink/60 leading-snug">
-            Construisez votre menu pour que vos clients puissent commander.
-          </p>
-          <span className="font-mono text-[11px] uppercase tracking-widest text-ink font-bold mt-2 group-hover:text-accent transition-colors">
-            + Ajouter un article →
-          </span>
-        </Link>
+        <div className="px-6 py-6">
+          <div className="border-2 border-ink p-5 flex flex-col gap-5">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="font-sans text-[17px] font-bold leading-tight">
+                Bienvenue ! Commencez par ajouter votre menu
+              </h2>
+              <div className="w-8 h-8 border-2 border-ink flex-shrink-0" />
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              <Link
+                href="/catalog/new"
+                className="bg-ink text-base px-5 py-3 font-mono font-bold uppercase tracking-widest text-[12px] hover:bg-accent transition-colors border-2 border-ink focus:outline-none focus:ring-4 focus:ring-accent/20 text-center"
+              >
+                + Ajouter votre menu
+              </Link>
+              <Link
+                href="/home"
+                className="bg-base text-ink px-5 py-3 font-mono font-bold uppercase tracking-widest text-[12px] hover:bg-ink hover:text-base transition-colors border-2 border-ink focus:outline-none focus:ring-4 focus:ring-accent/20 text-center"
+              >
+                Partagez votre QR code
+              </Link>
+            </div>
+          </div>
+        </div>
       </section>
     );
   }

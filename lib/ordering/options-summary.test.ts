@@ -1,31 +1,72 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseOrderItemOptions } from "./options-summary";
+import {
+  parseOrderItemOptions,
+  serializeOrderItemOptions,
+  summarizeOrderItemOptions,
+} from "./order-item-options";
 
-test("parseOrderItemOptions extracts variant and selected options", () => {
-  const parsed = parseOrderItemOptions({
-    variant_id: "variant-xl",
-    variant_name: "XL",
-    selected_options_summary: [
+test("serializeOrderItemOptions stores the canonical camel-case snapshot", () => {
+  const stored = serializeOrderItemOptions({
+    variantId: "variant-xl",
+    variantName: "XL",
+    variantPriceOverride: 70,
+    selections: [
       {
-        option_id: "meat",
-        option_name: "Viande",
-        option_type: "single_select",
+        optionId: "meat",
+        optionName: "Viande",
+        optionType: "multi_select",
+        values: [
+          { valueId: "kefta", valueName: "Kefta", priceAddition: 0 },
+          { valueId: "mixte", valueName: "Mixte", priceAddition: 0 },
+        ],
+      },
+    ],
+  });
+
+  assert.deepEqual(stored, {
+    variantId: "variant-xl",
+    variantName: "XL",
+    variantPriceOverride: 70,
+    selections: [
+      {
+        optionId: "meat",
+        optionName: "Viande",
+        optionType: "multi_select",
+        values: [
+          { valueId: "kefta", valueName: "Kefta", priceAddition: 0 },
+          { valueId: "mixte", valueName: "Mixte", priceAddition: 0 },
+        ],
+      },
+    ],
+  });
+});
+
+test("parseOrderItemOptions extracts canonical variant and selected options", () => {
+  const parsed = parseOrderItemOptions({
+    variantId: "variant-xl",
+    variantName: "XL",
+    variantPriceOverride: 70,
+    selections: [
+      {
+        optionId: "meat",
+        optionName: "Viande",
+        optionType: "single_select",
         values: [
           {
-            value_id: "cordon",
-            value_name: "Cordon bleu",
-            price_addition: 5,
+            valueId: "cordon",
+            valueName: "Cordon bleu",
+            priceAddition: 5,
           },
         ],
       },
       {
-        option_id: "sauce",
-        option_name: "Sauces",
-        option_type: "multi_select",
+        optionId: "sauce",
+        optionName: "Sauces",
+        optionType: "multi_select",
         values: [
-          { value_id: "algerienne", value_name: "Algerienne", price_addition: 0 },
-          { value_id: "andalouse", value_name: "Andalouse", price_addition: 0 },
+          { valueId: "algerienne", valueName: "Algerienne", priceAddition: 0 },
+          { valueId: "andalouse", valueName: "Andalouse", priceAddition: 0 },
         ],
       },
     ],
@@ -47,25 +88,53 @@ test("parseOrderItemOptions extracts variant and selected options", () => {
   ]);
 });
 
-test("parseOrderItemOptions treats plain orders as empty configuration", () => {
-  assert.deepEqual(parseOrderItemOptions(null), {
-    variantName: null,
-    options: [],
-  });
+test("summarizeOrderItemOptions returns the shared French display lines", () => {
+  assert.deepEqual(
+    summarizeOrderItemOptions({
+      variantId: "variant-l",
+      variantName: "L",
+      variantPriceOverride: 55,
+      selections: [
+        {
+          optionId: "meat",
+          optionName: "Viande",
+          optionType: "multi_select",
+          values: [
+            { valueId: "kefta", valueName: "Kefta", priceAddition: 0 },
+            { valueId: "mixte", valueName: "Mixte", priceAddition: 0 },
+          ],
+        },
+        {
+          optionId: "sauce",
+          optionName: "Sauces",
+          optionType: "multi_select",
+          values: [
+            { valueId: "algerienne", valueName: "Algerienne", priceAddition: 0 },
+            { valueId: "samourai", valueName: "Samourai", priceAddition: 0 },
+          ],
+        },
+      ],
+    }),
+    ["  Variante : L", "  Viande : Kefta, Mixte", "  Sauces : Algerienne, Samourai"],
+  );
 });
 
-test("parseOrderItemOptions ignores malformed option payload fragments", () => {
+test("legacy options_json is still readable for existing orders", () => {
   const parsed = parseOrderItemOptions({
-    variant_name: "M",
+    variant_id: "variant-xl",
+    variant_name: "XL",
     selected_options_summary: [
-      null,
-      { option_name: "Sauces", values: [{ value_name: "Samourai" }] },
-      { option_name: "Vide", values: [] },
+      {
+        option_id: "sauce",
+        option_name: "Sauces",
+        option_type: "multi_select",
+        values: [{ value_id: "samourai", value_name: "Samourai" }],
+      },
     ],
   });
 
   assert.deepEqual(parsed, {
-    variantName: "M",
+    variantName: "XL",
     options: [
       {
         optionName: "Sauces",
@@ -73,4 +142,24 @@ test("parseOrderItemOptions ignores malformed option payload fragments", () => {
       },
     ],
   });
+});
+
+test("snapshotting keeps the original names after later catalog renames", () => {
+  const stored = serializeOrderItemOptions({
+    variantId: null,
+    variantName: null,
+    variantPriceOverride: null,
+    selections: [
+      {
+        optionId: "option-1",
+        optionName: "Sauces",
+        optionType: "multi_select",
+        values: [{ valueId: "value-1", valueName: "Samourai", priceAddition: 0 }],
+      },
+    ],
+  });
+
+  const laterCatalogName = "Sauces maison";
+  assert.equal(laterCatalogName, "Sauces maison");
+  assert.deepEqual(summarizeOrderItemOptions(stored), ["  Sauces : Samourai"]);
 });

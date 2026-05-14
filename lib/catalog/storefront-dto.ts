@@ -14,6 +14,11 @@ export function buildStorefrontFixture(
     slug: business.slug,
     name: business.name,
     location,
+    orderingEnabled:
+      business.settings?.menuQrEnabled !== false &&
+      business.settings?.orderingEnabled !== false,
+    dineInEnabled: business.settings?.dineInEnabled !== false,
+    takeawayEnabled: business.settings?.takeawayEnabled !== false,
     sections: menu.map((category) => ({
       id: category.id,
       label: category.name,
@@ -25,6 +30,8 @@ export function buildStorefrontFixture(
         image: product.image
           ? { src: product.image, alt: product.name }
           : undefined,
+        hasConfiguration:
+          product.options.length > 0 || product.variants.length > 1,
         variants: product.variants.map((variant) => {
           const overrides = variant.optionMaxSelectionsOverrides ?? {};
           return {
@@ -34,6 +41,8 @@ export function buildStorefrontFixture(
               variant.priceOverride == null
                 ? null
                 : Number(variant.priceOverride),
+            isDefault: variant.isDefault,
+            available: variant.available,
             optionMaxSelectionsOverrides: overrides,
             option_max_selections_overrides: overrides,
           };
@@ -43,11 +52,15 @@ export function buildStorefrontFixture(
           name: option.name,
           type: option.type,
           required: option.required,
-          maxSelections: option.maxSelections,
+          minSelect: option.minSelect,
+          maxSelect: option.maxSelect,
+          maxSelections: option.maxSelect,
+          available: option.available,
           values: option.values.map((value) => ({
             id: value.id,
             name: value.name,
             priceAddition: Number(value.priceAddition),
+            available: value.available,
           })),
         })),
       })),

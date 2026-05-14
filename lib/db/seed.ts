@@ -11,6 +11,9 @@ async function main() {
     businessEntitlements,
     categories,
     products,
+    productVariants,
+    productOptions,
+    optionValues,
     orders,
     orderItems,
     loyaltyPrograms,
@@ -18,21 +21,25 @@ async function main() {
     loyaltyTransactions,
   } = await import("./schema");
   const { cafeDesArts } = await import("../catalog/fixtures");
+  const { generateCustomerAccessToken } = await import(
+    "../ordering/customer-token"
+  );
   const { auth } = await import("../auth/server");
   const { MODULE_KEYS } = await import("../entitlements/types");
 
   console.log("→ Seeding Quickarte demo data…");
 
   await seedFullDemo();
+  await seedSnackAtlasDemo();
   await seedSingleModuleDemo();
 
   console.log("✓ Seed complete.");
   await pool.end();
 
   async function seedFullDemo() {
-    const email = "camille@cafedesarts.fr";
+    const email = "salma@cafemaarif.ma";
     const password = "quickarte123";
-    const name = "Camille";
+    const name = "Salma";
 
     const existing = await db.query.users.findFirst({
       where: eq(users.email, email),
@@ -71,8 +78,8 @@ async function main() {
         name: cafeDesArts.name,
         slug: cafeDesArts.slug,
         type: "cafe",
-        city: "Paris",
-        address: "Rue Oberkampf",
+        city: "Casablanca",
+        address: "Maarif",
         currency: "MAD",
         timezone: "Africa/Casablanca",
         locale: "fr-MA",
@@ -90,11 +97,15 @@ async function main() {
 
     await db.insert(businessSettings).values({
       businessId: business.id,
+      menuQrEnabled: true,
       orderingEnabled: true,
+      loyaltyEnabled: true,
+      analyticsEnabled: true,
       reservationsEnabled: false,
       dineInEnabled: true,
       takeawayEnabled: true,
       deliveryEnabled: false,
+      tableQrCount: 8,
     });
 
     await db.insert(businessEntitlements).values(
@@ -158,7 +169,7 @@ async function main() {
     if (!program) throw new Error("Failed to insert loyalty program");
 
     // Long-tail distribution tuned so that — after ~2 stamps each added by
-    // historical online-order linking below — Camille ends up with:
+    // historical online-order linking below — Salma ends up with:
     //   3 customers above the 10-stamp threshold,
     //   5 in the 5–9 range,
     //   7 below 5.
@@ -172,7 +183,7 @@ async function main() {
       { phone: "+212612233441", name: "Inès",       lifetimeEarned: 18, daysAgo: 0.2 },
       { phone: "+212612345678", name: "Sophie",     lifetimeEarned: 13, daysAgo: 0.5 },
       { phone: "+212698765432", name: "Thomas",     lifetimeEarned: 11, daysAgo: 1.2 },
-      { phone: "+212688112233", name: "Camille D.", lifetimeEarned: 8,  daysAgo: 0.3 },
+      { phone: "+212688112233", name: "Salma D.", lifetimeEarned: 8,  daysAgo: 0.3 },
       { phone: "+212677998844", name: "Léa",        lifetimeEarned: 7,  daysAgo: 2 },
       { phone: "+212666554411", name: "Mehdi",      lifetimeEarned: 6,  daysAgo: 3 },
       { phone: "+212655443322", name: "Julien",     lifetimeEarned: 5,  daysAgo: 4 },
@@ -357,6 +368,7 @@ async function main() {
           businessId,
           customerName: spec.customerName,
           customerPhone: spec.customerPhone,
+          customerAccessToken: generateCustomerAccessToken(),
           type: "dine_in",
           status: spec.status,
           paymentStatus: markPaid ? "paid" : "unpaid",
@@ -487,11 +499,15 @@ async function main() {
 
     await db.insert(businessSettings).values({
       businessId: business.id,
+      menuQrEnabled: true,
       orderingEnabled: false,
+      loyaltyEnabled: false,
+      analyticsEnabled: false,
       reservationsEnabled: false,
       dineInEnabled: false,
       takeawayEnabled: true,
       deliveryEnabled: false,
+      tableQrCount: 0,
     });
 
     await db.insert(businessEntitlements).values({
@@ -502,6 +518,191 @@ async function main() {
     });
     console.log(`  [solo] entitlements: menu_qr only`);
     console.log(`  [solo] login: ${email} / ${password}`);
+  }
+
+  async function seedSnackAtlasDemo() {
+    const email = "yassine@snackatlas.ma";
+    const password = "quickarte123";
+    const name = "Yassine";
+    const slug = "snack-atlas";
+
+    const existing = await db.query.users.findFirst({
+      where: eq(users.email, email),
+      columns: { id: true },
+    });
+    if (existing) {
+      console.log(`  [snack] existing demo user found, deleting (cascade)...`);
+      await db.delete(users).where(eq(users.id, existing.id));
+    }
+
+    const staleBySlug = await db.query.businesses.findFirst({
+      where: eq(businesses.slug, slug),
+      columns: { id: true, ownerId: true },
+    });
+    if (staleBySlug) {
+      console.log(`  [snack] stale business at slug, deleting owner (cascade)...`);
+      await db.delete(users).where(eq(users.id, staleBySlug.ownerId));
+    }
+
+    const signUp = await auth.api.signUpEmail({
+      body: { email, password, name },
+    });
+    const ownerId = signUp.user.id;
+
+    await db
+      .update(users)
+      .set({ role: "owner", name })
+      .where(eq(users.id, ownerId));
+
+    const [business] = await db
+      .insert(businesses)
+      .values({
+        ownerId,
+        name: "Snack Atlas",
+        slug,
+        type: "restaurant",
+        city: "Tangier",
+        address: "Centre-ville",
+        currency: "MAD",
+        timezone: "Africa/Casablanca",
+        locale: "fr-MA",
+      })
+      .returning();
+    if (!business) throw new Error("Failed to insert Snack Atlas business");
+
+    await db.insert(businessSettings).values({
+      businessId: business.id,
+      menuQrEnabled: true,
+      orderingEnabled: true,
+      loyaltyEnabled: false,
+      analyticsEnabled: true,
+      reservationsEnabled: false,
+      dineInEnabled: true,
+      takeawayEnabled: true,
+      deliveryEnabled: false,
+      tableQrCount: 6,
+    });
+
+    await db.insert(businessEntitlements).values(
+      MODULE_KEYS.map((module) => ({
+        businessId: business.id,
+        module,
+        enabled: module !== "loyalty",
+        source: "manual" as const,
+      })),
+    );
+
+    const [category] = await db
+      .insert(categories)
+      .values({
+        businessId: business.id,
+        name: "Tacos",
+        position: 0,
+        visible: true,
+      })
+      .returning({ id: categories.id });
+    if (!category) throw new Error("Failed to insert Snack Atlas category");
+
+    const [tacos] = await db
+      .insert(products)
+      .values({
+        businessId: business.id,
+        categoryId: category.id,
+        name: "Tacos Atlas",
+        description: "Tacos francais, frites, fromage et sauces au choix.",
+        price: "45.00",
+        image: null,
+        available: true,
+        position: 0,
+      })
+      .returning({ id: products.id });
+    if (!tacos) throw new Error("Failed to insert Snack Atlas tacos");
+
+    await db.insert(productVariants).values([
+      {
+        productId: tacos.id,
+        name: "M",
+        priceOverride: "45.00",
+        position: 0,
+        isDefault: false,
+        available: true,
+      },
+      {
+        productId: tacos.id,
+        name: "L",
+        priceOverride: "55.00",
+        position: 1,
+        isDefault: true,
+        available: true,
+      },
+      {
+        productId: tacos.id,
+        name: "XL",
+        priceOverride: "70.00",
+        position: 2,
+        isDefault: false,
+        available: true,
+      },
+    ]);
+
+    const [viande] = await db
+      .insert(productOptions)
+      .values({
+        productId: tacos.id,
+        name: "Viande",
+        type: "multi_select",
+        required: true,
+        minSelect: 1,
+        maxSelect: 2,
+        position: 0,
+        available: true,
+      })
+      .returning({ id: productOptions.id });
+    const [sauces] = await db
+      .insert(productOptions)
+      .values({
+        productId: tacos.id,
+        name: "Sauces",
+        type: "multi_select",
+        required: false,
+        minSelect: 0,
+        maxSelect: 3,
+        position: 1,
+        available: true,
+      })
+      .returning({ id: productOptions.id });
+    const [supplements] = await db
+      .insert(productOptions)
+      .values({
+        productId: tacos.id,
+        name: "Supplements",
+        type: "multi_select",
+        required: false,
+        minSelect: 0,
+        maxSelect: null,
+        position: 2,
+        available: true,
+      })
+      .returning({ id: productOptions.id });
+    if (!viande || !sauces || !supplements) {
+      throw new Error("Failed to insert Snack Atlas options");
+    }
+
+    await db.insert(optionValues).values([
+      { optionId: viande.id, name: "Poulet", priceAddition: "0.00", position: 0 },
+      { optionId: viande.id, name: "Kefta", priceAddition: "0.00", position: 1 },
+      { optionId: viande.id, name: "Mixte", priceAddition: "0.00", position: 2 },
+      { optionId: sauces.id, name: "Algerienne", priceAddition: "0.00", position: 0 },
+      { optionId: sauces.id, name: "Samourai", priceAddition: "0.00", position: 1 },
+      { optionId: sauces.id, name: "Harissa", priceAddition: "0.00", position: 2 },
+      { optionId: sauces.id, name: "Blanche", priceAddition: "0.00", position: 3 },
+      { optionId: sauces.id, name: "BBQ", priceAddition: "0.00", position: 4 },
+      { optionId: supplements.id, name: "Cheddar", priceAddition: "6.00", position: 0 },
+      { optionId: supplements.id, name: "Oeuf", priceAddition: "5.00", position: 1 },
+      { optionId: supplements.id, name: "Bacon", priceAddition: "8.00", position: 2 },
+    ]);
+
+    console.log(`  [snack] login: ${email} / ${password}`);
   }
 }
 

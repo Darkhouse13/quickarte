@@ -7,16 +7,16 @@ type Order = {
 };
 
 const pending: Order[] = [
-  { id: "#0042", time: "7H42", customer: "Sophie L.", items: "Pain au levain, Croissant beurre ×2", total: "8,30 €" },
-  { id: "#0041", time: "7H38", customer: "Marc D.", items: "Pain de campagne ×2, Baguette tradition", total: "13,00 €" },
-  { id: "#0040", time: "7H31", customer: "Inès P.", items: "Kouign-amann, Chausson aux pommes", total: "5,60 €" },
+  { id: "#0042", time: "12H42", customer: "Salma B.", items: "Tacos poulet, The menthe x2", total: "73 MAD" },
+  { id: "#0041", time: "12H38", customer: "Yassine D.", items: "Harira x2, Msemen", total: "52 MAD" },
+  { id: "#0040", time: "12H31", customer: "Ines A.", items: "Tajine kefta, Raib", total: "68 MAD" },
 ];
 
 const done: Order[] = [
-  { id: "#0039", time: "7H25", customer: "Thomas B.", items: "Brioche feuilletée", total: "3,60 €" },
-  { id: "#0038", time: "7H19", customer: "Claire M.", items: "Tartelette aux fruits ×2", total: "8,40 €" },
-  { id: "#0037", time: "7H12", customer: "Julien S.", items: "Pain au chocolat ×3", total: "5,70 €" },
-  { id: "#0036", time: "7H05", customer: "Léa V.", items: "Baguette tradition ×2, Croissant ×1", total: "4,60 €" },
+  { id: "#0039", time: "12H25", customer: "Omar T.", items: "Beldi breakfast", total: "38 MAD" },
+  { id: "#0038", time: "12H19", customer: "Nora M.", items: "Jus orange x2", total: "36 MAD" },
+  { id: "#0037", time: "12H12", customer: "Mehdi S.", items: "Tacos mixte x3", total: "150 MAD" },
+  { id: "#0036", time: "12H05", customer: "Sara V.", items: "Cafe noir x2, Msemen x1", total: "32 MAD" },
 ];
 
 const pendingBadge = {

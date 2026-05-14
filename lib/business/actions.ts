@@ -6,11 +6,13 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { businesses, businessSettings } from "@/lib/db/schema";
+import { businesses, businessSettings, staffMembers } from "@/lib/db/schema";
 import { requireBusiness, requireSession } from "@/lib/auth/get-business";
+import { assertRole } from "@/lib/identity/permissions";
 import { seedDefaultCatalog } from "@/lib/catalog/default-menus";
 import { provisionDefaultEntitlements } from "@/lib/entitlements/defaults";
 import { isValidSlug } from "@/lib/utils/slug";
+import { normalizeMoroccanPhone } from "@/lib/business/phone";
 
 const BUSINESS_TYPES = [
   "restaurant",
@@ -21,10 +23,12 @@ const BUSINESS_TYPES = [
 const createBusinessSchema = z.object({
   name: z.string().trim().min(2, "Nom trop court").max(80),
   type: z.enum(BUSINESS_TYPES),
-  googlePlaceId: z.string().trim().min(1, "Adresse requise"),
+  googlePlaceId: z.string().trim().optional().nullable(),
   formattedAddress: z.string().trim().min(1, "Adresse requise").max(300),
-  lat: z.number().finite().min(-90).max(90),
-  lng: z.number().finite().min(-180).max(180),
+  city: z.string().trim().max(80).optional().nullable(),
+  address: z.string().trim().max(220).optional().nullable(),
+  lat: z.number().finite().min(-90).max(90).optional().nullable(),
+  lng: z.number().finite().min(-180).max(180).optional().nullable(),
   slug: z
     .string()
     .trim()
@@ -86,10 +90,12 @@ export async function createBusinessAction(
       name: data.name,
       slug: data.slug,
       type: data.type,
-      googlePlaceId: data.googlePlaceId,
+      city: data.city || null,
+      address: data.address || data.formattedAddress,
+      googlePlaceId: data.googlePlaceId || null,
       formattedAddress: data.formattedAddress,
-      lat: data.lat.toString(),
-      lng: data.lng.toString(),
+      lat: data.lat == null ? null : data.lat.toString(),
+      lng: data.lng == null ? null : data.lng.toString(),
     })
     .returning({ id: businesses.id });
 
@@ -99,11 +105,25 @@ export async function createBusinessAction(
 
   await db.insert(businessSettings).values({
     businessId: inserted.id,
+    menuQrEnabled: true,
     orderingEnabled: true,
+    loyaltyEnabled: true,
+    analyticsEnabled: true,
     reservationsEnabled: false,
     dineInEnabled: true,
     takeawayEnabled: true,
     deliveryEnabled: false,
+    tableQrCount: 0,
+    posCoexistenceEnabled: false,
+  });
+
+  await db.insert(staffMembers).values({
+    businessId: inserted.id,
+    userId: session.user.id,
+    email: session.user.email,
+    displayName: session.user.name || session.user.email,
+    role: "owner",
+    acceptedAt: new Date(),
   });
 
   try {
@@ -143,7 +163,8 @@ export type UpdateBusinessProfileResult =
 export async function updateBusinessProfile(
   input: UpdateBusinessProfileInput,
 ): Promise<UpdateBusinessProfileResult> {
-  const { business } = await requireBusiness();
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
 
   const parsed = updateBusinessProfileSchema.safeParse(input);
   if (!parsed.success) {
@@ -166,5 +187,223 @@ export async function updateBusinessProfile(
   revalidatePath("/fr/settings");
   revalidatePath("/fr/home");
 
+  return { ok: true };
+}
+
+const updateBusinessAddressSchema = z.object({
+  formattedAddress: z.string().trim().min(1, "Adresse requise").max(300),
+  city: z.string().trim().max(80).optional().nullable(),
+  address: z.string().trim().max(220).optional().nullable(),
+  googlePlaceId: z.string().trim().optional().nullable(),
+  lat: z.number().finite().min(-90).max(90).optional().nullable(),
+  lng: z.number().finite().min(-180).max(180).optional().nullable(),
+});
+
+export type UpdateBusinessAddressInput = z.input<
+  typeof updateBusinessAddressSchema
+>;
+
+export async function updateBusinessAddress(
+  input: UpdateBusinessAddressInput,
+): Promise<UpdateBusinessProfileResult> {
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
+  const parsed = updateBusinessAddressSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "Validation invalide",
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
+    };
+  }
+  const data = parsed.data;
+
+  await db
+    .update(businesses)
+    .set({
+      formattedAddress: data.formattedAddress,
+      city: data.city || null,
+      address: data.address || data.formattedAddress,
+      googlePlaceId: data.googlePlaceId || null,
+      lat: data.lat == null ? null : data.lat.toString(),
+      lng: data.lng == null ? null : data.lng.toString(),
+      updatedAt: new Date(),
+    })
+    .where(eq(businesses.id, business.id));
+
+  revalidatePath("/fr/settings");
+  revalidatePath("/fr/home");
+  revalidatePath(`/fr/${business.slug}`);
+  return { ok: true };
+}
+
+const updateOperationalSettingsSchema = z
+  .object({
+    menuQrEnabled: z.boolean(),
+    orderingEnabled: z.boolean(),
+    loyaltyEnabled: z.boolean(),
+    analyticsEnabled: z.boolean(),
+    dineInEnabled: z.boolean(),
+    takeawayEnabled: z.boolean(),
+  })
+  .refine((data) => !data.orderingEnabled || data.dineInEnabled || data.takeawayEnabled, {
+    message: "Activez au moins un mode de commande",
+    path: ["orderingEnabled"],
+  });
+
+export type UpdateOperationalSettingsInput = z.input<
+  typeof updateOperationalSettingsSchema
+>;
+
+export async function updateOperationalSettings(
+  input: UpdateOperationalSettingsInput,
+): Promise<UpdateBusinessProfileResult> {
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
+  const parsed = updateOperationalSettingsSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "Validation invalide",
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
+    };
+  }
+  const data = parsed.data;
+
+  await db
+    .update(businessSettings)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(businessSettings.businessId, business.id));
+
+  revalidatePath("/fr/settings");
+  revalidatePath("/fr/home");
+  revalidatePath(`/fr/${business.slug}`);
+  return { ok: true };
+}
+
+const updateTableQrCountSchema = z.object({
+  tableQrCount: z.coerce
+    .number({ invalid_type_error: "Nombre de tables invalide" })
+    .int("Nombre de tables invalide")
+    .min(0, "Nombre de tables invalide")
+    .max(80, "Maximum 80 tables"),
+});
+
+export async function updateTableQrCount(input: {
+  tableQrCount: number;
+}): Promise<UpdateBusinessProfileResult> {
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
+  const parsed = updateTableQrCountSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "Validation invalide",
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
+    };
+  }
+
+  await db
+    .update(businessSettings)
+    .set({
+      tableQrCount: parsed.data.tableQrCount,
+      updatedAt: new Date(),
+    })
+    .where(eq(businessSettings.businessId, business.id));
+
+  revalidatePath("/fr/settings");
+  return { ok: true };
+}
+
+const updateCustomerFacingSettingsSchema = z.object({
+  whatsappNumber: z.string().trim().max(80).optional().nullable(),
+  customerPostOrderMessage: z
+    .string()
+    .trim()
+    .max(280, "Maximum 280 caracteres")
+    .optional()
+    .nullable(),
+});
+
+export type UpdateCustomerFacingSettingsInput = z.input<
+  typeof updateCustomerFacingSettingsSchema
+>;
+
+export async function updateCustomerFacingSettings(
+  input: UpdateCustomerFacingSettingsInput,
+): Promise<UpdateBusinessProfileResult> {
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
+  const parsed = updateCustomerFacingSettingsSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "Validation invalide",
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
+    };
+  }
+
+  const phone = normalizeMoroccanPhone(parsed.data.whatsappNumber ?? "");
+  const postOrderMessage = parsed.data.customerPostOrderMessage?.trim() ?? "";
+
+  await db
+    .update(businessSettings)
+    .set({
+      whatsappNumber: phone.value.length > 0 ? phone.value : null,
+      customerPostOrderMessage:
+        postOrderMessage.length > 0 ? postOrderMessage : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(businessSettings.businessId, business.id));
+
+  revalidatePath("/fr/settings");
+  revalidatePath(`/fr/${business.slug}`);
+  return { ok: true };
+}
+
+const updatePosCoexistenceSettingSchema = z.object({
+  enabled: z.boolean(),
+});
+
+export async function updatePosCoexistenceSetting(input: {
+  enabled: boolean;
+}): Promise<UpdateBusinessProfileResult> {
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
+  const parsed = updatePosCoexistenceSettingSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "Validation invalide",
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
+    };
+  }
+
+  await db
+    .update(businessSettings)
+    .set({
+      posCoexistenceEnabled: parsed.data.enabled,
+      updatedAt: new Date(),
+    })
+    .where(eq(businessSettings.businessId, business.id));
+
+  revalidatePath("/fr/settings");
+  revalidatePath("/fr/orders");
+  revalidatePath("/fr/cloture");
   return { ok: true };
 }

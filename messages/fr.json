@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "Quickarte",
-    "currency": "EUR"
+    "currency": "MAD"
   },
   "nav": {
     "home": "Accueil",
@@ -61,9 +61,9 @@
       "available": "Disponible"
     },
     "placeholders": {
-      "name": "Pain au chocolat",
-      "description": "Viennoiserie pur beurre, feuilletée à la main",
-      "price": "1,80",
+      "name": "Tacos poulet",
+      "description": "Sauces au choix, frites maison",
+      "price": "45",
       "selectCategory": "Sélectionner une catégorie..."
     },
     "hints": {

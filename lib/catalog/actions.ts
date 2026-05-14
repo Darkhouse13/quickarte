@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { categories, products } from "@/lib/db/schema";
 import { requireBusiness } from "@/lib/auth/get-business";
+import { assertRole } from "@/lib/identity/permissions";
 import {
   createCategorySchema,
   createProductSchema,
@@ -38,7 +39,8 @@ export async function createProduct(
     };
   }
 
-  const { business } = await requireBusiness();
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
 
   const category = await db.query.categories.findFirst({
     where: and(
@@ -91,7 +93,8 @@ export async function updateProduct(
     };
   }
 
-  const { business } = await requireBusiness();
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
 
   const existing = await db.query.products.findFirst({
     where: and(
@@ -141,7 +144,8 @@ export async function updateProductAvailability(
   productId: string,
   available: boolean,
 ): Promise<void> {
-  const { business } = await requireBusiness();
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
   await db
     .update(products)
     .set({ available, updatedAt: new Date() })
@@ -153,7 +157,8 @@ export async function updateProductAvailability(
 }
 
 export async function deleteProduct(productId: string): Promise<void> {
-  const { business } = await requireBusiness();
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
   await db
     .delete(products)
     .where(
@@ -178,7 +183,8 @@ export async function createCategory(
     return { status: "error", message: first };
   }
 
-  const { business } = await requireBusiness();
+  const { session, business } = await requireBusiness();
+  await assertRole(session.user.id, business.id, ["owner", "manager"]);
 
   const last = await db.query.categories.findFirst({
     where: eq(categories.businessId, business.id),

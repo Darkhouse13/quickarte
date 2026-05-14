@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   jsonb,
   numeric,
@@ -7,6 +8,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
@@ -56,61 +58,96 @@ export const products = pgTable("products", {
     .defaultNow(),
 });
 
-export const productVariants = pgTable("product_variants", {
-  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  productId: uuid("product_id")
-    .notNull()
-    .references(() => products.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  priceOverride: numeric("price_override", { precision: 10, scale: 2 }),
-  position: integer("position").notNull().default(0),
-  optionMaxSelectionsOverrides: jsonb("option_max_selections_overrides")
-    .$type<Record<string, number>>()
-    .notNull()
-    .default(sql`'{}'::jsonb`),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const productVariants = pgTable(
+  "product_variants",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    priceOverride: numeric("price_override", { precision: 10, scale: 2 }),
+    position: integer("position").notNull().default(0),
+    isDefault: boolean("is_default").notNull().default(false),
+    available: boolean("available").notNull().default(true),
+    optionMaxSelectionsOverrides: jsonb("option_max_selections_overrides")
+      .$type<Record<string, number>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    productPositionIdx: index("product_variants_product_id_position_idx").on(
+      table.productId,
+      table.position,
+    ),
+    defaultVariantIdx: uniqueIndex("product_variants_one_default_idx")
+      .on(table.productId)
+      .where(sql`${table.isDefault} = true`),
+  }),
+);
 
-export const productOptions = pgTable("product_options", {
-  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  productId: uuid("product_id")
-    .notNull()
-    .references(() => products.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  type: optionTypeEnum("type").notNull().default("single_select"),
-  required: boolean("required").notNull().default(false),
-  position: integer("position").notNull().default(0),
-  maxSelections: integer("max_selections"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const productOptions = pgTable(
+  "product_options",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    type: optionTypeEnum("type").notNull().default("single_select"),
+    required: boolean("required").notNull().default(false),
+    minSelect: integer("min_select").notNull().default(0),
+    maxSelect: integer("max_select"),
+    position: integer("position").notNull().default(0),
+    available: boolean("available").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    productPositionIdx: index("product_options_product_id_position_idx").on(
+      table.productId,
+      table.position,
+    ),
+  }),
+);
 
-export const optionValues = pgTable("option_values", {
-  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  optionId: uuid("option_id")
-    .notNull()
-    .references(() => productOptions.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  priceAddition: numeric("price_addition", { precision: 10, scale: 2 })
-    .notNull()
-    .default("0"),
-  position: integer("position").notNull().default(0),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const optionValues = pgTable(
+  "option_values",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    optionId: uuid("option_id")
+      .notNull()
+      .references(() => productOptions.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    priceAddition: numeric("price_addition", { precision: 10, scale: 2 })
+      .notNull()
+      .default("0"),
+    position: integer("position").notNull().default(0),
+    available: boolean("available").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    optionPositionIdx: index("option_values_option_id_position_idx").on(
+      table.optionId,
+      table.position,
+    ),
+  }),
+);
 
 export const categoriesRelations = relations(categories, ({ one, many }) => ({
   business: one(businesses, {

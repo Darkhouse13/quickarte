@@ -1,10 +1,22 @@
 import {
-  getEffectiveMaxSelections,
-  type VariantOptionMaxSelectionsOverrides,
-} from "@/lib/catalog/option-guards";
+  serializeOrderItemOptions,
+  type OrderItemOptions,
+  type OrderItemOptionType,
+} from "./order-item-options";
+
+export type OrderPlacementErrorCode =
+  | "PRODUCT_UNAVAILABLE"
+  | "VARIANT_INVALID"
+  | "OPTION_REQUIRED_MISSING"
+  | "OPTION_MIN_NOT_MET"
+  | "OPTION_MAX_EXCEEDED"
+  | "OPTION_SINGLE_INVALID"
+  | "OPTION_VALUE_INVALID"
+  | "PRICE_RESOLVED_NEGATIVE";
 
 export type DbProductForOrder = {
   id: string;
+  name: string;
   price: string;
   available: boolean;
   variants: Array<{
@@ -12,20 +24,24 @@ export type DbProductForOrder = {
     productId: string;
     name: string;
     priceOverride: string | null;
-    optionMaxSelectionsOverrides: VariantOptionMaxSelectionsOverrides;
+    isDefault: boolean;
+    available: boolean;
   }>;
   options: Array<{
     id: string;
     productId: string;
     name: string;
-    type: "single_select" | "multi_select";
+    type: OrderItemOptionType;
     required: boolean;
-    maxSelections: number | null;
+    minSelect: number;
+    maxSelect: number | null;
+    available: boolean;
     values: Array<{
       id: string;
       optionId: string;
       name: string;
       priceAddition: string;
+      available: boolean;
     }>;
   }>;
 };
@@ -43,77 +59,84 @@ export type ValidatedOrderLine = {
   quantity: number;
   unitPrice: number;
   subtotal: number;
-  optionsJson: {
-    variant_id: string | null;
-    variant_name: string | null;
-    selected_options_summary: Array<{
-      option_id: string;
-      option_name: string;
-      option_type: "single_select" | "multi_select";
-      values: Array<{
-        value_id: string;
-        value_name: string;
-        price_addition: number;
-      }>;
-    }>;
-  } | null;
+  optionsJson: OrderItemOptions | null;
 };
 
-export function validateConfiguredLine(
-  item: IncomingOrderLine,
-  product: DbProductForOrder,
-):
+export type ConfiguredLineValidationResult =
   | {
       status: "success";
       line: ValidatedOrderLine;
     }
-  | { status: "error"; message: string; statusCode?: 422 } {
-  const variants = product.variants ?? [];
-  if (variants.length > 0 && item.variant_id === null) {
-    return { status: "error", message: "Variante requise" };
-  }
-  if (variants.length === 0 && item.variant_id !== null) {
-    return { status: "error", message: "Variante invalide" };
+  | {
+      status: "error";
+      code: OrderPlacementErrorCode;
+      message: string;
+      statusCode: 422;
+    };
+
+export function validateConfiguredLine(
+  item: IncomingOrderLine,
+  product: DbProductForOrder,
+): ConfiguredLineValidationResult {
+  if (!product.available) {
+    return validationError(
+      "PRODUCT_UNAVAILABLE",
+      "Un ou plusieurs articles sont indisponibles",
+    );
   }
 
-  const variant = item.variant_id
-    ? variants.find((v) => v.id === item.variant_id)
-    : null;
-  if (item.variant_id && !variant) {
-    return { status: "error", message: "Variante invalide" };
-  }
+  const variantResult = resolveVariant(item, product);
+  if (variantResult.status === "error") return variantResult;
+  const variant = variantResult.variant;
+  const snapshotVariant = variantResult.snapshotVariant;
 
   const selectedIds = new Set(item.selected_option_value_ids);
   if (selectedIds.size !== item.selected_option_value_ids.length) {
-    return { status: "error", message: "Choix invalides" };
+    return validationError("OPTION_VALUE_INVALID", "Choix invalides");
   }
 
-  const selectedOptionsSummary = [];
+  const allowedValueIds = new Set<string>();
+  const unavailableValueIds = new Set<string>();
+  const selections: OrderItemOptions["selections"] = [];
   let additions = 0;
+
   for (const option of product.options ?? []) {
+    for (const value of option.values) {
+      allowedValueIds.add(value.id);
+      if (!value.available || !option.available) {
+        unavailableValueIds.add(value.id);
+      }
+    }
+
     const selectedValues = option.values.filter((value) =>
       selectedIds.has(value.id),
     );
 
+    if (selectedValues.some((value) => unavailableValueIds.has(value.id))) {
+      return validationError(
+        "OPTION_VALUE_INVALID",
+        `${option.name} n'est plus disponible pour ${product.name}.`,
+      );
+    }
+
+    if (!option.available) {
+      continue;
+    }
+
     if (option.type === "single_select") {
-      if (option.required && selectedValues.length !== 1) {
-        return { status: "error", message: "Choix requis manquant" };
-      }
-      if (selectedValues.length > 1) {
-        return { status: "error", message: "Choix unique invalide" };
-      }
+      const singleValidation = validateSingleSelect(
+        option,
+        selectedValues.length,
+        product.name,
+      );
+      if (singleValidation) return singleValidation;
     } else {
-      if (option.required && selectedValues.length < 1) {
-        return { status: "error", message: "Choix requis manquant" };
-      }
-      const effectiveMax = getEffectiveMaxSelections(option, variant);
-      if (selectedValues.length > effectiveMax) {
-        return {
-          status: "error",
-          statusCode: 422,
-          message: "Trop de choix sélectionnés",
-        };
-      }
+      const multiValidation = validateMultiSelect(
+        option,
+        selectedValues.length,
+        product.name,
+      );
+      if (multiValidation) return multiValidation;
     }
 
     if (selectedValues.length > 0) {
@@ -121,45 +144,38 @@ export function validateConfiguredLine(
         const priceAddition = Number(value.priceAddition);
         additions += priceAddition;
         return {
-          value_id: value.id,
-          value_name: value.name,
-          price_addition: priceAddition,
+          valueId: value.id,
+          valueName: value.name,
+          priceAddition,
         };
       });
-      selectedOptionsSummary.push({
-        option_id: option.id,
-        option_name: option.name,
-        option_type: option.type,
+      selections.push({
+        optionId: option.id,
+        optionName: option.name,
+        optionType: option.type,
         values,
       });
     }
   }
 
-  const allowedValueIds = new Set(
-    (product.options ?? []).flatMap((option) =>
-      option.values.map((value) => value.id),
-    ),
-  );
   for (const selectedId of selectedIds) {
     if (!allowedValueIds.has(selectedId)) {
-      return { status: "error", message: "Choix invalides" };
+      return validationError("OPTION_VALUE_INVALID", "Choix invalides");
     }
   }
 
   const unitPrice = roundMoney(
     Number(variant?.priceOverride ?? product.price) + additions,
   );
-  if (unitPrice !== roundMoney(item.unit_price)) {
-    return {
-      status: "error",
-      statusCode: 422,
-      message: "Les prix ont été mis à jour. Veuillez vérifier votre commande.",
-    };
+  if (unitPrice < 0) {
+    return validationError(
+      "PRICE_RESOLVED_NEGATIVE",
+      "Le prix de cet article est invalide.",
+    );
   }
 
   const subtotal = roundMoney(unitPrice * item.quantity);
-  const hasConfiguration =
-    variant !== null || selectedOptionsSummary.length > 0;
+  const hasConfiguration = snapshotVariant || selections.length > 0;
 
   return {
     status: "success",
@@ -169,14 +185,119 @@ export function validateConfiguredLine(
       unitPrice,
       subtotal,
       optionsJson: hasConfiguration
-        ? {
-            variant_id: variant?.id ?? null,
-            variant_name: variant?.name ?? null,
-            selected_options_summary: selectedOptionsSummary,
-          }
+        ? serializeOrderItemOptions({
+            variantId: snapshotVariant ? variant?.id ?? null : null,
+            variantName: snapshotVariant ? variant?.name ?? null : null,
+            variantPriceOverride:
+              !snapshotVariant || variant?.priceOverride == null
+                ? null
+                : Number(variant.priceOverride),
+            selections,
+          })
         : null,
     },
   };
+}
+
+function resolveVariant(
+  item: IncomingOrderLine,
+  product: DbProductForOrder,
+):
+  | {
+      status: "success";
+      variant: DbProductForOrder["variants"][number] | null;
+      snapshotVariant: boolean;
+    }
+  | Extract<ConfiguredLineValidationResult, { status: "error" }> {
+  const variants = product.variants ?? [];
+  if (variants.length === 0) {
+    if (item.variant_id !== null) {
+      return validationError("VARIANT_INVALID", "Variante invalide");
+    }
+    return { status: "success", variant: null, snapshotVariant: false };
+  }
+
+  if (item.variant_id) {
+    const variant = variants.find((v) => v.id === item.variant_id);
+    if (!variant || variant.productId !== product.id || !variant.available) {
+      return validationError("VARIANT_INVALID", "Variante invalide");
+    }
+    return { status: "success", variant, snapshotVariant: true };
+  }
+
+  if (variants.length > 1) {
+    return validationError(
+      "VARIANT_INVALID",
+      `Veuillez choisir une variante pour ${product.name}.`,
+    );
+  }
+
+  const defaultVariant =
+    variants.find((variant) => variant.isDefault && variant.available) ??
+    (variants.length === 1 && variants[0]?.available ? variants[0] : null);
+  if (!defaultVariant) {
+    return validationError(
+      "VARIANT_INVALID",
+      `Veuillez choisir une variante pour ${product.name}.`,
+    );
+  }
+  return {
+    status: "success",
+    variant: defaultVariant,
+    snapshotVariant: variants.length > 1,
+  };
+}
+
+function validateSingleSelect(
+  option: DbProductForOrder["options"][number],
+  selectedCount: number,
+  productName: string,
+): Extract<ConfiguredLineValidationResult, { status: "error" }> | null {
+  if (selectedCount > 1) {
+    return validationError(
+      "OPTION_SINGLE_INVALID",
+      `Veuillez choisir une seule valeur pour ${option.name}.`,
+    );
+  }
+  if (option.required && selectedCount !== 1) {
+    return validationError(
+      "OPTION_REQUIRED_MISSING",
+      requiredMessage(option.name, productName),
+    );
+  }
+  return null;
+}
+
+function validateMultiSelect(
+  option: DbProductForOrder["options"][number],
+  selectedCount: number,
+  productName: string,
+): Extract<ConfiguredLineValidationResult, { status: "error" }> | null {
+  const minSelect = option.required ? Math.max(1, option.minSelect) : option.minSelect;
+  if (selectedCount < minSelect) {
+    return validationError(
+      minSelect > 1 ? "OPTION_MIN_NOT_MET" : "OPTION_REQUIRED_MISSING",
+      requiredMessage(option.name, productName),
+    );
+  }
+  if (option.maxSelect !== null && selectedCount > option.maxSelect) {
+    return validationError(
+      "OPTION_MAX_EXCEEDED",
+      `Vous pouvez choisir au maximum ${option.maxSelect} option(s) pour ${option.name}.`,
+    );
+  }
+  return null;
+}
+
+function requiredMessage(optionName: string, productName: string): string {
+  return `Veuillez choisir ${optionName.toLocaleLowerCase("fr-FR")} pour ${productName}.`;
+}
+
+function validationError(
+  code: OrderPlacementErrorCode,
+  message: string,
+): Extract<ConfiguredLineValidationResult, { status: "error" }> {
+  return { status: "error", code, message, statusCode: 422 };
 }
 
 function roundMoney(value: number): number {
