@@ -32,7 +32,6 @@ import {
   type OverrideValidationOption,
 } from "./variant-option-overrides";
 import { USED_OPTION_FALLBACK_MESSAGE } from "./customization-messages";
-export { USED_OPTION_FALLBACK_MESSAGE } from "./customization-messages";
 
 export type CustomizationActionResult =
   | { status: "success" }
