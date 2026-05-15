@@ -22,6 +22,7 @@ import {
   type OrderLifecycleStatus,
 } from "@/lib/ordering/status";
 import type { OrderWithItems } from "@/lib/ordering/queries";
+import { shouldShowRedemptionPill } from "@/lib/loyalty/redemption-pill";
 import type { StaffRole } from "@/lib/identity/permissions";
 import type { JournalEvent } from "@/lib/ordering/event-queries";
 import {
@@ -149,6 +150,14 @@ export function OrderRow({
             {formatAmountCompact(total)}
           </span>
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
+            {shouldShowRedemptionPill(order) ? (
+              <span
+                className="px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-ink text-ink"
+                aria-label="Commande payée en crédits"
+              >
+                Récompense
+              </span>
+            ) : null}
             <PaymentPill status={order.paymentStatus} />
             <StatusBadge
               status={status}

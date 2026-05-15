@@ -23,6 +23,7 @@ import {
   kitchenMarkReady,
 } from "@/lib/kitchen/actions";
 import type { KitchenOrder } from "@/lib/kitchen/queries";
+import { shouldShowRedemptionPill } from "@/lib/loyalty/redemption-pill";
 
 const POLL_INTERVAL_MS = 4_000;
 const TICKER_INTERVAL_MS = 10_000;
@@ -410,8 +411,18 @@ function KitchenCard({
   const isDineIn = order.type === "dine_in";
   const tableLabel = isDineIn ? order.tableNumber ?? "—" : "À emporter";
 
+  const isRedemption = shouldShowRedemptionPill(order);
+
   return (
     <li className="border-b-2 border-ink last:border-b-0 px-6 md:px-8 py-5 flex flex-col gap-4">
+      {isRedemption ? (
+        <span
+          className="self-start font-mono text-[10px] uppercase tracking-widest font-bold text-ink border border-ink px-2 py-1"
+          aria-label="Commande payée en crédits"
+        >
+          Récompense
+        </span>
+      ) : null}
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1 min-w-0">
           <span className="font-mono text-[10px] uppercase tracking-widest text-ink/45 font-bold">

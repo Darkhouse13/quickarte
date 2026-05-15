@@ -21,6 +21,10 @@ export type KitchenOrder = {
   notes: string | null;
   createdAt: string;
   statusEnteredAt: string;
+  // 'credits' surfaces the RÉCOMPENSE pill so the kitchen knows this order
+  // was paid in loyalty credits, not MAD. Optional for compatibility with
+  // historical rows where paymentMode might be null.
+  paymentMode: "mad" | "credits" | null;
   items: KitchenOrderItem[];
 };
 
@@ -68,6 +72,7 @@ export async function getOpenKitchenOrders(
       // updatedAt is bumped by transitionOrder, so it tracks when the order
       // entered its current status — used for the 60s ready-linger window.
       statusEnteredAt: row.updatedAt.toISOString(),
+      paymentMode: row.paymentMode ?? null,
       items,
     };
   });
