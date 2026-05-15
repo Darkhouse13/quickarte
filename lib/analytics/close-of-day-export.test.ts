@@ -77,6 +77,15 @@ test("handleCloseExport passes posStatus to the order list", async () => {
       "https://quickarte.test/api/cloture/export?date=2026-05-14&posStatus=pending",
     ),
     depsForRole("manager", {
+      getCurrentBusiness: async () => ({
+        session: { user: { id: "user-1" } },
+        business: {
+          id: businessId,
+          slug: "snack-atlas",
+          timezone: "Africa/Casablanca",
+          settings: { posCoexistenceEnabled: true },
+        },
+      }),
       getOrdersForDay: async (_businessId, _bounds, filters) => {
         capturedFilters = filters ?? {};
         return [{ ...exportOrder(), posStatus: "pending" }];

@@ -76,10 +76,74 @@ test("buildCloseCsv emits UTF-8 BOM, semicolons, CRLF, and accented headers", ()
 
   assert.deepEqual([...bytes.subarray(0, 3)], [0xef, 0xbb, 0xbf]);
   assert.ok(csv.startsWith("\uFEFFHeure;Référence;Type;Table;Articles"));
-  assert.ok(csv.includes("Statut;Caisse;Téléphone;Note client"));
+  assert.ok(csv.includes("Statut;Téléphone;Note client"));
   assert.ok(csv.includes("\r\n"));
   assert.equal(csv.replace(/\r\n/g, "").includes("\n"), false);
   assert.ok(Buffer.from(csv, "utf8").toString("utf8").includes("Référence"));
+});
+
+test("buildCloseCsv omits Caisse when POS coexistence is disabled", () => {
+  const csv = buildCloseCsv({
+    orders,
+    totals: { revenueMad: 55.5, orderCount: 1 },
+    business: { posCoexistenceEnabled: false },
+  });
+  const lines = csv.slice(1).split("\r\n");
+  const header = parseCsvLine(lines[0]!);
+  const firstOrder = parseCsvLine(lines[1]!);
+  const blankIndex = lines.indexOf("");
+  const totalsLine = parseCsvLine(lines[blankIndex + 1]!);
+
+  assert.equal(header.length, 9);
+  assert.deepEqual(header.slice(-2), ["Téléphone", "Note client"]);
+  assert.equal(header.includes("Caisse"), false);
+  assert.equal(firstOrder.length, 9);
+  assert.equal(firstOrder[7], "0611223344");
+  assert.equal(firstOrder[8], "Sans oignons");
+  assert.equal(totalsLine.length, 9);
+});
+
+test("buildCloseCsv appends empty Caisse cells when POS coexistence is enabled with no entries", () => {
+  const csv = buildCloseCsv({
+    orders: orders.map((order) => ({
+      ...order,
+      posStatus: "not_required",
+      posReference: null,
+    })),
+    totals: { revenueMad: 55.5, orderCount: 1 },
+    business: { posCoexistenceEnabled: true },
+  });
+  const lines = csv.slice(1).split("\r\n");
+  const header = parseCsvLine(lines[0]!);
+  const firstOrder = parseCsvLine(lines[1]!);
+  const blankIndex = lines.indexOf("");
+  const totalsLine = parseCsvLine(lines[blankIndex + 1]!);
+
+  assert.equal(header.length, 10);
+  assert.equal(header.at(-1), "Caisse");
+  assert.equal(firstOrder.length, 10);
+  assert.equal(firstOrder.at(-1), "");
+  assert.equal(totalsLine.length, 10);
+  assert.equal(totalsLine.at(-1), "");
+});
+
+test("buildCloseCsv appends entered and skipped Caisse dispositions at the end", () => {
+  const csv = buildCloseCsv({
+    orders: [
+      orders[0]!,
+      { ...orders[1]!, posStatus: "skipped", posReference: "MANUAL" },
+    ],
+    totals: { revenueMad: 55.5, orderCount: 1 },
+    business: { posCoexistenceEnabled: true },
+  });
+  const lines = csv.slice(1).split("\r\n");
+  const header = parseCsvLine(lines[0]!);
+  const firstOrder = parseCsvLine(lines[1]!);
+  const secondOrder = parseCsvLine(lines[2]!);
+
+  assert.equal(header.at(-1), "Caisse");
+  assert.equal(firstOrder.at(-1), "Entrée (BC-1408)");
+  assert.equal(secondOrder.at(-1), "Sautée (MANUAL)");
 });
 
 test("buildCloseCsv keeps Snack Atlas articles aligned with summarizeOrderItemOptions", () => {
@@ -97,7 +161,8 @@ test("buildCloseCsv keeps Snack Atlas articles aligned with summarizeOrderItemOp
   assert.equal(cells[4], `${tacosArticles} ; 1x Frites`);
   assert.equal(cells[5], "55,50");
   assert.equal(cells[6], "Servie");
-  assert.equal(cells[7], "Entrée (BC-1408)");
+  assert.equal(cells[7], "0611223344");
+  assert.equal(cells[8], "Sans oignons");
   assert.match(firstOrderLine, /"1x Tacos Atlas/);
   assert.match(firstOrderLine, /""chef""/);
 });
@@ -114,7 +179,7 @@ test("buildCloseCsv includes cancelled rows but excludes them from the totals li
 
   assert.equal(bodyRows.length, 2);
   assert.ok(bodyRows.some((line) => line.includes("Annulée")));
-  assert.equal(totalsLine, "Total;;;;;55,50;1 commande(s);;;");
+  assert.equal(totalsLine, "Total;;;;;55,50;1 commande(s);;");
 });
 
 test("streamCloseCsv emits the same BOM and row shape for large exports", async () => {

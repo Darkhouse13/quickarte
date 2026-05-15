@@ -12,7 +12,6 @@ export const CLOSE_CSV_HEADER = [
   "Articles",
   "Total (MAD)",
   "Statut",
-  "Caisse",
   "Téléphone",
   "Note client",
 ] as const;
@@ -25,15 +24,19 @@ export type CloseCsvTotals = {
 export type BuildCloseCsvInput = {
   orders: OrderListItem[];
   totals: CloseCsvTotals;
+  business?: {
+    posCoexistenceEnabled?: boolean | null;
+  };
   timezone?: string;
 };
 
 export function buildCloseCsv({
   orders,
   totals,
+  business,
   timezone = DEFAULT_BUSINESS_TIMEZONE,
 }: BuildCloseCsvInput): string {
-  return `\uFEFF${Array.from(closeCsvLines({ orders, totals, timezone })).join(
+  return `\uFEFF${Array.from(closeCsvLines({ orders, totals, business, timezone })).join(
     "\r\n",
   )}\r\n`;
 }
@@ -64,14 +67,16 @@ export function streamCloseCsv(input: BuildCloseCsvInput): ReadableStream<Uint8A
 export function* closeCsvLines({
   orders,
   totals,
+  business,
   timezone = DEFAULT_BUSINESS_TIMEZONE,
 }: BuildCloseCsvInput): Generator<string> {
-  yield csvLine(CLOSE_CSV_HEADER);
+  const includeCaisseColumn = business?.posCoexistenceEnabled === true;
+  yield csvLine(closeCsvHeader(includeCaisseColumn));
   for (const order of orders) {
-    yield closeOrderCsvLine(order, timezone);
+    yield closeOrderCsvLine(order, timezone, includeCaisseColumn);
   }
   yield "";
-  yield csvLine([
+  const totalRow = [
     "Total",
     "",
     "",
@@ -81,15 +86,17 @@ export function* closeCsvLines({
     `${totals.orderCount} commande(s)`,
     "",
     "",
-    "",
-  ]);
+  ];
+  if (includeCaisseColumn) totalRow.push("");
+  yield csvLine(totalRow);
 }
 
 export function closeOrderCsvLine(
   order: OrderListItem,
   timezone = DEFAULT_BUSINESS_TIMEZONE,
+  includeCaisseColumn = false,
 ): string {
-  return csvLine([
+  const values = [
     formatBusinessTime(order.createdAt, timezone),
     order.shortRef,
     formatOrderTypeFr(order.type),
@@ -97,10 +104,19 @@ export function closeOrderCsvLine(
     order.itemsSummary,
     formatMadCsv(order.totalMad),
     formatOrderStatusFr(order.status),
-    formatPosStatusFr(order.posStatus, order.posReference),
     order.customerPhone ?? "",
     order.customerNote ?? "",
-  ]);
+  ];
+  if (includeCaisseColumn) {
+    values.push(formatPosStatusFr(order.posStatus, order.posReference));
+  }
+  return csvLine(values);
+}
+
+function closeCsvHeader(includeCaisseColumn: boolean): string[] {
+  const header: string[] = [...CLOSE_CSV_HEADER];
+  if (includeCaisseColumn) header.push("Caisse");
+  return header;
 }
 
 export function csvLine(values: readonly string[]): string {
