@@ -147,6 +147,46 @@ test("renderTicket keeps the total on counter tickets", () => {
   assert.match(ticket, /TOTAL\s+76\.00 MAD/);
 });
 
+test("renderTicket shows the RECOMPENSE banner on credit orders", () => {
+  const creditOrder: TicketOrder = {
+    id: "11111111-2222-4333-8444-555555555555",
+    customerName: "+212600000123",
+    customerPhone: "+212600000123",
+    type: "takeaway",
+    tableNumber: null,
+    notes: null,
+    total: "0.00",
+    paymentMode: "credits",
+    creditsUsed: 30,
+    createdAt: new Date("2026-05-15T16:49:00"),
+    items: [
+      {
+        quantity: 1,
+        unitPrice: "0.00",
+        creditUnitPrice: 30,
+        subtotal: "0.00",
+        optionsJson: null,
+        product: { name: "Msemen miel" },
+      },
+    ],
+  };
+  const ticket = renderTicket(creditOrder, { stationFilter: "counter" });
+
+  assertTicketWidth(ticket);
+  // Banner sits between the table-rule and the Commande line so the
+  // counter operator sees it before they parse the order header.
+  assert.match(ticket, /={32}\n {8,}\* RECOMPENSE \*\n-{32}\nCommande/);
+  assert.match(ticket, /1x Msemen miel\s+30 credits/);
+  assert.match(ticket, /TOTAL\s+30 credits/);
+});
+
+test("renderTicket omits the RECOMPENSE banner on MAD orders", () => {
+  const ticket = renderTicket(tacosOrder, { stationFilter: "counter" });
+
+  assertTicketWidth(ticket);
+  assert.doesNotMatch(ticket, /RECOMPENSE/);
+});
+
 test("Snack Atlas station ticket shows only tacos when coffee routes to bar", () => {
   const mixedOrder: TicketOrder = {
     ...tacosOrder,

@@ -44,6 +44,12 @@ export function renderTicket(
   lines.push(rule("="));
   lines.push(center(`TABLE ${sanitize(table)}`));
   lines.push(rule("="));
+  // ASCII asterisks only — preserves the 32-col width discipline and never
+  // garbles on thermal printers that strip non-printable bytes.
+  if (isCreditOrder) {
+    lines.push(center("* RECOMPENSE *"));
+    lines.push(rule("-"));
+  }
   lines.push(`Commande ${shortId(order.id)}`);
   lines.push(`Client ${sanitize(order.customerName)}`);
   if (order.customerPhone) lines.push(`Tel ${sanitize(order.customerPhone)}`);
