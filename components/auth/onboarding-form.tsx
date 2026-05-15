@@ -173,7 +173,7 @@ export function OnboardingForm() {
               required
             />
             <p className="mt-2 font-mono text-[11px] uppercase tracking-widest text-ink/50">
-              Selectionnez votre etablissement dans la liste, ou saisissez
+              Sélectionnez votre établissement dans la liste, ou saisissez
               l'adresse manuellement.
             </p>
             <FieldError message={fieldError("formattedAddress")} />

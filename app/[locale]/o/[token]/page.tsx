@@ -9,6 +9,7 @@ import {
   formatShortOrderId,
 } from "@/lib/ordering/customer-view";
 import { OrderTracker } from "@/components/storefront/order-tracker";
+import { ComplianceFooter } from "@/components/legal/compliance-footer";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -76,10 +77,12 @@ export default async function CustomerOrderPage({ params }: Props) {
 
       <OrderTracker
         token={token}
+        locale={locale}
         initialStatus={data.order.status}
         initialLatestEventAt={latestEventIso(data)}
         type={data.order.type}
         businessName={data.business.name}
+        businessSlug={data.business.slug}
         tableNumber={data.order.tableNumber}
         items={data.order.items}
         total={data.order.total}
@@ -87,7 +90,10 @@ export default async function CustomerOrderPage({ params }: Props) {
         postOrderMessage={data.business.postOrderMessage}
         whatsapp={whatsapp}
         shortOrderId={shortOrderId}
+        loyalty={data.loyalty}
+        customerPhone={data.order.customerPhone}
       />
+      <ComplianceFooter locale={locale} />
     </main>
   );
 }

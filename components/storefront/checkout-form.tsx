@@ -85,7 +85,7 @@ export function CheckoutForm({
     setFormError(null);
 
     if (!orderingEnabled) {
-      setFormError("Commande en ligne desactivee pour ce restaurant");
+      setFormError("Commande en ligne désactivée pour ce restaurant");
       return;
     }
 
@@ -203,15 +203,15 @@ export function CheckoutForm({
             />
             <OrderTypeOption
               active={orderType === "takeaway"}
-              label="A emporter"
-              sub="A emporter"
+              label="À emporter"
+              sub="À emporter"
               onClick={() => setOrderType("takeaway")}
               bordered
             />
           </div>
         ) : (
           <div className="border-2 border-ink px-4 py-3 font-mono text-[12px] uppercase tracking-widest font-bold">
-            {orderType === "dine_in" ? "Sur place" : "A emporter"}
+            {orderType === "dine_in" ? "Sur place" : "À emporter"}
           </div>
         )}
 

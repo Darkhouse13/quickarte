@@ -10,10 +10,13 @@ export type TicketOrder = {
   tableNumber: string | null;
   notes: string | null;
   total: string | number;
+  paymentMode?: "mad" | "credits";
+  creditsUsed?: number | null;
   createdAt: Date | string;
   items: Array<{
     quantity: number;
     unitPrice: string | number;
+    creditUnitPrice?: number | null;
     subtotal: string | number;
     optionsJson: unknown;
     product: { name: string } | null;
@@ -35,6 +38,7 @@ export function renderTicket(
   const showTotal =
     !options.omitTotal &&
     (!options.stationFilter || options.stationFilter === "counter");
+  const isCreditOrder = order.paymentMode === "credits";
 
   lines.push(center("QUICKARTE"));
   lines.push(rule("="));
@@ -48,9 +52,12 @@ export function renderTicket(
 
   for (const item of order.items) {
     const name = sanitize(item.product?.name ?? "Article supprime");
+    const lineCost = isCreditOrder
+      ? formatCredits((item.creditUnitPrice ?? 0) * item.quantity)
+      : formatMad(item.subtotal);
     lines.push(
       showPrices
-        ? fit(`${item.quantity}x ${name}`, formatMad(item.subtotal))
+        ? fit(`${item.quantity}x ${name}`, lineCost)
         : fit(`${item.quantity}x ${name}`),
     );
     for (const optionLine of summarizeOrderItemOptions(item.optionsJson)) {
@@ -66,7 +73,9 @@ export function renderTicket(
 
   lines.push(rule("-"));
   if (showTotal) {
-    lines.push(fit("TOTAL", formatMad(order.total)));
+    lines.push(
+      fit("TOTAL", isCreditOrder ? formatCredits(order.creditsUsed ?? 0) : formatMad(order.total)),
+    );
   } else {
     lines.push(center(`TABLE ${sanitize(table)}`));
     lines.push(center(`Commande ${shortId(order.id)}`));
@@ -98,6 +107,10 @@ function formatTime(input: Date | string): string {
 
 function formatMad(value: string | number): string {
   return `${Number(value).toFixed(2)} MAD`;
+}
+
+function formatCredits(value: number): string {
+  return `${Math.trunc(value)} credits`;
 }
 
 function rule(char: "-" | "="): string {

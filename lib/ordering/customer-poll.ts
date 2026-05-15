@@ -3,6 +3,9 @@ import { isCustomerTerminalStatus } from "./customer-view";
 export type CustomerStatusSnapshot = {
   status: string;
   latestEventAt: string;
+  // null when loyalty is not surfaced on this order; otherwise the current
+  // member balance so the tracker can detect jumps without a full re-fetch.
+  balance?: number | null;
 };
 
 export type StatusFetchResult =

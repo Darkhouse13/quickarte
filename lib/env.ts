@@ -95,6 +95,7 @@ const schema = z
     // Optional
     QUICKARTE_ADMIN_EMAILS: adminEmailsSchema,
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
+    GOOGLE_PLACES_API_KEY: z.string().optional(),
     NEXT_PUBLIC_SALES_CONTACT: z.string().optional(),
     NEXT_PUBLIC_LAN_URL: urlSchema.optional(),
     NEXT_PUBLIC_ENABLE_SW_IN_DEV: booleanFromString.optional().default("false"),

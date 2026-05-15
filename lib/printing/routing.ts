@@ -9,7 +9,8 @@ export const ALL_PRINT_STATIONS: Station[] = ["counter", "kitchen", "bar"];
 
 type TransactionLike = Pick<typeof db, "select">;
 
-export type RoutableOrderItem = OrderItem & {
+export type RoutableOrderItem = Omit<OrderItem, "creditUnitPrice"> & {
+  creditUnitPrice?: number | null;
   product?: { categoryId: string | null } | null;
 };
 

@@ -40,6 +40,8 @@ export const paymentStatusEnum = pgEnum("payment_status", [
   "failed",
 ]);
 
+export const paymentModeEnum = pgEnum("payment_mode", ["mad", "credits"]);
+
 export const posStatusEnum = pgEnum("pos_status", [
   "not_required",
   "pending",
@@ -87,6 +89,8 @@ export const orders = pgTable("orders", {
   paymentStatus: paymentStatusEnum("payment_status")
     .notNull()
     .default("unpaid"),
+  paymentMode: paymentModeEnum("payment_mode").notNull().default("mad"),
+  creditsUsed: integer("credits_used"),
   posStatus: posStatusEnum("pos_status").notNull().default("not_required"),
   posEnteredAt: timestamp("pos_entered_at", { withTimezone: true }),
   posEnteredByUserId: uuid("pos_entered_by_user_id"),
@@ -125,6 +129,7 @@ export const orderItems = pgTable("order_items", {
   }),
   quantity: integer("quantity").notNull().default(1),
   unitPrice: numeric("unit_price", { precision: 10, scale: 2 }).notNull(),
+  creditUnitPrice: integer("credit_unit_price"),
   optionsJson: jsonb("options_json"),
   subtotal: numeric("subtotal", { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })

@@ -232,10 +232,10 @@ function PrinterItem({
         {printer.lastSeenAt ? formatSeen(printer.lastSeenAt) : "Jamais vu"}
       </p>
       <p className="font-sans text-sm text-ink/60 leading-snug">
-        Recoit :{" "}
+        Reçoit :{" "}
         {receivedCategoryNames.length > 0
           ? receivedCategoryNames.join(" · ")
-          : "Aucune categorie routable"}
+          : "Aucune catégorie routable"}
       </p>
 
       {kioskUrl ? (
@@ -305,7 +305,7 @@ function StationRoutingTable({ routing }: { routing: RoutingSettings }) {
         setError(result.error);
         return;
       }
-      setMessage("Routage enregistre.");
+      setMessage("Routage enregistré.");
     });
   };
 
@@ -336,7 +336,7 @@ function StationRoutingTable({ routing }: { routing: RoutingSettings }) {
                   {routing.stationPrinterCounts[station.value as PrinterStation] ===
                   0 ? (
                     <span className="block normal-case tracking-normal font-sans text-[12px] text-ink/45 mt-1">
-                      Aucune imprimante associee a cette station pour le moment.
+                      Aucune imprimante associée à cette station pour le moment.
                     </span>
                   ) : null}
                 </th>
@@ -350,7 +350,7 @@ function StationRoutingTable({ routing }: { routing: RoutingSettings }) {
                   {category.name}
                   {(routeCounts.get(category.id) ?? 0) === 0 ? (
                     <span className="block font-normal text-[12px] text-ink/45 mt-1">
-                      Sans routage : sera imprimee partout.
+                      Sans routage : sera imprimée partout.
                     </span>
                   ) : null}
                 </td>
@@ -382,7 +382,7 @@ function StationRoutingTable({ routing }: { routing: RoutingSettings }) {
 
       {routing.categories.length === 0 ? (
         <p className="font-sans text-sm text-ink/55 leading-snug">
-          Aucune categorie catalogue pour le moment.
+          Aucune catégorie catalogue pour le moment.
         </p>
       ) : null}
       {error ? <StatusText tone="error">{error}</StatusText> : null}

@@ -115,8 +115,8 @@ export function StorefrontMenu({ business, locale, initialTableNumber }: Props) 
         <div className="flex-1 px-6 py-24 flex flex-col items-center text-center gap-4">
           <div className="w-10 h-10 border-2 border-ink" />
           <p className="font-sans text-[15px] text-ink/60 leading-snug max-w-[300px]">
-            Le menu sera bientot disponible. Demandez la carte a l'equipe ou
-            revenez apres la mise a jour du restaurant.
+            Le menu sera bientôt disponible. Demandez la carte à l'équipe ou
+            revenez après la mise à jour du restaurant.
           </p>
         </div>
       ) : null}
@@ -124,7 +124,7 @@ export function StorefrontMenu({ business, locale, initialTableNumber }: Props) 
       {!menuEmpty && !orderingEnabled ? (
         <div className="px-6 py-4 border-b-4 border-outline bg-black/[0.02]">
           <p className="font-sans text-sm text-ink/60 leading-snug">
-            Commande en ligne desactivee pour le moment. Vous pouvez consulter
+            Commande en ligne désactivée pour le moment. Vous pouvez consulter
             la carte et commander directement au comptoir.
           </p>
         </div>

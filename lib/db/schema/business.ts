@@ -79,6 +79,7 @@ export const businessSettings = pgTable("business_settings", {
   posCoexistenceEnabled: boolean("pos_coexistence_enabled")
     .notNull()
     .default(false),
+  googlePlaceId: text("google_place_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
