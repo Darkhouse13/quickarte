@@ -141,6 +141,13 @@
       "when": 1778763600000,
       "tag": "0019_print_station_routing",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1778859682362,
+      "tag": "0020_loyalty_credits",
+      "breakpoints": true
     }
   ]
 }
