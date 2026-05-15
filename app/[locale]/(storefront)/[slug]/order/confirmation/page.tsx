@@ -12,6 +12,7 @@ import { getOrderById } from "@/lib/ordering/queries";
 import { getProgram } from "@/lib/loyalty/queries";
 import { StatusBadge, type OrderStatus } from "@/components/ui/status-badge";
 import { formatAmount } from "@/lib/utils/currency";
+import { OrderTrackerLink } from "./order-tracker-link";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -266,7 +267,11 @@ export default async function OrderConfirmationPage({
         </div>
       </section>
 
-      <div className="sticky bottom-0 left-0 w-full bg-base border-t-2 border-ink p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+      <div className="sticky bottom-0 left-0 w-full bg-base border-t-2 border-ink p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] flex flex-col gap-3">
+        <OrderTrackerLink
+          locale={locale}
+          customerAccessToken={order.customerAccessToken}
+        />
         <Link
           href={`/${locale}/${slug}`}
           className="w-full bg-accent text-base px-6 py-4 flex justify-between items-center hover:bg-ink transition-colors border-2 border-transparent hover:border-base focus:outline-none focus:ring-4 focus:ring-accent/20"

@@ -21,6 +21,9 @@ type CloseCurrentBusiness = {
     id: string;
     slug: string;
     timezone: string;
+    settings?: {
+      posCoexistenceEnabled?: boolean | null;
+    } | null;
   } | null;
 } | null;
 
@@ -90,6 +93,10 @@ export async function handleCloseExport(
     totals: {
       revenueMad: dailyClose.totals.revenueMad,
       orderCount: dailyClose.totals.orderCount,
+    },
+    business: {
+      posCoexistenceEnabled:
+        current.business.settings?.posCoexistenceEnabled === true,
     },
     timezone,
   };
