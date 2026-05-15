@@ -157,7 +157,7 @@ export function AddressSettingsSection({
         {pending ? "..." : "Enregistrer l'adresse"}
       </button>
       {error ? <StatusText tone="error">{error}</StatusText> : null}
-      {saved ? <StatusText>Adresse enregistree.</StatusText> : null}
+      {saved ? <StatusText>Adresse enregistrée.</StatusText> : null}
     </div>
   );
 }
@@ -214,7 +214,7 @@ export function OperationalSettingsSection({
             onCheckedChange={(value) => set("dineInEnabled", value)}
           />
           <FormToggle
-            label="A emporter"
+            label="À emporter"
             checked={settings.takeawayEnabled}
             onCheckedChange={(value) => set("takeawayEnabled", value)}
           />
@@ -294,13 +294,13 @@ export function CustomerFacingSettingsSection({
         </p>
         {phoneUnrecognized ? (
           <p className="mt-2 font-sans text-xs text-accent leading-snug">
-            Format non reconnu. Le numero sera affiche tel quel.
+            Format non reconnu. Le numéro sera affiché tel quel.
           </p>
         ) : null}
       </div>
       <div>
         <FormTextarea
-          label="Message apres commande"
+          label="Message après commande"
           name="customerPostOrderMessage"
           rows={4}
           maxLength={280}

@@ -332,7 +332,7 @@ async function TodayBody({
           />
           {hasLoyalty ? (
             <ActionCard
-              label="Gérer la fidélité"
+              label="Gérer mes habitués"
               href="/loyalty"
               accent="ink"
               isLast

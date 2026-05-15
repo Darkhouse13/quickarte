@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   useTransition,
+  type FormEvent,
 } from "react";
 import { ArrowLeft, Camera } from "lucide-react";
 import { FormInput } from "@/components/ui/form-input";
@@ -26,6 +27,7 @@ import {
   createCategory,
   type ActionState,
 } from "@/lib/catalog/actions";
+import { validateCategorySelection } from "@/lib/catalog/form-validation";
 
 const initialState: ActionState = { status: "idle" };
 
@@ -58,12 +60,14 @@ export function NewItemForm({
   const isEdit = Boolean(product);
   const router = useRouter();
   const nameRef = useRef<HTMLInputElement>(null);
+  const categorySelectRef = useRef<HTMLSelectElement>(null);
 
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [available, setAvailable] = useState(product?.available ?? true);
   const [categoryId, setCategoryId] = useState<string>(
     product?.categoryId ?? "",
   );
+  const [categoryError, setCategoryError] = useState<string | null>(null);
   const [newCategoryOpen, setNewCategoryOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryError, setNewCategoryError] = useState<string | null>(null);
@@ -101,9 +105,26 @@ export function NewItemForm({
       }
       setCategories((prev) => [...prev, result.category]);
       setCategoryId(result.category.id);
+      setCategoryError(null);
       setNewCategoryName("");
       setNewCategoryOpen(false);
     });
+  };
+
+  // Block the request when no category is selected, surface a calm inline
+  // error, and bring the field into view — the server action would otherwise
+  // reject silently and the form would look broken.
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const error = validateCategorySelection(categoryId);
+    if (error) {
+      event.preventDefault();
+      setCategoryError(error.message);
+      categorySelectRef.current?.scrollIntoView({
+        block: "center",
+        behavior: "smooth",
+      });
+      categorySelectRef.current?.focus();
+    }
   };
 
   const handleDelete = () => {
@@ -136,6 +157,7 @@ export function NewItemForm({
 
       <form
         action={formAction}
+        onSubmit={handleSubmit}
         id="item-form"
         className="flex-1 p-6 flex flex-col"
       >
@@ -225,15 +247,18 @@ export function NewItemForm({
 
           <div>
             <FormSelect
+              ref={categorySelectRef}
               label="Catégorie"
               options={categories.map((c) => ({ value: c.id, label: c.name }))}
               value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              required
+              onChange={(e) => {
+                setCategoryId(e.target.value);
+                if (e.target.value) setCategoryError(null);
+              }}
             />
-            {fieldErrors.categoryId ? (
+            {categoryError ?? fieldErrors.categoryId ? (
               <p className="font-mono text-[11px] text-accent mt-2">
-                {fieldErrors.categoryId[0]}
+                {categoryError ?? fieldErrors.categoryId?.[0]}
               </p>
             ) : null}
 
@@ -247,12 +272,19 @@ export function NewItemForm({
               </button>
             ) : (
               <div className="mt-4 border border-outline p-4 flex flex-col gap-3">
-                <label className="block font-mono text-[11px] uppercase tracking-widest text-ink">
-                  Nouvelle catégorie
+                <label
+                  htmlFor="new-category-name"
+                  className="block font-mono text-[11px] uppercase tracking-widest text-ink"
+                >
+                  Nom de la catégorie
                 </label>
                 <div className="flex gap-2">
                   <input
+                    id="new-category-name"
+                    name="new-category-name"
                     type="text"
+                    placeholder="Nom de la catégorie"
+                    aria-required="true"
                     value={newCategoryName}
                     onChange={(e) => {
                       setNewCategoryName(e.target.value);

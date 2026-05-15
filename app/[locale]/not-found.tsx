@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+// Keep branded 404 chrome in this not-found segment. Routes must call
+// notFound() instead of importing/rendering this component directly; Next.js
+// then renders this UI with the HTTP 404 status crawlers and monitors expect.
 export default function NotFound() {
   return (
     <main className="w-full max-w-[480px] mx-auto bg-base min-h-screen flex flex-col items-center justify-center gap-6 border-x border-outline/50 px-6">

@@ -9,12 +9,14 @@ import { StatusBadge, type OrderStatus } from "@/components/ui/status-badge";
 import {
   cancelOrder,
   markOrderEnteredInPos,
+  markOrderServed,
   revertOrderPosStatus,
   transitionOrderStatus,
 } from "@/lib/ordering/actions";
 import { enqueuePrintJob } from "@/lib/printing/actions";
 import { summarizeOrderItemOptions } from "@/lib/ordering/order-item-options";
 import {
+  canShowServirButton,
   isTerminalOrderStatus,
   PRIMARY_ORDER_ACTIONS,
   type OrderLifecycleStatus,
@@ -80,10 +82,30 @@ export function OrderRow({
   role,
   posCoexistenceEnabled,
 }: OrderRowProps) {
-  const status = order.status as OrderStatus;
+  // Optimistic state for the SERVIR action: the row flips to `Servie` the
+  // instant the merchant taps, and rolls back if the server rejects it. The
+  // transition lives here, on the always-mounted row, because the SERVIR
+  // button itself unmounts the moment the order flips to a terminal status.
+  const [servedOptimistic, setServedOptimistic] = useState(false);
+  const [serveError, setServeError] = useState(false);
+  const [servePending, startServeTransition] = useTransition();
+  const status = (servedOptimistic ? "completed" : order.status) as OrderStatus;
   const barColor = getBarColor(status);
   const total = Number(order.total);
   const isDineIn = order.type === "dine_in";
+
+  const handleServe = () => {
+    setServedOptimistic(true);
+    setServeError(false);
+    startServeTransition(async () => {
+      const result = await markOrderServed(order.id);
+      if (result.status === "error") {
+        setServedOptimistic(false);
+        setServeError(true);
+        window.setTimeout(() => setServeError(false), 4_000);
+      }
+    });
+  };
 
   return (
     <div
@@ -128,7 +150,10 @@ export function OrderRow({
           </span>
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
             <PaymentPill status={order.paymentStatus} />
-            <StatusBadge status={status} />
+            <StatusBadge
+              status={status}
+              label={servedOptimistic ? "Servie" : undefined}
+            />
             {posCoexistenceEnabled && order.posStatus === "pending" ? (
               <span className="px-1.5 py-0.5 text-[9px] uppercase font-mono font-bold tracking-widest leading-none border border-outline text-ink/55">
                 À entrer en caisse
@@ -144,7 +169,21 @@ export function OrderRow({
           events={events}
           role={role}
           posCoexistenceEnabled={posCoexistenceEnabled}
+          servedOptimistic={servedOptimistic}
+          servePending={servePending}
+          onServe={handleServe}
         />
+      ) : null}
+
+      {serveError ? (
+        <div
+          role="status"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 border-2 border-accent bg-base px-5 py-3 max-w-[420px] w-[calc(100%-32px)]"
+        >
+          <p className="font-sans text-[13px] text-ink leading-snug">
+            Impossible de marquer cette commande comme servie.
+          </p>
+        </div>
       ) : null}
     </div>
   );
@@ -205,14 +244,31 @@ function OrderDetail({
   events,
   role,
   posCoexistenceEnabled,
+  servedOptimistic,
+  servePending,
+  onServe,
 }: {
   order: OrderWithItems;
   events: JournalEvent[];
   role: StaffRole;
   posCoexistenceEnabled: boolean;
+  servedOptimistic: boolean;
+  servePending: boolean;
+  onServe: () => void;
 }) {
-  const status = order.status as OrderLifecycleStatus;
+  const status = (servedOptimistic
+    ? "completed"
+    : order.status) as OrderLifecycleStatus;
   const isDineIn = order.type === "dine_in";
+
+  // While the optimistic serve is in flight the journal shows a synthetic
+  // `Servie` entry; once the revalidated server data carries the real event
+  // the synthetic one is dropped to avoid a duplicate.
+  const hasServedEvent = events.some((e) => e.eventType === "order.served");
+  const journalEvents =
+    servedOptimistic && !hasServedEvent
+      ? [...events, optimisticServedEvent(order.id)]
+      : events;
 
   return (
     <div className="order-ticket-print bg-black/[0.01] border-t border-outline px-6 py-5 flex flex-col gap-5">
@@ -241,7 +297,9 @@ function OrderDetail({
         <span>{formatAmount(Number(order.total))}</span>
       </div>
 
-      {events.length > 0 ? <OrderJournal events={events} /> : null}
+      {journalEvents.length > 0 ? (
+        <OrderJournal events={journalEvents} />
+      ) : null}
 
       <PrintTicketButton orderId={order.id} />
 
@@ -250,10 +308,28 @@ function OrderDetail({
       ) : null}
 
       {!isTerminalOrderStatus(status) ? (
-        <OrderActions orderId={order.id} status={status} />
+        <OrderActions
+          orderId={order.id}
+          status={status}
+          role={role}
+          servePending={servePending}
+          onServe={onServe}
+        />
       ) : null}
     </div>
   );
+}
+
+function optimisticServedEvent(orderId: string): JournalEvent {
+  return {
+    id: `optimistic-served-${orderId}`,
+    orderId,
+    eventType: "order.served",
+    actorDisplayName: null,
+    actorRole: null,
+    payload: null,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 function PosReconciliationControl({
@@ -514,12 +590,19 @@ function OrderLineItem({ item }: { item: OrderWithItems["items"][number] }) {
 function OrderActions({
   orderId,
   status,
+  role,
+  servePending,
+  onServe,
 }: {
   orderId: string;
   status: OrderLifecycleStatus;
+  role: StaffRole;
+  servePending: boolean;
+  onServe: () => void;
 }) {
   const [pending, startTransition] = useTransition();
   const action = PRIMARY_ORDER_ACTIONS[status];
+  const showServir = canShowServirButton(status, role);
 
   const runPrimary = () => {
     if (!action) return;
@@ -547,6 +630,16 @@ function OrderActions({
           className="px-5 py-3 font-mono font-bold uppercase tracking-widest text-[12px] transition-colors border-2 border-ink bg-ink text-base hover:bg-accent hover:text-base focus:outline-none focus:ring-4 focus:ring-accent/20 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {pending ? "..." : action.label}
+        </button>
+      ) : null}
+      {showServir ? (
+        <button
+          type="button"
+          onClick={onServe}
+          disabled={servePending}
+          className="px-5 py-3 font-mono font-bold uppercase tracking-widest text-[12px] transition-colors border-2 border-ink bg-ink text-base hover:bg-accent hover:text-base focus:outline-none focus:ring-4 focus:ring-accent/20 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {servePending ? "..." : "Servir"}
         </button>
       ) : null}
       <button

@@ -47,6 +47,29 @@
   animation: order-status-fade-in 180ms ease-out;
 }
 
+/* Order tracker — the "+N" delta fades in next to the balance number and
+   fades out two seconds later. Same calm tone as the status fade; the
+   balance itself is the celebration. */
+@keyframes loyalty-delta-pulse {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.loyalty-delta {
+  animation: loyalty-delta-pulse 2000ms ease-out forwards;
+}
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;

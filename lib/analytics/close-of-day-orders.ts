@@ -41,6 +41,8 @@ export type OrderListRow = {
   posStatus: PosStatus;
   posReference: string | null;
   total: string | number;
+  paymentMode?: "mad" | "credits";
+  creditsUsed?: number | null;
   customerPhone: string | null;
   notes: string | null;
   items: OrderListItemRow[];
@@ -48,6 +50,7 @@ export type OrderListRow = {
 
 export type OrderListItemRow = {
   quantity: number;
+  creditUnitPrice?: number | null;
   optionsJson: unknown;
   product: { name: string } | null;
 };
@@ -148,7 +151,11 @@ export function orderListItemFromRow(row: OrderListRow): OrderListItem {
 }
 
 export function summarizeCloseOrderItem(item: OrderListItemRow): string {
-  const base = `${item.quantity}x ${item.product?.name ?? "Article supprimé"}`;
+  const creditSuffix =
+    item.creditUnitPrice === null || item.creditUnitPrice === undefined
+      ? ""
+      : ` (${item.creditUnitPrice * item.quantity} credits)`;
+  const base = `${item.quantity}x ${item.product?.name ?? "Article supprimé"}${creditSuffix}`;
   const optionLines = summarizeOrderItemOptions(item.optionsJson)
     .map((line) => line.trim())
     .filter(Boolean);
@@ -182,6 +189,8 @@ async function queryOrderRowsForDay(
       posStatus: true,
       posReference: true,
       total: true,
+      paymentMode: true,
+      creditsUsed: true,
       customerPhone: true,
       notes: true,
     },
@@ -189,6 +198,7 @@ async function queryOrderRowsForDay(
       items: {
         columns: {
           quantity: true,
+          creditUnitPrice: true,
           optionsJson: true,
         },
         orderBy: [asc(orderItems.createdAt)],

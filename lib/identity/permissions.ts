@@ -8,6 +8,7 @@ export type ProtectedResource =
   | "catalog"
   | "orders.dashboard"
   | "orders.status_update"
+  | "orders.mark_served"
   | "orders.mark_paid"
   | "orders.pos_reconciliation"
   | "orders.print"
@@ -25,6 +26,7 @@ const permissions: Record<StaffRole, ReadonlySet<ProtectedResource>> = {
     "catalog",
     "orders.dashboard",
     "orders.status_update",
+    "orders.mark_served",
     "orders.mark_paid",
     "orders.pos_reconciliation",
     "orders.print",
@@ -41,6 +43,7 @@ const permissions: Record<StaffRole, ReadonlySet<ProtectedResource>> = {
     "catalog",
     "orders.dashboard",
     "orders.status_update",
+    "orders.mark_served",
     "orders.mark_paid",
     "orders.pos_reconciliation",
     "orders.print",
@@ -52,10 +55,11 @@ const permissions: Record<StaffRole, ReadonlySet<ProtectedResource>> = {
     "exports",
     "staff",
   ]),
-  waiter: new Set(["orders.dashboard", "orders.status_update"]),
+  waiter: new Set(["orders.dashboard", "orders.status_update", "orders.mark_served"]),
   kitchen: new Set(["kitchen.queue", "kitchen.mark_prepared"]),
   cashier: new Set([
     "orders.dashboard",
+    "orders.mark_served",
     "orders.mark_paid",
     "orders.pos_reconciliation",
     "orders.print",

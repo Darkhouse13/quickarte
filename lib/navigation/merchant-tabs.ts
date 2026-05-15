@@ -25,6 +25,6 @@ export function getMerchantTabs(pendingOrders = 0): MerchantTabDefinition[] {
     },
     { id: "kitchen", label: "Cuisine", href: "/kitchen" },
     { id: "cloture", label: "Clôture", href: "/cloture" },
-    { id: "loyalty", label: "Fid\u00e9lit\u00e9", href: "/loyalty" },
+    { id: "loyalty", label: "Mes habitu\u00e9s", href: "/loyalty" },
   ];
 }

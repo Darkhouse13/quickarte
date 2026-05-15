@@ -320,7 +320,9 @@ export async function placeOrder(
 
 export type OrderTransitionResult =
   | { status: "success" }
-  | { status: "error"; message: string };
+  | { status: "error"; message: string; code?: "NOT_FOUND" | "INVALID_TRANSITION" };
+
+export type TransitionResult = OrderTransitionResult;
 
 export async function transitionOrderStatus(
   orderId: string,
@@ -339,10 +341,48 @@ export async function transitionOrderStatus(
     { businessId: business.id },
   );
   if (result.status === "not_found") {
-    return { status: "error", message: "Commande introuvable" };
+    return { status: "error", code: "NOT_FOUND", message: "Commande introuvable" };
   }
   if (result.status === "invalid_transition") {
-    return { status: "error", message: "Transition de statut invalide" };
+    return { status: "error", code: "INVALID_TRANSITION", message: "Transition de statut invalide" };
+  }
+  revalidatePath("/orders");
+  revalidatePath("/home");
+  return { status: "success" };
+}
+
+// Marks a ready order as served by moving it to the terminal `completed`
+// lifecycle status. The only legal source state is `ready`; `completed` is
+// accepted as an idempotent no-op so retrying the action does not create a
+// second `order.served` event. Future snack workflows may justify a direct
+// `preparing -> completed` path, but this action intentionally keeps the
+// production transition narrow until field research supports it.
+export async function markOrderServed(
+  orderId: string,
+): Promise<TransitionResult> {
+  const { session, business } = await requireBusiness();
+  const role = await assertRole(session.user.id, business.id, [
+    "owner",
+    "manager",
+    "waiter",
+    "cashier",
+  ]);
+  const result = await transitionOrder(
+    orderId,
+    "completed",
+    { userId: session.user.id, role },
+    { businessId: business.id },
+  );
+  if (result.status === "not_found") {
+    return { status: "error", code: "NOT_FOUND", message: "Commande introuvable" };
+  }
+  if (result.status === "invalid_transition") {
+    return {
+      status: "error",
+      code: "INVALID_TRANSITION",
+      message:
+        "Cette commande ne peut pas \u00eatre marqu\u00e9e comme servie depuis son \u00e9tat actuel.",
+    };
   }
   revalidatePath("/orders");
   revalidatePath("/home");
@@ -383,10 +423,10 @@ export async function cancelOrder(
     },
   );
   if (result.status === "invalid_transition") {
-    return { status: "error", message: "Transition de statut invalide" };
+    return { status: "error", code: "INVALID_TRANSITION", message: "Transition de statut invalide" };
   }
   if (result.status === "not_found") {
-    return { status: "error", message: "Commande introuvable" };
+    return { status: "error", code: "NOT_FOUND", message: "Commande introuvable" };
   }
   revalidatePath("/orders");
   revalidatePath("/home");

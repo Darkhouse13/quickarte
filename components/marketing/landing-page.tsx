@@ -441,16 +441,6 @@ export function LandingPage() {
                     Se connecter
                   </a>
                 </li>
-                <li>
-                  <a href="#" className="font-mono text-xs uppercase tracking-widest text-ink hover:text-accent transition">
-                    Instagram
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="font-mono text-xs uppercase tracking-widest text-ink hover:text-accent transition">
-                    LinkedIn
-                  </a>
-                </li>
               </ul>
               <div className="mt-4">
                 <a
@@ -474,19 +464,28 @@ export function LandingPage() {
               className="font-mono uppercase tracking-widest text-ink/40 flex flex-wrap items-center gap-x-2 gap-y-1"
               style={{ fontSize: "11px" }}
             >
-              {/* TODO(post-SAS): restore legal links once /mentions-legales, /confidentialite, /cgv are live.
-              <a href="/mentions-legales" className="hover:text-ink transition">
+              <a href="/fr/mentions-legales" className="hover:text-ink transition">
                 Mentions légales
               </a>
               <span className="text-ink/30">·</span>
-              <a href="/confidentialite" className="hover:text-ink transition">
-                Confidentialité
+              <a href="/fr/politique-de-confidentialite" className="hover:text-ink transition">
+                Politique de confidentialité
               </a>
               <span className="text-ink/30">·</span>
-              <a href="/cgv" className="hover:text-ink transition">
-                CGV
+              <a href="/fr/cgu" className="hover:text-ink transition">
+                CGU
               </a>
-              */}
+              <span className="text-ink/30">·</span>
+              <a href="/fr/contact" className="hover:text-ink transition">
+                Contact
+              </a>
+              <span className="text-ink/30">·</span>
+              <a
+                href="mailto:bonjour@quickarte.fr"
+                className="hover:text-ink transition normal-case"
+              >
+                bonjour@quickarte.fr
+              </a>
             </div>
           </div>
         </div>
