@@ -43,3 +43,23 @@ Append any new contradictions found during M1-M9 using the same structure.
 **Authoritative rule:** Phase 0 must support future CMI integration cleanly without implementing CMI itself. CMI implementation lands during Module 8, around month 6.
 
 **Phase 0 impact:** Foundational architecture must not preclude CMI. Payment-related foundations should leave room for payment records, audit logging, offline sync, and idempotency keys, but no CMI gateway integration, tokenization flow, terminal workflow, or offline card authorization logic is built in Phase 0.
+
+## Amendment 5 - Tenant Root Domain
+
+**Spec language:** Tenant subdomains use `restaurantname.yourapp.ma`.
+
+**Locked decision:** Tenant root domain is configurable via `TENANT_ROOT_DOMAIN`.
+
+**Authoritative rule:** Do not hardcode a production tenant root domain in Phase 0. Development uses `*.lvh.me` or `*.localhost`. Production domain choice is deferred to launch and is not Phase 0 blocking.
+
+**Phase 0 impact:** Subdomain parsing, documentation, tests, and deployment examples must use environment-driven domain configuration.
+
+## Amendment 6 - On-Premise and Cloud Sync Boundary
+
+**Spec language:** The spec describes cloud-hosted operation but also requires an offline-first POS foundation.
+
+**Locked decision:** On-premise and cloud sync use the same API contract.
+
+**Authoritative rule:** The only terminal-side difference between cloud-hosted tenants and premium on-premise tenants is the `API_BASE_URL` environment value. There is no tenant-specific client build.
+
+**Phase 0 impact:** POS sync, generated SDK usage, environment configuration, and deployment documentation must keep the API contract identical across cloud and on-premise deployments.

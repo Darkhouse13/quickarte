@@ -33,21 +33,21 @@ Build a new API-first, offline-capable, multi-tenant POS foundation inside the e
 - `docs/04-PRICING-AND-ENTITLEMENTS.md`
 - `docs/05-DEPLOYMENT.md`
 - `docs/audit-2026-04-24.md`
+- `docs/phase-0/MVP_Feature_Spec_v1.md`
+- `docs/phase-0/SPEC_AMENDMENTS.md`
 - Current Phase 0 prompt and accepted audit result from the project manager.
 
-## Missing Canonical Document
+## Canonical Feature Spec
 
-`MVP_Feature_Spec_v1.md` is referenced as canonical but is not present in this clone. I searched the repo and nearby local project folder and did not find it.
+`docs/phase-0/MVP_Feature_Spec_v1.md` is present and has been read in full.
+
+The spec is canonical for feature and module scope, except where it conflicts with locked Phase 0 decisions. Those conflicts are recorded in `docs/phase-0/SPEC_AMENDMENTS.md`, which is authoritative whenever the spec and locked decisions disagree.
 
 Impact:
 
-- M1 monorepo restructure can proceed without the spec because it is mechanical and preserves Quickarte behavior.
-- M2 package extraction can proceed from the locked decisions and current repo structure.
-- M3 onward must be reconciled against `MVP_Feature_Spec_v1.md` before detailed API/auth/sync choices are finalized.
-
-Decision needed before M3 at the latest:
-
-- Provide `MVP_Feature_Spec_v1.md` and confirm whether it should live at `docs/MVP_Feature_Spec_v1.md`.
+- M1 remains a mechanical restructure that preserves Quickarte behavior.
+- M2-M9 must follow the spec plus `SPEC_AMENDMENTS.md`.
+- Any new contradiction found during M1-M9 must be appended to `SPEC_AMENDMENTS.md` before implementation relies on it.
 
 ## Locked Architecture
 
@@ -164,6 +164,9 @@ Tasks:
 | Convert npm lock to pnpm lock | M | Remove `package-lock.json` only after `pnpm-lock.yaml` works. |
 | Preserve Quickarte `@/*` imports | M | App-local TS path config first; no package extraction yet. |
 | Update Next/Sentry/Tailwind/PostCSS config paths | M | Build must match pre-move behavior. |
+| Verify Sentry configs move correctly | M | `sentry.*.config.ts` must still load from `apps/qr-menu`. |
+| Verify environment loading from new app path | M | `.env`, `.env.local`, and env validation must still load correctly. |
+| Verify runtime entry files after move | M | `instrumentation.ts` and `middleware.ts` must still run correctly. |
 | Update Docker/Coolify build path for Quickarte | M | Keep one deployable Quickarte service. |
 | Verify install/test/build/dev | M | Must keep 348 passing tests green. |
 | Commit M1 | S | Commit only monorepo skeleton changes. |
@@ -423,17 +426,20 @@ Critical dependencies:
 | Quickarte breaks during `apps/qr-menu` move | High | High | M1 is move-only; preserve app-local `@/*`; verify tests/build before commit. |
 | pnpm/Turbo conversion changes dependency resolution | Medium | High | Use strict root lockfile, run full Quickarte suite, inspect peer warnings. |
 | Existing Next/Sentry/Tailwind config assumes repo root | High | Medium | Update paths in M1, keep Docker build focused on qr-menu. |
-| `MVP_Feature_Spec_v1.md` missing causes spec drift | High | High | Block detailed M3+ design reconciliation until spec is added. |
 | Shared DB schema extraction creates circular imports | Medium | High | `packages/db-schema` must be schema-only plus DB helpers; no app/domain imports. |
+| Drizzle migration ownership unclear when schema lives in `packages/db-schema` | Medium | High | Migration files live in the package; document that only the API runs them, either at startup or through a dedicated migrate command. No app re-runs migrations independently. |
 | Better Auth cannot cleanly issue API/mobile JWTs | Medium | High | M5 explicitly stops and presents options before swapping auth strategy. |
 | RLS with pooled DB connections leaks tenant context | Medium | Critical | Use transaction-scoped `SET LOCAL`; tests must prove cross-tenant denial. |
 | Super-admin bypass weakens tenant isolation | Medium | Critical | Surface options in M4; use explicit admin claims and separate policies only after PM sign-off. |
 | WatermelonDB schema diverges from server schema | Medium | High | Keep M6 schema subset minimal and generate/document mappings. |
 | Offline conflict rule too simplistic for future modules | Medium | High | Centralize conflict policy metadata; server-timestamp-wins is locked but entity hooks can be added later. |
+| Client/server clock skew breaks server-timestamp-wins offline sync | Medium | High | Server timestamps win on conflict, but events record both `client_timestamp` and `server_received_at`. Document before M6. |
+| next-intl and i18next consume slightly different message-format dialects | Medium | Medium | `packages/i18n` standardizes on an ICU MessageFormat subset both libraries handle. Add CI lint to catch divergence. |
 | Admin/POS bypass generated SDK | Medium | Medium | Add lint/test guard or code review checklist; no handwritten fetch in M7. |
 | Audit vulnerabilities require major upgrades | Medium | Medium | Resolve in M8, but do low-risk version bumps earlier only if required by M1/M2. |
 | CI runtime too slow for Expo/API/Next builds | Medium | Medium | Turbo task graph, cache, app-specific build targets. |
 | Coolify monorepo deploys become ambiguous | Medium | High | M1 updates Quickarte deploy; M8 documents independent services. |
+| Coolify multi-service deployment from a monorepo is not turnkey | Medium | High | M1 keeps Quickarte deploy working; M8 documents Coolify per-app build commands and verifies one fresh deploy per app type. |
 
 ## Decisions Needed Before Starting M1
 
@@ -443,30 +449,26 @@ M1 is a mechanical restructure. It does not make business-domain choices, API su
 
 ## Decisions Needed Before Later Milestones
 
-1. `MVP_Feature_Spec_v1.md` location and contents.
-   - Required before M3 detailed API foundation is treated as final.
-   - Recommendation: commit it at `docs/MVP_Feature_Spec_v1.md`.
-
-2. Production domain for subdomains.
+1. Production domain for subdomains.
    - Prompt uses `{slug}.yourapp.ma`; existing docs use `quickarte.fr`.
    - Required before M4 routing documentation and M7 admin URL acceptance.
    - Recommendation: use an environment variable family, for example `TENANT_ROOT_DOMAIN`, so dev/prod domains differ without code changes.
 
-3. Super-admin model.
+2. Super-admin model.
    - Required in M4.
    - Recommendation to evaluate then: separate platform-admin claim plus explicit audited bypass path; never use a silent `business_id = null` bypass.
 
-4. Auth JWT path if Better Auth cannot issue suitable JWTs.
+3. Auth JWT path if Better Auth cannot issue suitable JWTs.
    - Required in M5.
    - Recommendation will depend on Better Auth capabilities at implementation time.
 
-5. On-premise premium sync deployment boundary.
+4. On-premise premium sync deployment boundary.
    - Not blocking M6 skeleton, but needed before production sync rollout.
    - Recommendation: same API contract, configurable base URL, no tenant-specific client build.
 
 ## Provisional Phase 0 Verification Checklist
 
-This checklist is provisional because `MVP_Feature_Spec_v1.md` is missing.
+This checklist is based on `MVP_Feature_Spec_v1.md`, the Phase 0 locked decisions, and `SPEC_AMENDMENTS.md`.
 
 - Repo is a pnpm/Turbo monorepo.
 - Quickarte runs from `apps/qr-menu` and preserves current behavior.
@@ -504,4 +506,4 @@ This checklist is provisional because `MVP_Feature_Spec_v1.md` is missing.
 
 ## M1 Proposed Scope
 
-M1 should only initialize the monorepo and move Quickarte into `apps/qr-menu` while preserving behavior. The milestone should stop immediately after verification and PR creation.
+M1 should only initialize the monorepo and move Quickarte into `apps/qr-menu` while preserving behavior. The milestone should stop immediately after verification and local merge into `phase-0-foundation` with `--no-ff` (no remote push until access is resolved).
