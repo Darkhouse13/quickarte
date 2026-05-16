@@ -148,6 +148,13 @@
       "when": 1778859682362,
       "tag": "0020_loyalty_credits",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1778863200000,
+      "tag": "0021_audit_log",
+      "breakpoints": true
     }
   ]
 }

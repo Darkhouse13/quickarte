@@ -1,0 +1,49 @@
+{
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "operationId": "HealthController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "API is healthy and database is reachable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "ok",
+                    "db": "ok",
+                    "timestamp": "2026-05-16T12:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "API is running but database is not reachable."
+          }
+        },
+        "summary": "Check API and database health",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Quickarte API",
+    "description": "",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [
+    {
+      "url": "http://localhost:3001/v1"
+    }
+  ],
+  "components": {
+    "schemas": {}
+  }
+}

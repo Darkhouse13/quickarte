@@ -1,9 +1,13 @@
+import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const packageRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-);
+const candidates = [
+  path.resolve(process.cwd(), "packages/db-schema/migrations"),
+  path.resolve(process.cwd(), "../../packages/db-schema/migrations"),
+  typeof __dirname === "undefined"
+    ? undefined
+    : path.resolve(__dirname, "../migrations"),
+].filter((candidate): candidate is string => Boolean(candidate));
 
-export const migrationsFolder = path.join(packageRoot, "migrations");
+export const migrationsFolder =
+  candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0]!;

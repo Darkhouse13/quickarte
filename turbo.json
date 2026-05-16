@@ -2,6 +2,9 @@
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": [
     "DATABASE_URL",
+    "API_PORT",
+    "LOG_LEVEL",
+    "NODE_ENV",
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
     "NEXT_PUBLIC_APP_URL",
