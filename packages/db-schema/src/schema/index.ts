@@ -6,3 +6,4 @@ export * from "./growth";
 export * from "./entitlements";
 export * from "./loyalty";
 export * from "./push";
+export * from "./audit";
