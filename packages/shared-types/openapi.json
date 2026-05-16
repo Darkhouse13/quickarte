@@ -30,6 +30,59 @@
         ]
       }
     },
+    "/v1/auth/staff/pin-login": {
+      "post": {
+        "operationId": "PinLoginController_login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Access and refresh tokens issued."
+          },
+          "401": {
+            "description": "Invalid PIN."
+          },
+          "429": {
+            "description": "Too many PIN attempts."
+          }
+        },
+        "summary": "Staff PIN login",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/audit-log": {
+      "get": {
+        "operationId": "AuditLogController_list",
+        "parameters": [
+          {
+            "name": "before",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-05-16T12:00:00.000Z"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant-scoped audit-log entries."
+          }
+        },
+        "summary": "List audit-log entries for the current tenant",
+        "tags": [
+          "Audit Log"
+        ]
+      }
+    },
     "/v1/businesses/me": {
       "get": {
         "operationId": "BusinessesController_getCurrentBusiness",
