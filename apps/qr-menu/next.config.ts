@@ -1,13 +1,18 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 import createNextIntlPlugin from "next-intl/plugin";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+const outputFileTracingRoot =
+  process.env.NEXT_STANDALONE_TRACE_ROOT === "workspace"
+    ? path.join(__dirname, "../..")
+    : __dirname;
 
 const nextConfig: NextConfig = {
   output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
   reactStrictMode: true,
-  outputFileTracingRoot: __dirname,
+  outputFileTracingRoot,
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
