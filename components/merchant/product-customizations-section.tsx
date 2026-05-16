@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import {
   createOption,
   createOptionValue,
@@ -34,20 +34,21 @@ import {
   validateOptionMinMax,
 } from "@/lib/catalog/option-editor-logic";
 import { cn } from "@/lib/utils/cn";
+import {
+  InlineText,
+  ReorderColumn,
+  SavedFlash,
+  ValueRow,
+  type ProductCustomizationOptionValue,
+} from "./product-customizations-value-row";
+
+export type { ProductCustomizationOptionValue } from "./product-customizations-value-row";
 
 export type ProductCustomizationVariant = {
   id: string;
   name: string;
   priceOverride: string | null;
   isDefault: boolean;
-  available: boolean;
-  position: number;
-};
-
-export type ProductCustomizationOptionValue = {
-  id: string;
-  name: string;
-  priceAddition: string;
   available: boolean;
   position: number;
 };
@@ -1210,151 +1211,6 @@ function OptionCard({
   );
 }
 
-function ValueRow({
-  value,
-  first,
-  last,
-  pending,
-  saved,
-  savedKey,
-  registerName,
-  onCommitName,
-  onCommitPrice,
-  onAvailability,
-  onMove,
-  onDelete,
-}: {
-  value: ProductCustomizationOptionValue;
-  first: boolean;
-  last: boolean;
-  pending: boolean;
-  saved: boolean;
-  savedKey: number;
-  registerName: (el: HTMLInputElement | null) => void;
-  onCommitName: (raw: string) => boolean;
-  onCommitPrice: (raw: string) => boolean;
-  onAvailability: (available: boolean) => void;
-  onMove: (direction: -1 | 1) => void;
-  onDelete: () => void;
-}) {
-  const free = Number(value.priceAddition) === 0;
-  return (
-    <div
-      className={cn(
-        "border border-outline",
-        !value.available && "opacity-55",
-      )}
-    >
-      <div className="flex items-stretch">
-        <div className="flex-1 min-w-0 p-2 flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <InlineText
-              ariaLabel="Nom de la valeur"
-              value={value.name}
-              placeholder="Nom"
-              inputRef={registerName}
-              className={cn(
-                "flex-1 min-w-0",
-                !value.available && "line-through",
-              )}
-              onCommit={onCommitName}
-            />
-            {saved ? <SavedFlash key={savedKey} /> : null}
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1">
-              <span className="font-mono text-[10px] text-ink/50">+</span>
-              <InlineText
-                ariaLabel="Supplément de prix"
-                numeric
-                value={free ? "" : Number(value.priceAddition).toString()}
-                placeholder="Gratuit"
-                className="w-20 font-mono"
-                onCommit={onCommitPrice}
-              />
-              <span className="font-mono text-[10px] uppercase tracking-widest text-ink/50">
-                MAD
-              </span>
-            </div>
-            <InlineToggle
-              label="Disponible"
-              checked={value.available}
-              disabled={pending}
-              onChange={onAvailability}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={onDelete}
-            className="self-start font-mono text-[10px] uppercase tracking-widest text-ink/50 hover:text-accent transition-colors focus:outline-none"
-          >
-            Supprimer
-          </button>
-        </div>
-        <ReorderColumn
-          first={first}
-          last={last}
-          pending={pending}
-          onMove={onMove}
-          small
-        />
-      </div>
-    </div>
-  );
-}
-
-function InlineText({
-  value,
-  onCommit,
-  ariaLabel,
-  placeholder,
-  numeric = false,
-  className,
-  inputRef,
-}: {
-  value: string;
-  onCommit: (next: string) => boolean | void;
-  ariaLabel: string;
-  placeholder?: string;
-  numeric?: boolean;
-  className?: string;
-  inputRef?: (el: HTMLInputElement | null) => void;
-}) {
-  const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
-
-  const commit = () => {
-    if (draft === value) return;
-    const accepted = onCommit(draft);
-    if (accepted === false) setDraft(value);
-  };
-
-  return (
-    <input
-      ref={inputRef}
-      aria-label={ariaLabel}
-      type={numeric ? "number" : "text"}
-      inputMode={numeric ? "decimal" : undefined}
-      step={numeric ? "0.01" : undefined}
-      min={numeric ? "0" : undefined}
-      value={draft}
-      placeholder={placeholder}
-      onChange={(e) => setDraft(e.target.value)}
-      onBlur={commit}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          e.currentTarget.blur();
-        }
-      }}
-      className={cn(
-        "border border-transparent px-2 py-2 bg-transparent text-sm text-ink placeholder:text-ink/35 hover:border-outline focus:outline-none focus:border-ink focus:bg-white transition-colors",
-        className,
-      )}
-    />
-  );
-}
-
 function InlineToggle({
   label,
   checked,
@@ -1385,64 +1241,6 @@ function InlineToggle({
         )}
       >
         <div className="w-4 h-4 bg-base border border-ink" />
-      </button>
-    </div>
-  );
-}
-
-function ReorderColumn({
-  first,
-  last,
-  pending,
-  onMove,
-  small = false,
-}: {
-  first: boolean;
-  last: boolean;
-  pending: boolean;
-  onMove: (direction: -1 | 1) => void;
-  small?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "shrink-0 flex flex-col",
-        small ? "border-l border-outline" : "border-l-2 border-ink",
-      )}
-    >
-      <button
-        type="button"
-        aria-label="Monter"
-        disabled={pending || first}
-        onClick={() => onMove(-1)}
-        className={cn(
-          "flex-1 flex items-center justify-center text-ink hover:text-accent disabled:opacity-25 disabled:hover:text-ink transition-colors focus:outline-none focus:bg-accent/10",
-          small ? "w-9 min-h-[36px]" : "w-11 min-h-[44px]",
-        )}
-      >
-        <ArrowUp
-          className={small ? "w-3.5 h-3.5" : "w-4 h-4"}
-          strokeWidth={2}
-          strokeLinecap="square"
-        />
-      </button>
-      <button
-        type="button"
-        aria-label="Descendre"
-        disabled={pending || last}
-        onClick={() => onMove(1)}
-        className={cn(
-          "flex-1 flex items-center justify-center text-ink hover:text-accent disabled:opacity-25 disabled:hover:text-ink transition-colors focus:outline-none focus:bg-accent/10",
-          small
-            ? "w-9 min-h-[36px] border-t border-outline"
-            : "w-11 min-h-[44px] border-t-2 border-ink",
-        )}
-      >
-        <ArrowDown
-          className={small ? "w-3.5 h-3.5" : "w-4 h-4"}
-          strokeWidth={2}
-          strokeLinecap="square"
-        />
       </button>
     </div>
   );
@@ -1494,10 +1292,3 @@ function Pill({ children }: { children: ReactNode }) {
   );
 }
 
-function SavedFlash() {
-  return (
-    <span className="qk-saved-flash shrink-0 font-mono text-[9px] uppercase tracking-widest text-accent">
-      Enregistré
-    </span>
-  );
-}
