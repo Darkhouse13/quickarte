@@ -10,7 +10,7 @@
     "start": "node dist/src/main.js",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --tsconfig tsconfig.json --test src/**/*.test.ts",
+    "test": "tsx --tsconfig tsconfig.json --test src/**/*.test.ts test/**/*.test.ts",
     "openapi:generate": "tsx --tsconfig tsconfig.json scripts/generate-openapi.ts"
   },
   "dependencies": {

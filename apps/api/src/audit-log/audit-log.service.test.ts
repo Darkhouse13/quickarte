@@ -5,19 +5,26 @@ import { AuditLogService, type AuditLogInput } from "./audit-log.service";
 
 test("recordAction inserts an audit log row", async () => {
   const inserted: unknown[] = [];
-  const fakeDb = {
-    insert(table: unknown) {
-      assert.equal(table, auditLog);
-      return {
-        values(row: unknown) {
-          inserted.push(row);
-          return Promise.resolve();
+  const tenantContexts: string[] = [];
+  const fakeDatabaseService = {
+    withTenant(businessId: string, callback: (tx: unknown) => Promise<void>) {
+      tenantContexts.push(businessId);
+      const fakeTx = {
+        insert(table: unknown) {
+          assert.equal(table, auditLog);
+          return {
+            values(row: unknown) {
+              inserted.push(row);
+              return Promise.resolve();
+            },
+          };
         },
       };
+      return callback(fakeTx);
     },
   };
 
-  const service = new AuditLogService(fakeDb as never);
+  const service = new AuditLogService(fakeDatabaseService as never);
   const input: AuditLogInput = {
     businessId: "00000000-0000-4000-8000-000000000001",
     actorUserId: "00000000-0000-4000-8000-000000000002",
@@ -33,6 +40,7 @@ test("recordAction inserts an audit log row", async () => {
 
   await service.recordAction(input);
 
+  assert.deepEqual(tenantContexts, [input.businessId]);
   assert.deepEqual(inserted, [
     {
       ...input,
