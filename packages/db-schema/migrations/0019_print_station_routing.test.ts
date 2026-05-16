@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const migration = readFileSync(
-  "lib/db/migrations/0019_print_station_routing.sql",
+  "migrations/0019_print_station_routing.sql",
   "utf8",
 );
 

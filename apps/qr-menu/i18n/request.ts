@@ -1,4 +1,5 @@
 import { getRequestConfig } from "next-intl/server";
+import { loadMessages } from "@quickarte/i18n";
 import { routing, type AppLocale } from "./routing";
 
 function isAppLocale(value: string | undefined): value is AppLocale {
@@ -13,6 +14,6 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale,
-    messages: (await import(`../messages/${locale}.json`)).default,
+    messages: await loadMessages(locale),
   };
 });

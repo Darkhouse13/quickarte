@@ -8,7 +8,7 @@ import {
   staffMembers,
   type Business,
   type BusinessSettings,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 import { auth, type AuthSession } from "./server";
 
 export type BusinessWithSettings = Business & {

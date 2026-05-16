@@ -1,0 +1,30 @@
+{
+  "name": "@quickarte/db-schema",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./migrations": "./src/migrations.ts"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "drizzle-kit migrate --config drizzle.config.ts",
+    "db:push": "drizzle-kit push --config drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config drizzle.config.ts",
+    "test": "tsx --test migrations/0016_customer_order_access.test.ts migrations/0017_options_variants.test.ts migrations/0018_pos_reconciliation.test.ts migrations/0019_print_station_routing.test.ts migrations/0020_loyalty_credits.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@quickarte/config": "workspace:*",
+    "dotenv": "^16.4.5",
+    "drizzle-kit": "^0.31.10",
+    "drizzle-orm": "^0.45.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.6.3"
+  }
+}

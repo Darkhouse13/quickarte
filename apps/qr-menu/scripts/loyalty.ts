@@ -25,7 +25,7 @@ async function main() {
     businesses,
     loyaltyCustomers,
     loyaltyPrograms,
-  } = await import("../lib/db/schema");
+  } = await import("@quickarte/db-schema");
   const { recordAccrual, recordRedemption } = await import(
     "../lib/loyalty/service"
   );

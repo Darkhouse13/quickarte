@@ -1,6 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { staffMembers, type StaffMember } from "@/lib/db/schema";
+import { staffMembers, type StaffMember } from "@quickarte/db-schema";
 
 export type StaffRole = "owner" | "manager" | "waiter" | "kitchen" | "cashier";
 

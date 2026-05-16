@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { businessEntitlements } from "@/lib/db/schema";
+import { businessEntitlements } from "@quickarte/db-schema";
 
 export async function provisionDefaultEntitlements(
   businessId: string,

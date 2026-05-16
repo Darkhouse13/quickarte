@@ -12,7 +12,7 @@ import {
   type BusinessSettings,
   type Category,
   type Product,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 
 export type BusinessWithSettings = Business & {
   settings: BusinessSettings | null;

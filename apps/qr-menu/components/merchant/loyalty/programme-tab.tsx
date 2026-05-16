@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { updateCreditProgramSettings } from "@/lib/loyalty/actions";
-import type { LoyaltyProgram } from "@/lib/db/schema";
+import type { LoyaltyProgram } from "@quickarte/db-schema";
 import {
   FieldRow,
   LiveTextInput,

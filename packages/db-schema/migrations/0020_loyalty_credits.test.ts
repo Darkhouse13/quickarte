@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const migration = readFileSync(
-  "lib/db/migrations/0020_loyalty_credits.sql",
+  "migrations/0020_loyalty_credits.sql",
   "utf8",
 );
 

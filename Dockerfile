@@ -7,6 +7,11 @@ WORKDIR /app
 RUN corepack enable
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY apps/qr-menu/package.json ./apps/qr-menu/package.json
+COPY packages/config/package.json ./packages/config/package.json
+COPY packages/db-schema/package.json ./packages/db-schema/package.json
+COPY packages/i18n/package.json ./packages/i18n/package.json
+COPY packages/shared-types/package.json ./packages/shared-types/package.json
+COPY packages/ui/package.json ./packages/ui/package.json
 RUN pnpm install --filter @quickarte/qr-menu... --frozen-lockfile
 
 # ---- build ----
@@ -17,6 +22,9 @@ ENV NEXT_STANDALONE_TRACE_ROOT=workspace
 RUN corepack enable
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/qr-menu/node_modules ./apps/qr-menu/node_modules
+COPY --from=deps /app/packages/config/node_modules ./packages/config/node_modules
+COPY --from=deps /app/packages/db-schema/node_modules ./packages/db-schema/node_modules
+COPY --from=deps /app/packages/i18n/node_modules ./packages/i18n/node_modules
 COPY . .
 RUN pnpm --filter @quickarte/qr-menu build
 
@@ -35,7 +43,7 @@ RUN addgroup --system --gid 1001 nodejs \
 COPY --from=builder /app/apps/qr-menu/public ./apps/qr-menu/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/qr-menu/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/qr-menu/.next/static ./apps/qr-menu/.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/apps/qr-menu/lib/db/migrations ./apps/qr-menu/lib/db/migrations
+COPY --from=builder --chown=nextjs:nodejs /app/packages/db-schema/migrations ./packages/db-schema/migrations
 
 USER nextjs
 EXPOSE 3000

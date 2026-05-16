@@ -9,7 +9,7 @@ import {
   orders,
   printers,
   products,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 import { placeOrderSchema } from "./schemas";
 import { requireBusiness } from "@/lib/auth/get-business";
 import { hasEntitlement } from "@/lib/entitlements/queries";

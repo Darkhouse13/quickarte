@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { loyaltyPrograms } from "@/lib/db/schema";
+import { loyaltyPrograms } from "@quickarte/db-schema";
 
 export async function validateGooglePlacesBootPrerequisites(): Promise<void> {
   if (process.env.NODE_ENV !== "production") return;

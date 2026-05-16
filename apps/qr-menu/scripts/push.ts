@@ -34,7 +34,7 @@ async function main() {
 
   const { eq } = await import("drizzle-orm");
   const { db, pool } = await import("../lib/db");
-  const { businesses } = await import("../lib/db/schema");
+  const { businesses } = await import("@quickarte/db-schema");
   const { getSubscriptionsForBusiness } = await import("../lib/push/queries");
 
   try {

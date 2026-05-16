@@ -1,7 +1,7 @@
 import "server-only";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { pushSubscriptions, type PushSubscriptionRow } from "@/lib/db/schema";
+import { pushSubscriptions, type PushSubscriptionRow } from "@quickarte/db-schema";
 
 export async function getSubscriptionsForBusiness(
   businessId: string,

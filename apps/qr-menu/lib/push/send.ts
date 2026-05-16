@@ -9,7 +9,7 @@ import {
   pushSubscriptions,
   orderItems,
   orders,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 import {
   getSubscriptionsForBusiness,
   markFailure,

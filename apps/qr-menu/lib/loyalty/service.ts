@@ -7,7 +7,7 @@ import {
   loyaltyTransactions,
   type LoyaltyCustomer,
   type LoyaltyProgram,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 import type { AccrualType, LoyaltySource } from "./types";
 import { normalizeMoroccanPhone } from "@/lib/utils/phone";
 import {

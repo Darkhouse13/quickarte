@@ -33,16 +33,22 @@ function readJournal(migrationsFolder: string): Journal {
   return JSON.parse(fs.readFileSync(journalPath, "utf8")) as Journal;
 }
 
+function resolveMigrationsFolder(): string {
+  const candidates = [
+    path.resolve(process.cwd(), "../../packages/db-schema/migrations"),
+    path.resolve(process.cwd(), "packages/db-schema/migrations"),
+  ];
+
+  return candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0]!;
+}
+
 async function main() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error("DATABASE_URL is not set");
   }
 
-  const migrationsFolder = path.resolve(
-    process.cwd(),
-    "lib/db/migrations",
-  );
+  const migrationsFolder = resolveMigrationsFolder();
 
   readMigrationFiles({ migrationsFolder });
   const journal = readJournal(migrationsFolder);

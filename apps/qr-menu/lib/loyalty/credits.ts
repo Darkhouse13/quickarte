@@ -4,7 +4,7 @@ import {
   creditTransactions,
   loyaltyMembers,
   type CreditTransaction,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 import { normalizeMoroccanPhone } from "@/lib/utils/phone";
 
 type TransactionLike = Parameters<Parameters<typeof db.transaction>[0]>[0];

@@ -7,7 +7,7 @@ import {
   productOptions,
   products,
   productVariants,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 import { requireBusiness } from "@/lib/auth/get-business";
 import { assertRole } from "@/lib/identity/permissions";
 import { NewItemForm } from "@/components/merchant/new-item-form";

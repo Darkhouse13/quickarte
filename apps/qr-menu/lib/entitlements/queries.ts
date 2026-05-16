@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, gt, isNull, or } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { businessEntitlements } from "@/lib/db/schema";
+import { businessEntitlements } from "@quickarte/db-schema";
 import { MODULE_KEYS, type ModuleKey } from "./types";
 
 export async function hasEntitlement(
