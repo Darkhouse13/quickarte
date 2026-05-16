@@ -1,0 +1,46 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "DATABASE_URL",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
+    "NEXT_PUBLIC_APP_URL",
+    "NEXT_PUBLIC_CANONICAL_URL",
+    "VAPID_PRIVATE_KEY",
+    "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
+    "VAPID_SUBJECT",
+    "RESEND_API_KEY",
+    "CONTACT_EMAIL_FROM",
+    "SENTRY_DSN",
+    "NEXT_PUBLIC_SENTRY_DSN",
+    "QUICKARTE_ADMIN_EMAILS",
+    "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
+    "GOOGLE_PLACES_API_KEY",
+    "NEXT_PUBLIC_SALES_CONTACT",
+    "NEXT_PUBLIC_LAN_URL",
+    "NEXT_PUBLIC_ENABLE_SW_IN_DEV",
+    "SENTRY_AUTH_TOKEN",
+    "SENTRY_ORG",
+    "SENTRY_PROJECT",
+    "COOLIFY_GIT_COMMIT_SHA"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "typecheck": {
+      "outputs": []
+    },
+    "test": {
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
