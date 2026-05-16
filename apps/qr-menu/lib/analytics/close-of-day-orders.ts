@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { orderItems, orders } from "@/lib/db/schema";
+import { orderItems, orders } from "@quickarte/db-schema";
 import type { BusinessDayBounds } from "@/lib/business/business-day";
 import { formatShortOrderId } from "@/lib/ordering/customer-view";
 import { summarizeOrderItemOptions } from "@/lib/ordering/order-item-options";

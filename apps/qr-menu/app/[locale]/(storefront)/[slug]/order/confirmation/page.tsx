@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import {
   loyaltyCustomers,
   loyaltyTransactions,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 import { getBusinessBySlug } from "@/lib/catalog/queries";
 import { getOrderById } from "@/lib/ordering/queries";
 import { getProgram } from "@/lib/loyalty/queries";

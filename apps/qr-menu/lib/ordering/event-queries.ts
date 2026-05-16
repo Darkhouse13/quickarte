@@ -1,7 +1,7 @@
 import "server-only";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { orderEvents, orders, staffMembers, users } from "@/lib/db/schema";
+import { orderEvents, orders, staffMembers, users } from "@quickarte/db-schema";
 import type { StaffRole } from "@/lib/identity/permissions";
 import type { OrderEventType } from "@/lib/ordering/events";
 

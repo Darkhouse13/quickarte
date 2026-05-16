@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { getCustomerLedger } from "@/lib/loyalty/actions";
-import type { CreditTransaction } from "@/lib/db/schema";
+import type { CreditTransaction } from "@quickarte/db-schema";
 import { formatSignedAmount } from "@/lib/loyalty/format";
 import { cn } from "@/lib/utils/cn";
 

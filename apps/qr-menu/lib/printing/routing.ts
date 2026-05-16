@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { categoryPrintRoutes } from "@/lib/db/schema";
-import type { OrderItem } from "@/lib/db/schema";
+import { categoryPrintRoutes } from "@quickarte/db-schema";
+import type { OrderItem } from "@quickarte/db-schema";
 
 export type Station = "counter" | "kitchen" | "bar";
 

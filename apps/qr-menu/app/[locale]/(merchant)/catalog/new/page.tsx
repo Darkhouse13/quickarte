@@ -1,6 +1,6 @@
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { categories } from "@/lib/db/schema";
+import { categories } from "@quickarte/db-schema";
 import { requireBusiness } from "@/lib/auth/get-business";
 import { assertRole } from "@/lib/identity/permissions";
 import { NewItemForm } from "@/components/merchant/new-item-form";

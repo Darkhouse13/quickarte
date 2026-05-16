@@ -7,7 +7,7 @@ import {
   sessions,
   users,
   verifications,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 
 const trustedOrigins = Array.from(
   new Set(

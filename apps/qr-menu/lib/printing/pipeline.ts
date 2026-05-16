@@ -2,7 +2,7 @@ import "server-only";
 
 import { and, asc, count, eq, gte, isNull, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { categories, categoryPrintRoutes, printJobs, printers } from "@/lib/db/schema";
+import { categories, categoryPrintRoutes, printJobs, printers } from "@quickarte/db-schema";
 import { recordOrderEvent } from "@/lib/ordering/events";
 import { nextFailureState } from "@/lib/printing/format";
 export {

@@ -1,7 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { staffMembers } from "@/lib/db/schema";
+import { staffMembers } from "@quickarte/db-schema";
 import { requireBusiness, requireSession } from "@/lib/auth/get-business";
 import { assertRole } from "@/lib/identity/permissions";
 import { SectionHeader } from "@/components/ui/section-header";

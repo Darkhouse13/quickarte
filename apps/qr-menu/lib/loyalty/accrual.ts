@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { loyaltyPrograms, orders } from "@/lib/db/schema";
+import { loyaltyPrograms, orders } from "@quickarte/db-schema";
 import { applyCreditTransaction } from "@/lib/loyalty/credits";
 
 export async function accrueCreditsForServedOrder(orderId: string): Promise<void> {

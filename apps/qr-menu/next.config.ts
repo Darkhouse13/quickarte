@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
   output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
   reactStrictMode: true,
   outputFileTracingRoot,
+  transpilePackages: ["@quickarte/db-schema", "@quickarte/i18n"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },

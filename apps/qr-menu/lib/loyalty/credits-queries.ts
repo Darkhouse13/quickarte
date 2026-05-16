@@ -15,7 +15,7 @@ import {
   type LoyaltyMember,
   type LoyaltyProgram,
   type RedemptionListing,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 import { normalizeMoroccanPhone } from "@/lib/utils/phone";
 
 export type CreditProgramSnapshot = {

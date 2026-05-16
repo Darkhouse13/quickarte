@@ -8,7 +8,7 @@ import {
   type LoyaltyCustomer,
   type LoyaltyProgram,
   type LoyaltyTransaction,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 
 export async function getProgram(
   businessId: string,

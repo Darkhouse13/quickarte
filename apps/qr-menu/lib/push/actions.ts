@@ -3,7 +3,7 @@
 import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { pushSubscriptions } from "@/lib/db/schema";
+import { pushSubscriptions } from "@quickarte/db-schema";
 import { requireBusiness } from "@/lib/auth/get-business";
 import { hasEntitlement } from "@/lib/entitlements/queries";
 import type { PushSubscriptionInput } from "./types";

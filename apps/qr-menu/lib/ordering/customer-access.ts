@@ -6,7 +6,7 @@ import {
   loyaltyPrograms,
   orderEvents,
   orders,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 import { summarizeOrderItemOptions } from "./order-item-options";
 
 // hasEntitlement lives behind a `server-only` import that throws when loaded

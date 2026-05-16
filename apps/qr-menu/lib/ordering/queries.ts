@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { orders, staffMembers, type Order, type OrderItem } from "@/lib/db/schema";
+import { orders, staffMembers, type Order, type OrderItem } from "@quickarte/db-schema";
 import type { OrderLifecycleStatus } from "./status";
 import type { PosStatus } from "./pos-reconciliation";
 

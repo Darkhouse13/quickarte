@@ -3,7 +3,7 @@
 import { and, count, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { categories, categoryPrintRoutes, printJobs, printers } from "@/lib/db/schema";
+import { categories, categoryPrintRoutes, printJobs, printers } from "@quickarte/db-schema";
 import { requireBusiness } from "@/lib/auth/get-business";
 import { assertRole } from "@/lib/identity/permissions";
 import { recordOrderEvent } from "@/lib/ordering/events";

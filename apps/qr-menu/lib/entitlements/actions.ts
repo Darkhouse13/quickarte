@@ -4,7 +4,7 @@ import "server-only";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
-import { businessEntitlements } from "@/lib/db/schema";
+import { businessEntitlements } from "@quickarte/db-schema";
 import { requireSession } from "@/lib/auth/get-business";
 import type { EntitlementSource, ModuleKey } from "./types";
 

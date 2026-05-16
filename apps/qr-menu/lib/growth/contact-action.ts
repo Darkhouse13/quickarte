@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { and, eq, gt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { contactRequests } from "@/lib/db/schema";
+import { contactRequests } from "@quickarte/db-schema";
 import { normalizeLooseMoroccanPhone } from "./phone";
 import { sendContactAlert } from "./email";
 

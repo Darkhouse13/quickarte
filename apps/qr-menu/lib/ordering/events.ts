@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { orderEvents } from "@/lib/db/schema";
+import { orderEvents } from "@quickarte/db-schema";
 import type { StaffRole } from "@/lib/identity/permissions";
 
 export const ORDER_EVENT_TYPES = [

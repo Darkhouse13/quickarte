@@ -28,7 +28,7 @@ async function main() {
   const { eq, and } = await import("drizzle-orm");
   const { db, pool } = await import("../lib/db");
   const { businesses, businessEntitlements } = await import(
-    "../lib/db/schema"
+    "@quickarte/db-schema"
   );
   const { isModuleKey, MODULE_KEYS } = await import(
     "../lib/entitlements/types"

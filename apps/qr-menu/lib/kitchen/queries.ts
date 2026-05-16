@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { orders } from "@/lib/db/schema";
+import { orders } from "@quickarte/db-schema";
 import type { OrderLifecycleStatus } from "@/lib/ordering/status";
 import { summarizeOrderItemOptions } from "@/lib/ordering/order-item-options";
 

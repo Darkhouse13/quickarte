@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { businesses, businessSettings, staffMembers } from "@/lib/db/schema";
+import { businesses, businessSettings, staffMembers } from "@quickarte/db-schema";
 import { requireBusiness, requireSession } from "@/lib/auth/get-business";
 import { assertRole } from "@/lib/identity/permissions";
 import { seedDefaultCatalog } from "@/lib/catalog/default-menus";

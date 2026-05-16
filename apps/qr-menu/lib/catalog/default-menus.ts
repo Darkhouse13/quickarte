@@ -1,7 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { categories, products } from "@/lib/db/schema";
+import { categories, products } from "@quickarte/db-schema";
 
 type DefaultItem = { name: string; priceMAD: number };
 type DefaultCategory = {

@@ -1,0 +1,10 @@
+{
+  "extends": "@quickarte/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "messages/**/*.json"],
+  "exclude": ["node_modules"]
+}

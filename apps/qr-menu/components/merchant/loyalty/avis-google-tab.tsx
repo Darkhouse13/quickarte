@@ -5,7 +5,7 @@ import {
   updateCreditProgramSettings,
   updateGooglePlaceId,
 } from "@/lib/loyalty/actions";
-import type { GoogleReviewGrant, LoyaltyProgram } from "@/lib/db/schema";
+import type { GoogleReviewGrant, LoyaltyProgram } from "@quickarte/db-schema";
 import { formatPhoneForDisplay } from "@/lib/utils/phone";
 import {
   FieldRow,

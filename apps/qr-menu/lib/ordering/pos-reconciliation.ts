@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { orders } from "@/lib/db/schema";
+import { orders } from "@quickarte/db-schema";
 import type { StaffRole } from "@/lib/identity/permissions";
 import { recordOrderEvent, type OrderEventType } from "@/lib/ordering/events";
 

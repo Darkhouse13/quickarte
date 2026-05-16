@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { staffInviteTokens, staffMembers, users } from "@/lib/db/schema";
+import { staffInviteTokens, staffMembers, users } from "@quickarte/db-schema";
 import { requireBusiness, requireSession } from "@/lib/auth/get-business";
 import { env } from "@/lib/env";
 import { assertRole, type StaffRole } from "@/lib/identity/permissions";

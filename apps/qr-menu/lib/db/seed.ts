@@ -19,7 +19,7 @@ async function main() {
     loyaltyPrograms,
     loyaltyCustomers,
     loyaltyTransactions,
-  } = await import("./schema");
+  } = await import("@quickarte/db-schema");
   const { cafeDesArts } = await import("../catalog/fixtures");
   const { generateCustomerAccessToken } = await import(
     "../ordering/customer-token"

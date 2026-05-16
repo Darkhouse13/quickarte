@@ -15,7 +15,7 @@ import {
   orders,
   products,
   redemptionListings,
-} from "@/lib/db/schema";
+} from "@quickarte/db-schema";
 import { hasEntitlement, requireEntitlement } from "@/lib/entitlements/queries";
 import { env } from "@/lib/env";
 import { assertRole } from "@/lib/identity/permissions";

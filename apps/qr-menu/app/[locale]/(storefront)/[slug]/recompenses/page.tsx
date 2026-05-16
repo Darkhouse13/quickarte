@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { loyaltyPrograms } from "@/lib/db/schema";
+import { loyaltyPrograms } from "@quickarte/db-schema";
 import { getBusinessBySlug } from "@/lib/catalog/queries";
 import { hasEntitlement } from "@/lib/entitlements/queries";
 import {

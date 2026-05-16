@@ -4,7 +4,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { categories, products } from "@/lib/db/schema";
+import { categories, products } from "@quickarte/db-schema";
 import { requireBusiness } from "@/lib/auth/get-business";
 import { assertRole } from "@/lib/identity/permissions";
 import {

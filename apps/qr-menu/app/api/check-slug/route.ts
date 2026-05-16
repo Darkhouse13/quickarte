@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { businesses } from "@/lib/db/schema";
+import { businesses } from "@quickarte/db-schema";
 import { isValidSlug } from "@/lib/utils/slug";
 
 export const dynamic = "force-dynamic";

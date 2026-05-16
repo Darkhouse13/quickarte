@@ -1,6 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { printers } from "@/lib/db/schema";
+import { printers } from "@quickarte/db-schema";
 
 type TransactionLike = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
