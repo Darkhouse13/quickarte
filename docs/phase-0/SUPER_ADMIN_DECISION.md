@@ -21,6 +21,26 @@ Cons:
 - A bug in platform-admin middleware could widen access if not tightly guarded.
 - Requires careful tests for both tenant and platform-admin paths on every tenanted table.
 
+Required invariants:
+
+- Platform-admin requests MUST set both `app.current_business_id` and `app.is_platform_admin = 'true'`.
+- `app.current_business_id` is the business being acted on, even when platform-admin access is used.
+- Setting only `app.is_platform_admin = 'true'` is forbidden because audit-log entries would be ambiguous about which tenant was affected.
+- This is a non-negotiable rule for the future Pattern A implementation after M5.
+
+Policy template for tables that support platform-admin access:
+
+```sql
+USING (
+  business_id = nullif(current_setting('app.current_business_id', true), '')::uuid
+  OR current_setting('app.is_platform_admin', true) = 'true'
+)
+WITH CHECK (
+  business_id = nullif(current_setting('app.current_business_id', true), '')::uuid
+  OR current_setting('app.is_platform_admin', true) = 'true'
+)
+```
+
 Effort estimate: 3-5 dev days after M5 auth claims exist, including middleware, policy updates, audit-log flags, and tests.
 
 ## Pattern B: Separate DB Role With BYPASSRLS

@@ -70,3 +70,11 @@ Required environment variables for tenant routing:
 - API base URL variables consumed by admin web and POS terminal
 
 Wildcard DNS and reverse-proxy routing must be configured outside the application code. The app should read `TENANT_ROOT_DOMAIN`, not hardcode production domains.
+
+## CORS Considerations
+
+When admin web at `{slug}.{TENANT_ROOT_DOMAIN}/admin` calls the API at a stable URL such as `api.{TENANT_ROOT_DOMAIN}`, the request is cross-origin.
+
+The API CORS configuration must allow tenant app origins under `*.{TENANT_ROOT_DOMAIN}`. This can be implemented with a wildcard where safe, or with dynamic `Origin` header validation against `TENANT_ROOT_DOMAIN`.
+
+This is M5/M7 implementation work, but it is documented here so the cross-origin tenant routing requirement is not missed.
