@@ -112,6 +112,11 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     status: number,
     hasValidationErrors: boolean,
   ): string {
+    const response = exception instanceof HttpException ? exception.getResponse() : undefined;
+    if (typeof response === "object" && response && "type" in response) {
+      return String(response.type);
+    }
+
     if (hasValidationErrors || exception instanceof BadRequestException) {
       return `${PROBLEM_BASE_URL}/validation-failed`;
     }

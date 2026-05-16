@@ -29,6 +29,24 @@
           "health"
         ]
       }
+    },
+    "/v1/businesses/me": {
+      "get": {
+        "operationId": "BusinessesController_getCurrentBusiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current business profile for the tenant context."
+          },
+          "404": {
+            "description": "No business exists for the current tenant context."
+          }
+        },
+        "summary": "Get the current tenant business profile",
+        "tags": [
+          "Businesses"
+        ]
+      }
     }
   },
   "info": {

@@ -1,8 +1,10 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { LoggerModule } from "nestjs-pino";
 import { randomUUID } from "node:crypto";
 import { AuditLogModule } from "./audit-log/audit-log.module";
+import { BusinessesModule } from "./businesses/businesses.module";
+import { TenantContextMiddleware } from "./common/middleware/tenant-context.middleware";
 import { validateEnv } from "./config/env";
 import { HealthModule } from "./health/health.module";
 
@@ -56,6 +58,11 @@ import { HealthModule } from "./health/health.module";
     }),
     HealthModule,
     AuditLogModule,
+    BusinessesModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(TenantContextMiddleware).forRoutes("{*path}");
+  }
+}

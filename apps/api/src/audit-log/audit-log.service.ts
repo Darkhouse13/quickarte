@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { auditLog } from "@quickarte/db-schema";
-import { DRIZZLE_CLIENT, type QuickarteDatabase } from "../database/database.tokens";
+import { DatabaseService } from "../database/database.service";
 
 type JsonRecord = Record<string, unknown> | unknown[] | string | number | boolean | null;
 
@@ -21,22 +21,24 @@ export type AuditLogInput = {
 @Injectable()
 export class AuditLogService {
   constructor(
-    @Inject(DRIZZLE_CLIENT) private readonly db: QuickarteDatabase,
+    @Inject(DatabaseService) private readonly databaseService: DatabaseService,
   ) {}
 
   async recordAction(input: AuditLogInput): Promise<void> {
-    await this.db.insert(auditLog).values({
-      businessId: input.businessId,
-      actorUserId: input.actorUserId ?? null,
-      action: input.action,
-      entityType: input.entityType ?? null,
-      entityId: input.entityId ?? null,
-      beforeState: input.beforeState ?? null,
-      afterState: input.afterState ?? null,
-      ipAddress: input.ipAddress ?? null,
-      userAgent: input.userAgent ?? null,
-      requestId: input.requestId ?? null,
-      createdAt: input.createdAt,
+    await this.databaseService.withTenant(input.businessId, async (tx) => {
+      await tx.insert(auditLog).values({
+        businessId: input.businessId,
+        actorUserId: input.actorUserId ?? null,
+        action: input.action,
+        entityType: input.entityType ?? null,
+        entityId: input.entityId ?? null,
+        beforeState: input.beforeState ?? null,
+        afterState: input.afterState ?? null,
+        ipAddress: input.ipAddress ?? null,
+        userAgent: input.userAgent ?? null,
+        requestId: input.requestId ?? null,
+        createdAt: input.createdAt,
+      });
     });
   }
 }

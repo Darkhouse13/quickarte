@@ -24,6 +24,6 @@ import { DRIZZLE_CLIENT, PG_POOL, type QuickarteDatabase } from "./database.toke
     },
     DatabaseService,
   ],
-  exports: [PG_POOL, DRIZZLE_CLIENT, DatabaseService],
+  exports: [PG_POOL, DatabaseService],
 })
 export class DatabaseModule {}
