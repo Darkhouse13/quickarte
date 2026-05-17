@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "Quickarte POS Terminal",
-    "slug": "quickarte-pos-terminal",
-    "scheme": "quickarte-pos-terminal",
+    "name": "Mizan POS Terminal",
+    "slug": "mizan-pos-terminal",
+    "scheme": "mizan-pos-terminal",
     "version": "0.1.0",
     "orientation": "default",
     "platforms": ["ios", "android", "web"],
     "ios": {
-      "bundleIdentifier": "ma.quickarte.posterminal",
+      "bundleIdentifier": "ma.mizan.posterminal",
       "supportsTablet": true
     },
     "android": {
-      "package": "ma.quickarte.posterminal"
+      "package": "ma.mizan.posterminal"
     },
     "plugins": ["expo-router", "expo-secure-store", "expo-localization"],
     "experiments": {

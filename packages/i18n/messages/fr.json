@@ -96,7 +96,7 @@
       "requiredBody": "Ouvrez l'admin depuis le sous-domaine de votre restaurant."
     },
     "shell": {
-      "brand": "Quickarte Admin",
+      "brand": "Mizan Admin",
       "navigation": "Navigation admin",
       "comingSoon": "Bientot disponible",
       "notFound": "Page introuvable"

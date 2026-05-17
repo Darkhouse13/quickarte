@@ -1,4 +1,4 @@
-# Quickarte POS Terminal
+# Mizan POS Terminal
 
 Expo React Native scaffold for the offline-first POS terminal.
 
@@ -34,21 +34,25 @@ Expo React Native scaffold for the offline-first POS terminal.
 
 ## Manual Smoke Test
 
-The full simulator or real-device smoke test is deferred to M9 sign-off. Before pilot,
-this checklist must be run on real Android hardware or an iPad-compatible development
-build, because WatermelonDB persistence and network toggling need native runtime
-verification.
+The real-device smoke test is a blocking pre-pilot item. Phase 0 created the
+offline-first foundation, but Windows local tooling in M9 did not include a ready
+Android emulator or physical development client.
 
-1. Start local Postgres, Redis, API, and seeded permissions as above.
-2. Start the Expo dev server with `pnpm --filter @quickarte/pos-terminal dev`.
-3. Open on iOS simulator or Android emulator.
-4. Log in with a seeded staff PIN. For the M5 integration seed, owner PIN is `1234`; use that seed's business UUID until slug resolution lands.
-5. Verify the home screen shows the business name. This proves `/v1/sync/pull` hydrated the local WatermelonDB cache.
-6. Disable network from the simulator or emulator settings.
-7. Verify the home screen still shows the business name. This proves the shell is reading SQLite cache, not relying on a live request.
-8. The sync indicator should turn red within 30 seconds.
-9. Re-enable network.
-10. The sync indicator should return green within 30 seconds after foreground polling runs again, or immediately after tapping "Synchroniser".
+Before any pilot customer touches the POS terminal, run this checklist on a real
+Android tablet or iPad-compatible development build:
+
+1. Start local Postgres, Redis, API, and seeded permissions.
+2. Start Expo with `pnpm --filter @quickarte/pos-terminal dev`.
+3. Open the app through an Android emulator, Android development client, or iOS
+   development client.
+4. Log in with a seeded staff PIN.
+5. Confirm the home screen shows the business name from `/v1/sync/pull`.
+6. Disable network connectivity from device settings.
+7. Confirm the business name remains visible from SQLite cache.
+8. Confirm the sync indicator turns red within 30 seconds.
+9. Re-enable network connectivity.
+10. Confirm the sync indicator returns green within 30 seconds and queued writes
+    flush successfully.
 
 ## Sync Surface In M6
 
