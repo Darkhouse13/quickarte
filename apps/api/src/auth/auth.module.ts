@@ -5,13 +5,14 @@ import { PermissionsGuard } from "../common/guards/permissions.guard";
 import { AuthService } from "./auth.service";
 import { ApiJwtService } from "./jwt.strategy";
 import { ManagerOverrideGuard } from "./manager-override.guard";
+import { OwnerLoginController } from "./owner-login.controller";
 import { PinHashingService } from "./pin-hashing.service";
 import { PinLoginController } from "./pin-login.controller";
 import { RateLimitService } from "./rate-limit.service";
 
 @Module({
   imports: [DatabaseModule],
-  controllers: [PinLoginController],
+  controllers: [PinLoginController, OwnerLoginController],
   providers: [
     ApiJwtService,
     AuthService,
