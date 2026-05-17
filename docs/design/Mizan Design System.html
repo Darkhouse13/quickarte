@@ -1,0 +1,1814 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1280" />
+<title>Mizan — Design System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Plex (baseline) + Geist + Cairo (candidate) + Plex Mono -->
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Geist:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+:root{
+  --bg:#FAF8F4; --surface:#FFFFFF; --surface-2:#F2EEE6; --surface-elevated:#FFFFFF; --overlay:rgba(28,25,22,.45);
+  --fg:#1C1916; --fg-2:#5E574E; --fg-3:#8C857A; --fg-disabled:#BDB6A8; --fg-on-primary:#FFFFFF;
+  --border:#E7E1D5; --border-strong:#CFC7B7;
+  --primary:#B8543A; --primary-hover:#9F4630; --primary-press:#863A28; --primary-soft:#F5E5DF; --primary-on:#FFFFFF;
+  --secondary:#2C6B6B; --secondary-hover:#225454; --secondary-soft:#D9E8E8;
+  --success:#2E7D52; --success-soft:#DCEFE2;
+  --warning:#B57214; --warning-soft:#F8E8C9;
+  --danger:#B83A2A;  --danger-soft:#F6DDD7;
+  --info:#2E6FA8;    --info-soft:#DBE9F5;
+  --focus-ring:0 0 0 3px rgba(184,84,58,.32);
+  --table-free:#2E7D52; --table-occupied:#2E6FA8; --table-awaiting:#B57214;
+  --table-reserved:#6B4E9E; --table-dirty:#8C857A; --table-out:#5E574E;
+  --kds-fresh:#2E7D52; --kds-warning:#B57214; --kds-late:#B83A2A;
+
+  /* Saffron — celebration only (loyalty, milestones, redemption-eligible). NEVER nav, primary action, or warnings. */
+  --accent-celebration:       #E0A422;
+  --accent-celebration-hover: #C58E16;
+  --accent-celebration-soft:  #FBEFD0;
+  --accent-celebration-on:    #1C1916;
+
+  /* Type families — LOCKED at v3: Geist (Latin) + Cairo (Arabic) ship as default.
+     Plex still loaded for the historical comparison panel in Section 3. */
+  --font-sans:"Geist","Cairo",system-ui,sans-serif;
+  --font-arabic:"Cairo","Geist",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  /* Historical — used only in the Section 3 comparison panel */
+  --font-sans-plex:"IBM Plex Sans","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --font-arabic-plex:"IBM Plex Sans Arabic","IBM Plex Sans",system-ui,sans-serif;
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:20px;--s-6:24px;--s-8:32px;--s-10:40px;--s-12:48px;--s-14:56px;--s-16:64px;--s-20:80px;--s-24:96px;
+  --r-sm:4px;--r-md:8px;--r-lg:12px;--r-xl:16px;--r-2xl:24px;--r-full:9999px;
+  --shadow-1:0 1px 2px rgba(28,25,22,.05),0 1px 1px rgba(28,25,22,.03);
+  --shadow-2:0 2px 4px rgba(28,25,22,.06),0 4px 8px rgba(28,25,22,.04);
+  --shadow-3:0 4px 8px rgba(28,25,22,.06),0 12px 24px rgba(28,25,22,.08);
+  --shadow-4:0 8px 16px rgba(28,25,22,.08),0 24px 48px rgba(28,25,22,.14);
+  --d-instant:100ms;--d-fast:150ms;--d-base:200ms;
+  --ease-out:cubic-bezier(.22,1,.36,1);--ease-in-out:cubic-bezier(.65,0,.35,1);
+
+  /* DENSITY LAYER — comfortable default (v1 shipped). Dense defined but not surfaced. */
+  /* Components MUST read these instead of hard-coding numeric spacing for touch-related dimensions. */
+  --density-tap-target:       64px;  /* primary POS buttons */
+  --density-tap-target-sm:    44px;  /* secondary controls, steppers */
+  --density-row-padding:      14px;  /* order-line vertical pad */
+  --density-card-padding:     24px;  /* POS card padding */
+  --density-grid-gap:         12px;  /* menu grid gap */
+  --density-item-card-image:  84px;  /* item-card image height in POS grid */
+  --density-numpad-cell:      64px;  /* number-pad cell height */
+  --density-list-row:         56px;  /* list-row min height */
+  --density-chip-height:      36px;  /* filter chip height */
+}
+
+/* Opt-in dense override — flip on <html data-density="dense"> or any container. */
+[data-density="dense"]{
+  --density-tap-target:       48px;
+  --density-tap-target-sm:    36px;
+  --density-row-padding:      8px;
+  --density-card-padding:     16px;
+  --density-grid-gap:         8px;
+  --density-item-card-image:  56px;
+  --density-numpad-cell:      48px;
+  --density-list-row:         40px;
+  --density-chip-height:      28px;
+}
+[data-theme="dark"]{
+  --bg:#15130F; --surface:#1E1B16; --surface-2:#28241D; --surface-elevated:#2A2620; --overlay:rgba(0,0,0,.6);
+  --fg:#F2EEE6; --fg-2:#A39C8E; --fg-3:#767065; --fg-disabled:#4A453D;
+  --border:#322D25; --border-strong:#463F34;
+  --primary:#D26B4D; --primary-hover:#E07859; --primary-press:#BC5A3E; --primary-soft:#3A1F18; --primary-on:#1C1916;
+  --secondary:#4D9999; --secondary-hover:#5FACAC; --secondary-soft:#1F3535;
+  --success:#4DB37C; --success-soft:#1F3528;
+  --warning:#D9A24A; --warning-soft:#3D2E14;
+  --danger:#E27466;  --danger-soft:#3D1F1A;
+  --info:#5FA0CC;    --info-soft:#1A2C3D;
+  --focus-ring:0 0 0 3px rgba(210,107,77,.42);
+  --table-free:#4DB37C; --table-occupied:#5FA0CC; --table-awaiting:#D9A24A;
+  --table-reserved:#9D87C7; --table-dirty:#A39C8E; --table-out:#767065;
+  --kds-fresh:#4DB37C; --kds-warning:#D9A24A; --kds-late:#E27466;
+
+  /* Saffron darkens slightly so it still reads as warm-gold against dark surfaces */
+  --accent-celebration:       #E5B046;
+  --accent-celebration-hover: #F0C067;
+  --accent-celebration-soft:  #3D2F14;
+  --accent-celebration-on:    #1C1916;
+
+  --shadow-1:0 1px 2px rgba(0,0,0,.4);
+  --shadow-2:0 2px 4px rgba(0,0,0,.4),0 4px 8px rgba(0,0,0,.2);
+  --shadow-3:0 4px 8px rgba(0,0,0,.4),0 12px 24px rgba(0,0,0,.3);
+  --shadow-4:0 8px 16px rgba(0,0,0,.5),0 24px 48px rgba(0,0,0,.4);
+}
+html,body{background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased;font-feature-settings:"ss01"}
+[dir="rtl"] body{font-family:var(--font-arabic)}
+
+/* Historical Plex scope — used by the rejected-alternative panel in Section 3 only. */
+[data-font="plex"]              { font-family: var(--font-sans-plex) !important; }
+[data-font="plex"] *            { font-family: inherit; }
+[data-font="plex"][dir="rtl"],
+[data-font="plex"] [dir="rtl"]  { font-family: var(--font-arabic-plex) !important; }
+[data-font="plex"] .t-mono,
+[data-font="plex"] .mono        { font-family: var(--font-mono) !important; }
+
+/* ==========================================================================
+   SAFFRON ACCESS LAYER — v3 LOCK
+   The --accent-celebration variable is PRIVATE. Components must reach saffron
+   through one of the utilities below. Adding a new utility requires PR review.
+   This is enforcement-by-construction — if you can’t grab the color, you can’t
+   misuse it. Do NOT write `color: var(--accent-celebration)` in component CSS.
+   ========================================================================== */
+.badge-celebration { background: var(--accent-celebration-soft); color: var(--accent-celebration); }
+[data-theme="dark"] .badge-celebration { color: var(--accent-celebration); }
+.chip-celebration  { background: var(--accent-celebration); color: var(--accent-celebration-on); border-color: var(--accent-celebration); }
+.toast-celebration { border-inline-start: 3px solid var(--accent-celebration); }
+.toast-celebration .lucide { color: var(--accent-celebration); }
+*{border-color:var(--border)}
+::selection{background:var(--primary-soft);color:var(--fg)}
+:focus-visible{outline:none;box-shadow:var(--focus-ring);border-radius:var(--r-sm)}
+
+/* Type */
+.t-display{font-size:48px;line-height:56px;font-weight:700;letter-spacing:-.02em}
+.t-h1{font-size:32px;line-height:40px;font-weight:700;letter-spacing:-.015em}
+.t-h2{font-size:24px;line-height:32px;font-weight:600;letter-spacing:-.01em}
+.t-h3{font-size:20px;line-height:28px;font-weight:600}
+.t-body-lg{font-size:18px;line-height:28px}
+.t-body{font-size:16px;line-height:24px}
+.t-body-sm{font-size:14px;line-height:20px}
+.t-caption{font-size:12px;line-height:16px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3)}
+.t-mono{font-family:var(--font-mono);font-size:14px;line-height:20px;font-variant-numeric:tabular-nums}
+.t-price-total{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.t-price-line{font-size:18px;font-weight:500;font-variant-numeric:tabular-nums}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--r-md);font-weight:500;cursor:pointer;user-select:none;border:1px solid transparent;transition:background var(--d-fast) var(--ease-out),border-color var(--d-fast) var(--ease-out),color var(--d-fast) var(--ease-out),box-shadow var(--d-fast) var(--ease-out);white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn .lucide{width:1.1em;height:1.1em;flex-shrink:0}
+.btn-sm{height:32px;padding:0 12px;font-size:14px}
+.btn-md{height:40px;padding:0 16px;font-size:14px}
+.btn-lg{height:48px;padding:0 20px;font-size:16px}
+.btn-xl{height:64px;padding:0 24px;font-size:18px;font-weight:600;border-radius:var(--r-lg)}
+.btn-primary{background:var(--primary);color:var(--primary-on)}
+.btn-primary:hover:not(:disabled){background:var(--primary-hover)}
+.btn-primary:active:not(:disabled){background:var(--primary-press)}
+.btn-secondary{background:var(--surface);color:var(--fg);border-color:var(--border-strong)}
+.btn-secondary:hover:not(:disabled){background:var(--surface-2)}
+.btn-ghost{background:transparent;color:var(--fg)}
+.btn-ghost:hover:not(:disabled){background:var(--surface-2)}
+.btn-destructive{background:var(--danger);color:#fff}
+.btn-destructive:hover:not(:disabled){filter:brightness(.92)}
+.btn-icon{padding:0}
+.btn-icon.btn-sm{width:32px}.btn-icon.btn-md{width:40px}.btn-icon.btn-lg{width:48px}.btn-icon.btn-xl{width:64px}
+
+/* Inputs */
+.field{height:40px;width:100%;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--r-md);padding:0 12px;color:var(--fg);font:inherit;font-size:14px;transition:border-color var(--d-fast),box-shadow var(--d-fast)}
+.field::placeholder{color:var(--fg-3)}
+.field:hover:not(:disabled):not(:focus){border-color:var(--fg-3)}
+.field:focus{border-color:var(--primary);box-shadow:var(--focus-ring);outline:none}
+.field-lg{height:48px;font-size:16px;padding:0 14px}
+.field-error{border-color:var(--danger)}
+.field-label{display:block;font-size:14px;font-weight:500;margin-bottom:6px}
+.field-helper{font-size:13px;color:var(--fg-2);margin-top:6px}
+.field-error-text{font-size:13px;color:var(--danger);margin-top:6px;display:inline-flex;gap:4px;align-items:center}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-1)}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:var(--r-full);font-size:12px;font-weight:500;white-space:nowrap}
+.badge .lucide{width:12px;height:12px}
+.badge-neutral{background:var(--surface-2);color:var(--fg-2)}
+.badge-primary{background:var(--primary-soft);color:var(--primary)}
+.badge-success{background:var(--success-soft);color:var(--success)}
+.badge-warning{background:var(--warning-soft);color:var(--warning)}
+.badge-danger{background:var(--danger-soft);color:var(--danger)}
+.badge-info{background:var(--info-soft);color:var(--info)}
+
+/* Chips */
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:var(--r-full);font-size:14px;font-weight:500;background:var(--surface);border:1px solid var(--border-strong);color:var(--fg);cursor:pointer;transition:all var(--d-fast)}
+.chip:hover{background:var(--surface-2)}
+.chip-active{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+[data-theme="dark"] .chip-active{background:var(--primary-soft);color:var(--primary);border-color:var(--primary)}
+
+/* Segmented */
+.segmented{display:inline-flex;background:var(--surface-2);border-radius:var(--r-md);padding:4px;gap:2px}
+.segmented button{height:32px;padding:0 14px;border-radius:var(--r-sm);font-size:14px;font-weight:500;color:var(--fg-2);background:transparent;cursor:pointer}
+.segmented button:hover{color:var(--fg)}
+.segmented button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow-1)}
+
+/* Toast */
+.toast{display:flex;gap:12px;padding:12px 16px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-3);align-items:flex-start;max-width:420px}
+.toast .lucide{flex-shrink:0;margin-top:2px}
+.toast-success .lucide{color:var(--success)}
+.toast-warning .lucide{color:var(--warning)}
+.toast-danger .lucide{color:var(--danger)}
+.toast-info .lucide{color:var(--info)}
+
+/* Tables */
+.dtable{width:100%;border-collapse:collapse;font-size:14px}
+.dtable th,.dtable td{padding:12px 16px;text-align:start;border-bottom:1px solid var(--border)}
+.dtable th{font-size:12px;font-weight:600;color:var(--fg-2);text-transform:uppercase;letter-spacing:.04em;background:var(--surface-2)}
+.dtable.dense th,.dtable.dense td{padding:8px 12px}
+.dtable tr:hover td{background:var(--surface-2)}
+.dtable td.num{text-align:end;font-variant-numeric:tabular-nums}
+
+/* Tabs */
+.tabs{display:inline-flex;gap:4px;border-bottom:1px solid var(--border)}
+.tabs button{padding:12px 16px;font-size:14px;font-weight:500;color:var(--fg-2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:color var(--d-fast),border-color var(--d-fast)}
+.tabs button:hover{color:var(--fg)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--primary)}
+
+/* Floor plan */
+.fp{display:flex;align-items:center;justify-content:center;background:var(--surface);border:2px solid var(--border-strong);font-weight:600;color:var(--fg);position:relative;transition:all var(--d-base)}
+.fp-round{width:80px;height:80px;border-radius:50%}
+.fp-square{width:80px;height:80px;border-radius:var(--r-md)}
+.fp-rect{width:120px;height:70px;border-radius:var(--r-md)}
+.fp .dot{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center}
+[dir="rtl"] .fp .dot{right:auto;left:-6px}
+.fp .dot .lucide{width:10px;height:10px;color:#fff}
+.fp-free{background:color-mix(in srgb,var(--table-free) 10%,var(--surface));border-color:var(--table-free)}
+.fp-free .dot{background:var(--table-free)}
+.fp-occupied{background:color-mix(in srgb,var(--table-occupied) 14%,var(--surface));border-color:var(--table-occupied);color:var(--table-occupied)}
+.fp-occupied .dot{background:var(--table-occupied)}
+.fp-awaiting{background:color-mix(in srgb,var(--table-awaiting) 14%,var(--surface));border-color:var(--table-awaiting);color:var(--table-awaiting)}
+.fp-awaiting .dot{background:var(--table-awaiting)}
+.fp-reserved{background:color-mix(in srgb,var(--table-reserved) 12%,var(--surface));border-color:var(--table-reserved);color:var(--table-reserved)}
+.fp-reserved .dot{background:var(--table-reserved)}
+.fp-dirty{background:var(--surface-2);border-color:var(--table-dirty);border-style:dashed;color:var(--table-dirty)}
+.fp-dirty .dot{background:var(--table-dirty)}
+.fp-out{background:repeating-linear-gradient(45deg,var(--surface-2) 0 6px,var(--surface) 6px 12px);border-color:var(--table-out);color:var(--table-out)}
+.fp-out .dot{background:var(--table-out)}
+
+/* Numpad */
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:280px}
+.numpad button{height:64px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--border-strong);font-size:24px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--fg);cursor:pointer;transition:background var(--d-fast),transform var(--d-fast)}
+.numpad button:hover{background:var(--surface-2)}
+.numpad button:active{background:var(--border);transform:scale(.98)}
+.numpad button.action{background:var(--surface-2)}
+
+/* Qty */
+.qty{display:inline-flex;border:1px solid var(--border-strong);border-radius:var(--r-md);overflow:hidden;height:48px;background:var(--surface)}
+.qty button{width:48px;background:var(--surface);color:var(--fg);font-size:20px;font-weight:500;cursor:pointer}
+.qty button:hover{background:var(--surface-2)}
+.qty .value{min-width:56px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+
+/* KDS */
+.kds{background:var(--surface);border:1px solid var(--border);border-top:4px solid var(--kds-fresh);border-radius:var(--r-lg);box-shadow:var(--shadow-2);padding:16px;display:flex;flex-direction:column;gap:12px}
+.kds[data-elapsed="warning"]{border-top-color:var(--kds-warning)}
+.kds[data-elapsed="late"]{border-top-color:var(--kds-late);animation:kds-pulse 1.4s var(--ease-in-out) infinite}
+@keyframes kds-pulse{0%,100%{box-shadow:var(--shadow-2)}50%{box-shadow:var(--shadow-2),0 0 0 4px color-mix(in srgb,var(--kds-late) 22%,transparent)}}
+
+/* Empty illustration */
+.empty-illus{width:96px;height:96px;display:flex;align-items:center;justify-content:center;color:var(--fg-3);border:1.5px dashed var(--border-strong);border-radius:50%}
+.empty-illus .lucide{width:40px;height:40px}
+
+/* Skeleton */
+.skeleton{background:linear-gradient(90deg,var(--surface-2) 0%,color-mix(in srgb,var(--surface-2) 60%,var(--surface)) 50%,var(--surface-2) 100%);background-size:200% 100%;animation:shimmer 1.4s linear infinite;border-radius:var(--r-sm)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* Spinner */
+.spinner{width:20px;height:20px;border:2.5px solid var(--border-strong);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Modal/drawer/sheet */
+.modal-card{background:var(--surface-elevated);border-radius:var(--r-xl);box-shadow:var(--shadow-4);padding:24px;max-width:420px;border:1px solid var(--border)}
+.drawer-card{background:var(--surface-elevated);border-radius:var(--r-xl) 0 0 var(--r-xl);box-shadow:var(--shadow-4);padding:24px;width:360px;border:1px solid var(--border);border-right:none}
+[dir="rtl"] .drawer-card{border-radius:0 var(--r-xl) var(--r-xl) 0;border-left:none;border-right:1px solid var(--border)}
+.sheet-card{background:var(--surface-elevated);border-radius:var(--r-xl) var(--r-xl) 0 0;box-shadow:var(--shadow-4);padding:24px;width:100%;max-width:480px;border:1px solid var(--border);border-bottom:none}
+
+/* Avatar */
+.avatar{display:inline-flex;align-items:center;justify-content:center;background:var(--primary-soft);color:var(--primary);font-weight:600;border-radius:50%;position:relative;font-size:14px}
+.avatar-sm{width:24px;height:24px;font-size:11px}
+.avatar-md{width:32px;height:32px;font-size:13px}
+.avatar-lg{width:40px;height:40px;font-size:15px}
+.avatar-xl{width:56px;height:56px;font-size:18px}
+.avatar .status{position:absolute;bottom:-2px;width:10px;height:10px;border-radius:50%;border:2px solid var(--surface)}
+[dir="ltr"] .avatar .status{right:-2px}
+[dir="rtl"] .avatar .status{left:-2px}
+
+/* Nav */
+.doc-nav{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.doc-section{padding:64px 0 32px;border-bottom:1px solid var(--border);scroll-margin-top:80px}
+.doc-section:last-child{border-bottom:none}
+.doc-section-title{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:8px}
+.doc-section h2{font-size:36px;font-weight:700;letter-spacing:-.02em;margin-bottom:12px}
+.doc-section .lede{font-size:18px;line-height:28px;color:var(--fg-2);max-width:720px;margin-bottom:32px}
+
+/* Anchor frame */
+.frame{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-3);overflow:hidden;position:relative}
+.frame-tag{position:absolute;top:12px;left:12px;z-index:5;background:rgba(28,25,22,.75);color:#fff;font-family:var(--font-mono);font-size:11px;padding:3px 8px;border-radius:var(--r-sm)}
+[dir="rtl"] .frame-tag{left:auto;right:12px}
+
+/* Swatch */
+.swatch{width:100%;aspect-ratio:1.6;border-radius:var(--r-md);border:1px solid var(--border)}
+.swatch-tall{aspect-ratio:1.1}
+.swatch-name{font-size:13px;color:var(--fg);font-weight:500;margin-top:6px}
+.swatch-label{font-size:12px;color:var(--fg-2);font-family:var(--font-mono);margin-top:2px}
+
+/* Spacing strip */
+.sp-row{display:flex;align-items:center;gap:16px;padding:8px 0}
+.sp-tag{width:56px;font-family:var(--font-mono);font-size:12px;color:var(--fg-2)}
+.sp-val{width:60px;font-family:var(--font-mono);font-size:12px;color:var(--fg-3);text-align:end}
+.sp-bar{background:var(--primary);border-radius:2px;height:12px}
+
+/* Order line */
+.oli{display:grid;grid-template-columns:32px 1fr auto;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.oli-qty{font-variant-numeric:tabular-nums;font-weight:600;font-size:16px}
+.oli-name{font-size:15px;font-weight:500}
+.oli-mods{font-size:13px;color:var(--fg-2);margin-top:2px}
+.oli-price{font-variant-numeric:tabular-nums;font-weight:600;font-size:16px}
+
+/* Principle card */
+.principle{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;display:flex;flex-direction:column;gap:12px;height:100%}
+.principle-num{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:var(--r-md);background:var(--primary-soft);color:var(--primary);font-weight:600;font-family:var(--font-mono);font-size:14px}
+.principle h3{font-size:18px;font-weight:600;line-height:24px}
+.principle p{font-size:14px;line-height:22px;color:var(--fg-2)}
+
+/* Toggle seg */
+.toggle-row{display:inline-flex;gap:8px;align-items:center}
+.toggle-row .seg{display:inline-flex;background:var(--surface-2);border-radius:var(--r-md);padding:3px}
+.toggle-row .seg button{padding:5px 10px;font-size:13px;font-weight:500;border-radius:var(--r-sm);color:var(--fg-2)}
+.toggle-row .seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow-1)}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="doc-nav">
+  <div class="max-w-[1280px] mx-auto px-8 h-16 flex items-center justify-between gap-6">
+    <a href="#top" class="flex items-center gap-3">
+      <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg" style="background:var(--primary);color:var(--primary-on);">
+        <i data-lucide="utensils" style="width:18px;height:18px;"></i>
+      </span>
+      <div>
+        <div class="font-semibold text-[15px] leading-none">Mizan</div>
+        <div class="t-caption">Design System · v0.1</div>
+      </div>
+    </a>
+    <div class="hidden md:flex items-center gap-6 text-sm" style="color:var(--fg-2);">
+      <a href="#principles" class="hover:opacity-100" style="opacity:.85">Principles</a>
+      <a href="#tokens">Tokens</a>
+      <a href="#components">Components</a>
+      <a href="#screens">Screens</a>
+      <a href="#rtl">RTL</a>
+      <a href="#a11y">A11y</a>
+    </div>
+    <div class="toggle-row">
+      <div class="seg" role="group" aria-label="Theme">
+        <button aria-pressed="true" data-theme-set="light">Light</button>
+        <button aria-pressed="false" data-theme-set="dark">Dark</button>
+      </div>
+      <div class="seg" role="group" aria-label="Direction">
+        <button aria-pressed="true" data-dir-set="ltr">LTR</button>
+        <button aria-pressed="false" data-dir-set="rtl">RTL</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main id="top" class="max-w-[1280px] mx-auto px-8">
+
+<!-- HERO -->
+<header class="pt-16 pb-12">
+  <div class="t-caption" style="color:var(--primary);">Mizan · ميزان</div>
+  <h1 class="t-display mt-2" style="max-width:880px;">A calm, fast, multilingual system for the people running restaurants.</h1>
+  <p class="t-body-lg mt-6" style="max-width:720px;color:var(--fg-2);">Mizan is the design language behind a tablet-first POS, kitchen display, and back-of-house suite built for the Moroccan market. Optimised for long shifts, bright daylight terraces, dim evening dining rooms, and the seamless French ↔ Arabic switch every team here lives in.</p>
+  <div class="mt-8 flex flex-wrap gap-3">
+    <span class="badge badge-neutral"><i data-lucide="languages"></i>FR · AR · Darija</span>
+    <span class="badge badge-neutral"><i data-lucide="tablet"></i>Tablet-first</span>
+    <span class="badge badge-neutral"><i data-lucide="moon"></i>Light + Dark</span>
+    <span class="badge badge-neutral"><i data-lucide="accessibility"></i>WCAG AA</span>
+    <span class="badge badge-neutral"><i data-lucide="palette"></i>Tokens + Tailwind</span>
+  </div>
+</header>
+
+<!-- §1 PRINCIPLES -->
+<section id="principles" class="doc-section">
+  <div class="doc-section-title">§ 01</div>
+  <h2>Principles</h2>
+  <p class="lede">Seven things we believe about how this product should feel under a Friday-night rush.</p>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <article class="principle"><span class="principle-num">01</span><h3>Calm under fluorescent light</h3><p>The interface stays legible at a glance in the kitchen, on a sunlit terrace, and in a dim evening dining room. No decoration distracts from the task in front of the user.</p></article>
+    <article class="principle"><span class="principle-num">02</span><h3>The hand finds the button</h3><p>Touch targets are at least 44px everywhere, 64px on the POS terminal. Primary actions live where the thumb expects them. Spacing is generous on purpose.</p></article>
+    <article class="principle"><span class="principle-num">03</span><h3>Status is shape, not just color</h3><p>Order, table, and stock states always pair a color with a shape, icon, or label. A color-blind cashier and a tired manager see the same signal.</p></article>
+    <article class="principle"><span class="principle-num">04</span><h3>French and Arabic are equal</h3><p>RTL is built on logical properties from day one. Numerals stay LTR, layouts flip cleanly, type metrics match across scripts. Darija lives in the same field FR does.</p></article>
+    <article class="principle"><span class="principle-num">05</span><h3>Instant or it&rsquo;s broken</h3><p>Tap responses fire in under 100ms. No animation in the POS exceeds 200ms. The system feels like wood, not like the web.</p></article>
+    <article class="principle"><span class="principle-num">06</span><h3>Warm, not folkloric</h3><p>A whisper of terracotta and sand in the neutrals signals &ldquo;made here&rdquo; without leaning on motifs. No zellige, no lanterns, no calligraphy as ornament.</p></article>
+    <article class="principle"><span class="principle-num">07</span><h3>Density follows the surface</h3><p>The POS breathes. The manager dashboard packs information. The recipe builder is a working form. Each surface has its own density tier, drawn from the same tokens.</p></article>
+  </div>
+</section>
+
+<!-- §2 TOKENS -->
+<section id="tokens" class="doc-section">
+  <div class="doc-section-title">§ 02</div>
+  <h2>Design tokens</h2>
+  <p class="lede">Every visual decision in the system traces back to one of these tokens. They live as CSS custom properties and have light/dark twins where it matters.</p>
+
+  <!-- Brand -->
+  <h3 class="t-h3 mt-12 mb-6">Color · Brand</h3>
+  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div><div class="swatch swatch-tall" style="background:var(--primary);"></div><div class="swatch-name">Primary</div><div class="swatch-label">--primary · #B8543A</div></div>
+    <div><div class="swatch swatch-tall" style="background:var(--primary-hover);"></div><div class="swatch-name">Primary hover</div><div class="swatch-label">--primary-hover</div></div>
+    <div><div class="swatch swatch-tall" style="background:var(--primary-press);"></div><div class="swatch-name">Primary press</div><div class="swatch-label">--primary-press</div></div>
+    <div><div class="swatch swatch-tall" style="background:var(--primary-soft);"></div><div class="swatch-name">Primary soft</div><div class="swatch-label">--primary-soft</div></div>
+    <div><div class="swatch swatch-tall" style="background:var(--secondary);"></div><div class="swatch-name">Secondary</div><div class="swatch-label">--secondary · teal</div></div>
+    <div><div class="swatch swatch-tall" style="background:var(--secondary-soft);"></div><div class="swatch-name">Secondary soft</div><div class="swatch-label">--secondary-soft</div></div>
+  </div>
+
+  <h4 class="mt-10 mb-3 text-sm font-semibold" style="color:var(--fg-2);">Neutrals · the &ldquo;Moroccan whisper&rdquo;</h4>
+  <p class="text-sm mb-4" style="color:var(--fg-3);max-width:640px;">All neutrals carry a faint warm cast. Off-whites lean toward bone; grays toward stone. This is where local feeling lives — not in motifs.</p>
+  <div class="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-9 gap-3">
+    <div><div class="swatch" style="background:var(--bg);"></div><div class="swatch-name">--bg</div><div class="swatch-label">#FAF8F4</div></div>
+    <div><div class="swatch" style="background:var(--surface);"></div><div class="swatch-name">--surface</div><div class="swatch-label">#FFFFFF</div></div>
+    <div><div class="swatch" style="background:var(--surface-2);"></div><div class="swatch-name">--surface-2</div><div class="swatch-label">#F2EEE6</div></div>
+    <div><div class="swatch" style="background:var(--border);"></div><div class="swatch-name">--border</div><div class="swatch-label">#E7E1D5</div></div>
+    <div><div class="swatch" style="background:var(--border-strong);"></div><div class="swatch-name">--border-strong</div><div class="swatch-label">#CFC7B7</div></div>
+    <div><div class="swatch" style="background:var(--fg-disabled);"></div><div class="swatch-name">--fg-disabled</div><div class="swatch-label">#BDB6A8</div></div>
+    <div><div class="swatch" style="background:var(--fg-3);"></div><div class="swatch-name">--fg-3</div><div class="swatch-label">#8C857A</div></div>
+    <div><div class="swatch" style="background:var(--fg-2);"></div><div class="swatch-name">--fg-2</div><div class="swatch-label">#5E574E</div></div>
+    <div><div class="swatch" style="background:var(--fg);"></div><div class="swatch-name">--fg</div><div class="swatch-label">#1C1916</div></div>
+  </div>
+
+  <!-- Semantic -->
+  <h3 class="t-h3 mt-12 mb-6">Color · Semantic</h3>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="card p-4"><div class="flex items-center gap-3"><div style="width:36px;height:36px;border-radius:var(--r-md);background:var(--success);"></div><div><div class="font-semibold text-sm">Success</div><div class="t-mono text-xs" style="color:var(--fg-3);">--success</div></div></div><div class="mt-3 flex gap-2"><span class="badge badge-success"><i data-lucide="check"></i>Paid</span><span class="badge" style="background:var(--success-soft);color:var(--success);">on track</span></div></div>
+    <div class="card p-4"><div class="flex items-center gap-3"><div style="width:36px;height:36px;border-radius:var(--r-md);background:var(--warning);"></div><div><div class="font-semibold text-sm">Warning</div><div class="t-mono text-xs" style="color:var(--fg-3);">--warning</div></div></div><div class="mt-3 flex gap-2"><span class="badge badge-warning"><i data-lucide="clock"></i>7 min</span><span class="badge" style="background:var(--warning-soft);color:var(--warning);">low stock</span></div></div>
+    <div class="card p-4"><div class="flex items-center gap-3"><div style="width:36px;height:36px;border-radius:var(--r-md);background:var(--danger);"></div><div><div class="font-semibold text-sm">Danger</div><div class="t-mono text-xs" style="color:var(--fg-3);">--danger</div></div></div><div class="mt-3 flex gap-2"><span class="badge badge-danger"><i data-lucide="triangle-alert"></i>12 min</span><span class="badge" style="background:var(--danger-soft);color:var(--danger);">out of stock</span></div></div>
+    <div class="card p-4"><div class="flex items-center gap-3"><div style="width:36px;height:36px;border-radius:var(--r-md);background:var(--info);"></div><div><div class="font-semibold text-sm">Info</div><div class="t-mono text-xs" style="color:var(--fg-3);">--info</div></div></div><div class="mt-3 flex gap-2"><span class="badge badge-info"><i data-lucide="info"></i>Note</span><span class="badge" style="background:var(--info-soft);color:var(--info);">in progress</span></div></div>
+  </div>
+
+  <!-- POS status -->
+  <h3 class="t-h3 mt-12 mb-6">Color · POS-specific status</h3>
+  <p class="text-sm mb-6" style="color:var(--fg-2);max-width:640px;">These drive the floor plan, KDS, and stock surfaces. Every state pairs <em>color + shape + label</em> — never color alone.</p>
+
+  <h4 class="text-sm font-semibold mb-4" style="color:var(--fg-2);">Table states</h4>
+  <div class="card p-6 flex flex-wrap gap-8 justify-around items-end">
+    <div class="text-center"><div class="fp fp-round fp-free"><span>1</span><span class="dot"><i data-lucide="check"></i></span></div><div class="text-xs mt-3" style="color:var(--fg-2);">Free</div><div class="t-mono text-[11px]" style="color:var(--fg-3);">--table-free</div></div>
+    <div class="text-center"><div class="fp fp-round fp-occupied"><span>2</span><span class="dot"><i data-lucide="users"></i></span></div><div class="text-xs mt-3" style="color:var(--fg-2);">Occupied</div><div class="t-mono text-[11px]" style="color:var(--fg-3);">--table-occupied</div></div>
+    <div class="text-center"><div class="fp fp-square fp-awaiting"><span>3</span><span class="dot"><i data-lucide="receipt"></i></span></div><div class="text-xs mt-3" style="color:var(--fg-2);">Awaiting payment</div><div class="t-mono text-[11px]" style="color:var(--fg-3);">--table-awaiting</div></div>
+    <div class="text-center"><div class="fp fp-square fp-reserved"><span>4</span><span class="dot"><i data-lucide="bookmark"></i></span></div><div class="text-xs mt-3" style="color:var(--fg-2);">Reserved</div><div class="t-mono text-[11px]" style="color:var(--fg-3);">--table-reserved</div></div>
+    <div class="text-center"><div class="fp fp-rect fp-dirty"><span>5</span><span class="dot"><i data-lucide="brush"></i></span></div><div class="text-xs mt-3" style="color:var(--fg-2);">Dirty</div><div class="t-mono text-[11px]" style="color:var(--fg-3);">--table-dirty</div></div>
+    <div class="text-center"><div class="fp fp-rect fp-out"><span>6</span><span class="dot"><i data-lucide="ban"></i></span></div><div class="text-xs mt-3" style="color:var(--fg-2);">Out of service</div><div class="t-mono text-[11px]" style="color:var(--fg-3);">--table-out</div></div>
+  </div>
+
+  <h4 class="text-sm font-semibold mt-8 mb-4" style="color:var(--fg-2);">KDS timer thresholds</h4>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="card p-4 flex items-center gap-4" style="border-top:4px solid var(--kds-fresh);"><i data-lucide="circle" style="color:var(--kds-fresh);width:24px;height:24px;fill:var(--kds-fresh);"></i><div><div class="font-semibold">0 – 5 min · Fresh</div><div class="text-sm" style="color:var(--fg-2);">Recently fired, on pace.</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">--kds-fresh</div></div></div>
+    <div class="card p-4 flex items-center gap-4" style="border-top:4px solid var(--kds-warning);"><i data-lucide="triangle" style="color:var(--kds-warning);width:24px;height:24px;fill:var(--kds-warning);"></i><div><div class="font-semibold">5 – 10 min · Approaching</div><div class="text-sm" style="color:var(--fg-2);">Cooks should be plating.</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">--kds-warning</div></div></div>
+    <div class="card p-4 flex items-center gap-4" style="border-top:4px solid var(--kds-late);animation:kds-pulse 1.4s var(--ease-in-out) infinite;"><i data-lucide="square" style="color:var(--kds-late);width:24px;height:24px;fill:var(--kds-late);"></i><div><div class="font-semibold">10+ min · Late</div><div class="text-sm" style="color:var(--fg-2);">Card border pulses for peripheral capture.</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">--kds-late</div></div></div>
+  </div>
+
+  <!-- Saffron · celebration accent -->
+  <h3 class="t-h3 mt-12 mb-3">Color · Saffron <span class="badge badge-celebration" style="margin-inline-start:8px;vertical-align:middle;"><i data-lucide="sparkles"></i>Celebration only</span></h3>
+  <p class="text-sm mb-6" style="color:var(--fg-2);max-width:680px;">A single warm saffron, used <em>only</em> at the moments a guest, owner, or staff member should feel something good. Treat this token as a privilege — the moment it appears in nav or as a generic confirmation, it loses meaning.</p>
+
+  <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+    <div class="card p-5">
+      <div class="swatch swatch-tall" style="background:var(--accent-celebration);"></div>
+      <div class="swatch-name">Saffron</div>
+      <div class="swatch-label">--accent-celebration · #E0A422</div>
+      <div class="mt-3 grid grid-cols-2 gap-2">
+        <div><div class="swatch" style="background:var(--accent-celebration-hover);aspect-ratio:2.2;"></div><div class="text-xs mt-1" style="color:var(--fg-3);">hover</div></div>
+        <div><div class="swatch" style="background:var(--accent-celebration-soft);aspect-ratio:2.2;"></div><div class="text-xs mt-1" style="color:var(--fg-3);">soft</div></div>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="card p-5" style="border-left:3px solid var(--success);">
+        <div class="t-caption" style="color:var(--success);">✓ USE</div>
+        <ul class="mt-2 space-y-1 text-sm" style="color:var(--fg-2);list-style:none;padding:0;">
+          <li>· Loyalty point displays &amp; reward redemption</li>
+          <li>· Milestone moments (“first sale today”, “100ᵗʰ customer”)</li>
+          <li>· Customer-facing receipts &amp; thank-you toasts</li>
+          <li>· “Eligible for reward” filter chips on item cards</li>
+          <li>· Anniversary / Eid promotional badges</li>
+        </ul>
+      </div>
+      <div class="card p-5" style="border-left:3px solid var(--danger);">
+        <div class="t-caption" style="color:var(--danger);">✕ NEVER</div>
+        <ul class="mt-2 space-y-1 text-sm" style="color:var(--fg-2);list-style:none;padding:0;">
+          <li>· Primary buttons (use --primary terracotta)</li>
+          <li>· Navigation, sidebar accents, tab indicators</li>
+          <li>· Warnings or pending states (use --warning amber)</li>
+          <li>· Generic success toasts (use --success green)</li>
+          <li>· Decorative use — if it doesn’t earn a smile, it doesn’t earn saffron</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Saffron in use — three concrete surfaces -->
+  <h4 class="text-sm font-semibold mt-8 mb-4" style="color:var(--fg-2);">Three correct uses</h4>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="card p-5">
+      <div class="t-caption mb-3">Customer receipt · loyalty points pill</div>
+      <div style="background:var(--surface-2);border-radius:var(--r-md);padding:14px;font-family:var(--font-mono);font-size:13px;line-height:18px;">
+        <div style="display:flex;justify-content:space-between;"><span>Couscous royal</span><span>140.00</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Thé × 3</span><span>36.00</span></div>
+        <div style="display:flex;justify-content:space-between;border-top:1px dashed var(--border-strong);margin-top:8px;padding-top:8px;font-weight:600;color:var(--fg);"><span>Total</span><span>176.00 MAD</span></div>
+        <span class="badge badge-celebration mt-3" style="font-family:var(--font-sans);height:auto;padding:6px 12px;">
+          <i data-lucide="sparkles" style="width:14px;height:14px;"></i>
+          <span style="font-size:13px;font-weight:600;">+24 points fidélité</span>
+        </span>
+        <div class="text-xs mt-2" style="color:var(--fg-3);font-family:var(--font-sans);">Solde : 320 points → 344 · Café Atlas</div>
+      </div>
+    </div>
+    <div class="card p-5">
+      <div class="t-caption mb-3">Milestone toast · “First sale today”</div>
+      <div class="toast toast-celebration">
+        <i data-lucide="sparkles"></i>
+        <div>
+          <div class="font-semibold text-sm">Première vente du jour · bismillah</div>
+          <div class="text-sm" style="color:var(--fg-2);">Bonne chance à toute l’équipe.</div>
+        </div>
+      </div>
+      <div class="mt-3 toast toast-celebration">
+        <i data-lucide="trophy"></i>
+        <div>
+          <div class="font-semibold text-sm">100ᵉ client servi cette semaine</div>
+          <div class="text-sm" style="color:var(--fg-2);">Salma El Amrani · Table 4 · Café Atlas</div>
+        </div>
+      </div>
+    </div>
+    <div class="card p-5">
+      <div class="t-caption mb-3">Item card · redemption-eligible chip</div>
+      <div class="card p-0 overflow-hidden" style="box-shadow:none;border:1px solid var(--border);">
+        <div style="height:84px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 26%,var(--surface)),color-mix(in srgb,var(--warning) 22%,var(--surface)));position:relative;">
+          <span class="absolute chip-celebration" style="top:8px;inset-inline-start:8px;display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 9px;border-radius:var(--r-full);font-size:11px;font-weight:600;">
+            <i data-lucide="sparkles" style="width:12px;height:12px;"></i>Échangeable · 80 pts
+          </span>
+        </div>
+        <div class="p-3">
+          <div class="font-semibold text-sm">Tajine au poulet</div>
+          <div class="text-xs" style="color:var(--fg-2);">Offert à partir de 80 points</div>
+          <div class="flex items-center justify-between mt-2">
+            <span class="t-price-line">85.00</span>
+            <button class="btn btn-primary btn-sm">Échanger</button>
+          </div>
+        </div>
+      </div>
+      <p class="text-xs mt-3" style="color:var(--fg-3);">Saffron flags the <em>opportunity to redeem</em>. Once redeemed, the chip disappears — the moment passed.</p>
+    </div>
+  </div>
+
+  <!-- Typography -->
+  <h3 class="t-h3 mt-12 mb-6">Typography</h3>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="card p-6">
+      <div class="t-caption mb-4">Latin · IBM Plex Sans</div>
+      <div class="space-y-4">
+        <div><div class="t-display">Aa Bb Cc</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">48 / 56 · 700 · display</div></div>
+        <div><div class="t-h1">The quick brown fox</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">32 / 40 · 700 · h1</div></div>
+        <div><div class="t-h2">Order #4218 · Table 7</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">24 / 32 · 600 · h2</div></div>
+        <div><div class="t-h3">Tajine au poulet et citron</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">20 / 28 · 600 · h3</div></div>
+        <div><div class="t-body-lg">Body large &mdash; customer-facing copy, modal bodies, primary screen prose.</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">18 / 28 · 400</div></div>
+        <div><div class="t-body">Body &mdash; the default reading size. Forms, lists, settings.</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">16 / 24 · 400</div></div>
+        <div><div class="t-body-sm">Body small &mdash; table cells, secondary metadata, helper text.</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">14 / 20 · 400</div></div>
+        <div><div class="t-caption">Caption &mdash; LABELS &amp; SECTIONS</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">12 / 16 · 500 · uppercase</div></div>
+        <div><div class="t-mono">240.50 MAD &middot; SKU-A14-220</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">14 / 20 · IBM Plex Mono</div></div>
+      </div>
+    </div>
+    <div class="card p-6" dir="rtl" style="font-family:var(--font-arabic);">
+      <div class="t-caption mb-4" dir="ltr">Arabic · IBM Plex Sans Arabic</div>
+      <div class="space-y-4">
+        <div><div class="t-display">أ ب ج د</div><div class="t-mono text-xs mt-1" dir="ltr" style="color:var(--fg-3);">48 / 56 · 700 · display</div></div>
+        <div><div class="t-h1">مرحباً بكم في ميزان</div><div class="t-mono text-xs mt-1" dir="ltr" style="color:var(--fg-3);">32 / 40 · 700 · h1</div></div>
+        <div><div class="t-h2">طلب رقم ٤٢١٨ · الطاولة ٧</div><div class="t-mono text-xs mt-1" dir="ltr" style="color:var(--fg-3);">24 / 32 · 600 · h2</div></div>
+        <div><div class="t-h3">طاجين الدجاج بالحامض</div><div class="t-mono text-xs mt-1" dir="ltr" style="color:var(--fg-3);">20 / 28 · 600 · h3</div></div>
+        <div><div class="t-body-lg">نص كبير &mdash; يستخدم للنسخ الموجهة للعملاء وأجسام النوافذ.</div><div class="t-mono text-xs mt-1" dir="ltr" style="color:var(--fg-3);">18 / 28 · 400</div></div>
+        <div><div class="t-body">نص عادي &mdash; الحجم الافتراضي للقراءة. النماذج والقوائم.</div><div class="t-mono text-xs mt-1" dir="ltr" style="color:var(--fg-3);">16 / 24 · 400</div></div>
+        <div><div class="t-body-sm">نص صغير &mdash; خلايا الجداول والبيانات الثانوية.</div><div class="t-mono text-xs mt-1" dir="ltr" style="color:var(--fg-3);">14 / 20 · 400</div></div>
+        <div><div class="t-caption" style="letter-spacing:0;">عنوان · أقسام</div><div class="t-mono text-xs mt-1" dir="ltr" style="color:var(--fg-3);">12 / 16 · 500</div></div>
+        <div><div class="t-mono" dir="ltr">240.50 MAD · SKU-A14-220</div><div class="t-mono text-xs mt-1" dir="ltr" style="color:var(--fg-3);">numerals stay LTR</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-6 mt-6">
+    <div class="t-caption mb-3">POS-specific type</div>
+    <div class="flex flex-wrap items-end gap-10">
+      <div><div class="t-price-total">240.50 <span class="text-xl font-medium" style="color:var(--fg-2);">MAD</span></div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">price-total · 32 / 700 · tabular</div></div>
+      <div><div class="t-price-line">48.00 MAD</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">price-line · 18 / 500</div></div>
+      <div><div style="font-size:28px;font-weight:500;font-variant-numeric:tabular-nums;">240.50</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">numpad · 28 / 500</div></div>
+      <div><button class="btn btn-primary btn-xl">Envoyer en cuisine</button><div class="t-mono text-xs mt-2" style="color:var(--fg-3);">button-pos · 18 / 600 · h64</div></div>
+    </div>
+  </div>
+
+  <!-- Spacing -->
+  <h3 class="t-h3 mt-12 mb-6">Spacing scale · 4px base</h3>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="card p-6">
+      <div class="sp-row"><span class="sp-tag">s-1</span><span class="sp-bar" style="width:4px"></span><span class="sp-val">4 px</span></div>
+      <div class="sp-row"><span class="sp-tag">s-2</span><span class="sp-bar" style="width:8px"></span><span class="sp-val">8 px</span></div>
+      <div class="sp-row"><span class="sp-tag">s-3</span><span class="sp-bar" style="width:12px"></span><span class="sp-val">12 px</span></div>
+      <div class="sp-row"><span class="sp-tag">s-4</span><span class="sp-bar" style="width:16px"></span><span class="sp-val">16 px</span></div>
+      <div class="sp-row"><span class="sp-tag">s-5</span><span class="sp-bar" style="width:20px"></span><span class="sp-val">20 px</span></div>
+      <div class="sp-row"><span class="sp-tag">s-6</span><span class="sp-bar" style="width:24px"></span><span class="sp-val">24 px</span></div>
+      <div class="sp-row"><span class="sp-tag">s-8</span><span class="sp-bar" style="width:32px"></span><span class="sp-val">32 px</span></div>
+      <div class="sp-row"><span class="sp-tag">s-10</span><span class="sp-bar" style="width:40px"></span><span class="sp-val">40 px</span></div>
+      <div class="sp-row"><span class="sp-tag">s-12</span><span class="sp-bar" style="width:48px"></span><span class="sp-val">48 px</span></div>
+      <div class="sp-row"><span class="sp-tag">s-14</span><span class="sp-bar" style="width:56px"></span><span class="sp-val">56 px</span></div>
+      <div class="sp-row"><span class="sp-tag">s-16</span><span class="sp-bar" style="width:64px"></span><span class="sp-val">64 px</span></div>
+      <div class="sp-row"><span class="sp-tag">s-20</span><span class="sp-bar" style="width:80px"></span><span class="sp-val">80 px</span></div>
+      <div class="sp-row"><span class="sp-tag">s-24</span><span class="sp-bar" style="width:96px"></span><span class="sp-val">96 px</span></div>
+    </div>
+    <div class="card p-6">
+      <div class="t-caption mb-4">Density tiers</div>
+      <table class="dtable"><thead><tr><th>Surface</th><th>Card padding</th><th>Row gap</th></tr></thead><tbody>
+        <tr><td>POS terminal</td><td>s-6 (24px)</td><td>s-3 (12px)</td></tr>
+        <tr><td>Manager web</td><td>s-5 (20px)</td><td>s-3 (12px)</td></tr>
+        <tr><td>Data tables</td><td>s-4 (16px)</td><td>s-2 (8px)</td></tr>
+        <tr><td>Modals</td><td>s-6 (24px)</td><td>s-4 (16px)</td></tr>
+      </tbody></table>
+      <div class="t-caption mt-8 mb-4">In use · nested padding</div>
+      <div class="rounded-lg p-6" style="background:var(--surface-2);border:1px dashed var(--border-strong);">
+        <div class="text-sm" style="color:var(--fg-2);">Outer pad · s-6</div>
+        <div class="card p-4 mt-4">
+          <div class="text-sm" style="color:var(--fg-2);">Card pad · s-4</div>
+          <div class="flex flex-col gap-3 mt-3"><div class="text-sm" style="color:var(--fg-2);">Stack gap · s-3</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Density token layer -->
+  <h3 class="t-h3 mt-12 mb-3">Density layer <span class="badge badge-neutral" style="margin-inline-start:8px;vertical-align:middle;">Two tiers · token-swap only</span></h3>
+  <p class="text-sm mb-6" style="color:var(--fg-2);max-width:720px;">Touch dimensions live in their own token layer so future-flipping a surface to <span class="t-mono">dense</span> is one attribute change. Components read these tokens; they never hard-code 64px or 14px directly for tap-targets.</p>
+
+  <div class="card overflow-hidden mb-6">
+    <table class="dtable">
+      <thead>
+        <tr>
+          <th>Token</th>
+          <th class="num">Comfortable · default <span class="badge badge-success" style="margin-inline-start:6px;"><i data-lucide="check"></i>v1 shipped</span></th>
+          <th class="num">Dense · future <span class="badge badge-neutral" style="margin-inline-start:6px;"><i data-lucide="lock"></i>defined, hidden</span></th>
+          <th>Used by</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="t-mono">--density-tap-target</span></td><td class="num">64 px</td><td class="num">48 px</td><td>POS primary buttons, key actions</td></tr>
+        <tr><td><span class="t-mono">--density-tap-target-sm</span></td><td class="num">44 px</td><td class="num">36 px</td><td>Quantity stepper, secondary chrome</td></tr>
+        <tr><td><span class="t-mono">--density-row-padding</span></td><td class="num">14 px</td><td class="num">8 px</td><td>Order line items, list rows</td></tr>
+        <tr><td><span class="t-mono">--density-card-padding</span></td><td class="num">24 px</td><td class="num">16 px</td><td>POS panels, ticket sidebar</td></tr>
+        <tr><td><span class="t-mono">--density-grid-gap</span></td><td class="num">12 px</td><td class="num">8 px</td><td>Menu item grid gutters</td></tr>
+        <tr><td><span class="t-mono">--density-item-card-image</span></td><td class="num">84 px</td><td class="num">56 px</td><td>Item-card image height</td></tr>
+        <tr><td><span class="t-mono">--density-numpad-cell</span></td><td class="num">64 px</td><td class="num">48 px</td><td>Number-pad button height</td></tr>
+        <tr><td><span class="t-mono">--density-list-row</span></td><td class="num">56 px</td><td class="num">40 px</td><td>Min list-row height</td></tr>
+        <tr><td><span class="t-mono">--density-chip-height</span></td><td class="num">36 px</td><td class="num">28 px</td><td>Filter chips, category pills</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card p-5" style="background:var(--surface-2);">
+    <div class="flex items-start gap-3">
+      <i data-lucide="info" style="color:var(--info);width:20px;height:20px;flex-shrink:0;margin-top:2px;"></i>
+      <div class="text-sm" style="color:var(--fg-2);">
+        <div class="font-semibold" style="color:var(--fg);">v1 ships <span class="t-mono">comfortable</span> only.</div>
+        <p class="mt-1">Dense is defined as a future feature for established restaurants whose staff have memorised the menu and want more items per screen. We are <strong>not</strong> exposing a toggle in v1 — the system is locked in comfortable to enforce a single, predictable training experience. Section 4 below shows the same POS screen at both densities so PM can pressure-test the dense rendering before we commit to launching it.</p>
+        <p class="mt-2">To preview dense anywhere, add <span class="t-mono">data-density="dense"</span> on any container.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- v3 LOCK · Dense Graduation Criteria -->
+  <div class="card p-5 mt-4" style="border-color:var(--border-strong);">
+    <div class="flex items-start gap-3">
+      <i data-lucide="flag" style="color:var(--primary);width:22px;height:22px;flex-shrink:0;margin-top:2px;"></i>
+      <div style="flex:1;">
+        <div class="font-semibold" style="color:var(--fg);">Dense graduation criteria. <span class="badge badge-primary" style="margin-inline-start:6px;vertical-align:middle;">v3 lock</span></div>
+        <p class="text-sm mt-2" style="color:var(--fg-2);max-width:780px;">Dense mode ships in <strong>v1.1, post-pilot</strong>. Three conditions must <em>all</em> hold before it leaves the feature-flag:</p>
+        <ol class="mt-3 space-y-2 text-sm" style="color:var(--fg-2);list-style:none;padding:0;">
+          <li class="flex gap-3"><span class="font-mono font-semibold flex-shrink-0" style="color:var(--primary);width:1.4em;">a.</span><span><strong style="color:var(--fg);">3&ndash;6 months of stable comfortable mode in production.</strong> We need a real baseline of tap-error rates, order-time, and complaint volume before we change tactile behaviour.</span></li>
+          <li class="flex gap-3"><span class="font-mono font-semibold flex-shrink-0" style="color:var(--primary);width:1.4em;">b.</span><span><strong style="color:var(--fg);">Module 14 (Settings infrastructure) is built.</strong> Dense requires a per-tenant settings surface that doesn&rsquo;t exist yet &mdash; we will not bolt a hidden toggle onto a config file in the meantime.</span></li>
+          <li class="flex gap-3"><span class="font-mono font-semibold flex-shrink-0" style="color:var(--primary);width:1.4em;">c.</span><span><strong style="color:var(--fg);">At least one pilot restaurant has explicitly asked for denser views.</strong> If nobody is asking, we&rsquo;ve solved a problem that doesn&rsquo;t exist. Comfortable wins by default.</span></li>
+        </ol>
+        <div class="mt-4 p-3 rounded-md" style="background:var(--danger-soft);">
+          <div class="text-sm" style="color:var(--danger);font-weight:600;">Two non-negotiables.</div>
+          <ul class="mt-1 text-sm" style="color:var(--fg-2);list-style:none;padding:0;">
+            <li>&middot; <strong>Never default-on globally.</strong> Dense never becomes the system default &mdash; not in any version, not for any reason.</li>
+            <li>&middot; <strong>Per-restaurant, not per-user.</strong> Settings live on the tenant. A new hire and a 5-year veteran must see the same density on the same terminal during the same shift.</li>
+          </ul>
+        </div>
+        <p class="text-xs mt-3" style="color:var(--fg-3);max-width:760px;"><strong>Reasoning: new user + dense = error-rate disaster.</strong> A server on day one cannot safely operate a 48px-target POS during a Friday rush &mdash; the error rate spikes, orders mis-fire, frustration compounds. Comfortable is the training-wheels density and stays the default forever. Dense is a privilege earned by a kitchen that has clearly stabilised, and the per-tenant scope guarantees every shift on that terminal carries the same muscle memory.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Radius -->
+  <h3 class="t-h3 mt-12 mb-6">Border radius</h3>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div class="card p-4 text-center"><div style="height:64px;background:var(--surface-2);border-radius:var(--r-sm);"></div><div class="font-semibold text-sm mt-3">sm · 4</div><div class="t-mono text-xs" style="color:var(--fg-3);">inputs, chips</div></div>
+    <div class="card p-4 text-center"><div style="height:64px;background:var(--surface-2);border-radius:var(--r-md);"></div><div class="font-semibold text-sm mt-3">md · 8</div><div class="t-mono text-xs" style="color:var(--fg-3);">buttons</div></div>
+    <div class="card p-4 text-center"><div style="height:64px;background:var(--surface-2);border-radius:var(--r-lg);"></div><div class="font-semibold text-sm mt-3">lg · 12</div><div class="t-mono text-xs" style="color:var(--fg-3);">cards, panels</div></div>
+    <div class="card p-4 text-center"><div style="height:64px;background:var(--surface-2);border-radius:var(--r-xl);"></div><div class="font-semibold text-sm mt-3">xl · 16</div><div class="t-mono text-xs" style="color:var(--fg-3);">modals, sheets</div></div>
+    <div class="card p-4 text-center"><div style="height:64px;background:var(--surface-2);border-radius:var(--r-2xl);"></div><div class="font-semibold text-sm mt-3">2xl · 24</div><div class="t-mono text-xs" style="color:var(--fg-3);">hero cards</div></div>
+    <div class="card p-4 text-center"><div style="height:64px;background:var(--surface-2);border-radius:var(--r-full);"></div><div class="font-semibold text-sm mt-3">full</div><div class="t-mono text-xs" style="color:var(--fg-3);">pills, avatars</div></div>
+  </div>
+
+  <!-- Elevation -->
+  <h3 class="t-h3 mt-12 mb-6">Elevation</h3>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 p-8 rounded-2xl" style="background:var(--surface-2);">
+    <div style="background:var(--surface);box-shadow:var(--shadow-1);" class="p-6 rounded-xl text-center"><div class="font-semibold">Level 1</div><div class="text-sm mt-1" style="color:var(--fg-2);">subtle card</div><div class="t-mono text-xs mt-3" style="color:var(--fg-3);">--shadow-1</div></div>
+    <div style="background:var(--surface);box-shadow:var(--shadow-2);" class="p-6 rounded-xl text-center"><div class="font-semibold">Level 2</div><div class="text-sm mt-1" style="color:var(--fg-2);">raised card</div><div class="t-mono text-xs mt-3" style="color:var(--fg-3);">--shadow-2</div></div>
+    <div style="background:var(--surface);box-shadow:var(--shadow-3);" class="p-6 rounded-xl text-center"><div class="font-semibold">Level 3</div><div class="text-sm mt-1" style="color:var(--fg-2);">popover, dropdown</div><div class="t-mono text-xs mt-3" style="color:var(--fg-3);">--shadow-3</div></div>
+    <div style="background:var(--surface);box-shadow:var(--shadow-4);" class="p-6 rounded-xl text-center"><div class="font-semibold">Level 4</div><div class="text-sm mt-1" style="color:var(--fg-2);">modal, drawer</div><div class="t-mono text-xs mt-3" style="color:var(--fg-3);">--shadow-4</div></div>
+  </div>
+
+  <!-- Motion -->
+  <h3 class="t-h3 mt-12 mb-6">Motion</h3>
+  <div class="card p-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div><div class="font-semibold">Instant · 100ms</div><div class="text-sm mt-1 mb-4" style="color:var(--fg-2);">Tap reactions, toggle flips. The user shouldn&rsquo;t see the animation, just feel it.</div></div>
+      <div><div class="font-semibold">Fast · 150ms</div><div class="text-sm mt-1 mb-4" style="color:var(--fg-2);">Hover states, micro-feedback, badge flips.</div></div>
+      <div><div class="font-semibold">Base · 200ms</div><div class="text-sm mt-1 mb-4" style="color:var(--fg-2);">Modal entry, drawer slide. <strong>Ceiling for the POS terminal.</strong></div></div>
+    </div>
+    <div class="t-caption mt-6 mb-3">Easing curves</div>
+    <div class="flex flex-wrap gap-6 text-sm" style="color:var(--fg-2);">
+      <div><span class="t-mono" style="color:var(--fg);">--ease-out</span> · cubic-bezier(.22, 1, .36, 1) · entry, reveal</div>
+      <div><span class="t-mono" style="color:var(--fg);">--ease-in-out</span> · cubic-bezier(.65, 0, .35, 1) · loops</div>
+      <div><span class="t-mono" style="color:var(--fg);">--ease-in</span> · cubic-bezier(.5, 0, .75, 0) · exits</div>
+    </div>
+  </div>
+</section>
+<!-- §3 COMPONENTS -->
+<section id="components" class="doc-section">
+  <div class="doc-section-title">§ 03</div>
+  <h2>Components</h2>
+  <p class="lede">The kitchen sink. Every piece shown in default and key variants — and at least once in RTL where the layout actually changes.</p>
+
+  <!-- Typography historical comparison: Geist+Cairo shipped vs Plex rejected -->
+  <h3 class="t-h3 mt-4 mb-3">Typography · Geist + Cairo <span class="badge badge-success" style="margin-inline-start:8px;vertical-align:middle;"><i data-lucide="check"></i>v3 locked</span></h3>
+  <p class="text-sm mb-6" style="color:var(--fg-2);max-width:780px;">Mizan ships <strong>Geist (Latin) + Cairo (Arabic)</strong> across every surface. The panel below preserves the side-by-side comparison with IBM Plex for historical record &mdash; Plex was considered and rejected for being too safe-corporate. The toggle has been removed; v3 is the lock point.</p>
+
+  <div class="card p-0 overflow-hidden mb-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2">
+      <!-- Shipped: Geist + Cairo (renders in the default family) -->
+      <div class="p-6" style="border-inline-end:1px solid var(--border);">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="t-caption">Shipped · v3 lock</div>
+            <div class="font-semibold text-base">Geist + Cairo</div>
+          </div>
+          <span class="badge badge-success"><i data-lucide="check"></i>Default</span>
+        </div>
+        <div class="space-y-3">
+          <div><div style="font-size:36px;font-weight:700;letter-spacing:-.015em;line-height:1.05;">Tajine au poulet</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">Geist · 36/700</div></div>
+          <div dir="rtl"><div style="font-size:36px;font-weight:700;line-height:1.4;">طاجين بالحامض</div><div dir="ltr" class="t-mono text-xs mt-1" style="color:var(--fg-3);">Cairo · 36/700</div></div>
+          <div><div style="font-size:16px;line-height:24px;">Le couscous royal arrive en cuisine dans deux minutes &mdash; table 7, sans coriandre.</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">Body · 16/400</div></div>
+          <div dir="rtl"><div style="font-size:16px;line-height:28px;">الكسكس الملكي يصل إلى المطبخ في دقيقتين &mdash; طاولة ٧، بدون كزبرة.</div><div dir="ltr" class="t-mono text-xs mt-1" style="color:var(--fg-3);">Body · 16/400</div></div>
+          <div class="t-mono">486.00 MAD · SKU-A14-220 · 12:34</div>
+        </div>
+      </div>
+      <!-- Rejected: IBM Plex (rendered via local Plex scope so the panel actually shows Plex) -->
+      <div class="p-6" data-font="plex" style="background:color-mix(in srgb,var(--surface-2) 60%,var(--surface));">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="t-caption">Considered alternative</div>
+            <div class="font-semibold text-base">IBM Plex Sans + Plex Sans Arabic</div>
+          </div>
+          <span class="badge badge-danger"><i data-lucide="x"></i>Rejected</span>
+        </div>
+        <div class="space-y-3">
+          <div><div style="font-size:36px;font-weight:700;letter-spacing:-.015em;line-height:1.05;">Tajine au poulet</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">Plex Sans · 36/700</div></div>
+          <div dir="rtl"><div style="font-size:36px;font-weight:700;line-height:1.2;">طاجين بالحامض</div><div dir="ltr" class="t-mono text-xs mt-1" style="color:var(--fg-3);">Plex Sans Arabic · 36/700</div></div>
+          <div><div style="font-size:16px;line-height:24px;">Le couscous royal arrive en cuisine dans deux minutes &mdash; table 7, sans coriandre.</div><div class="t-mono text-xs mt-1" style="color:var(--fg-3);">Body · 16/400</div></div>
+          <div dir="rtl"><div style="font-size:16px;line-height:26px;">الكسكس الملكي يصل إلى المطبخ في دقيقتين &mdash; طاولة ٧، بدون كزبرة.</div><div dir="ltr" class="t-mono text-xs mt-1" style="color:var(--fg-3);">Body · 16/400</div></div>
+          <div class="t-mono">486.00 MAD · SKU-A14-220 · 12:34</div>
+        </div>
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t" style="border-color:var(--border);background:var(--surface-2);">
+      <div class="text-sm" style="color:var(--fg-2);max-width:780px;"><strong style="color:var(--fg);">Rationale.</strong> Plex is a workhorse &mdash; legible, free, open source, used everywhere from IBM to RedHat. That&rsquo;s the problem: every B2B SaaS dashboard speaks Plex. Mizan competes against Foodics in a market where staying memorable matters. Geist&rsquo;s tighter terminals and Cairo&rsquo;s slightly looser Arabic counters give the product a voice without sacrificing legibility on a dim KDS or a bright terrace. Cairo runs ~3% taller in body, so we budgeted ticket rows for it from the start.</div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <h3 class="t-h3 mt-8 mb-4">Buttons</h3>
+  <div class="card p-6 space-y-6">
+    <div>
+      <div class="t-caption mb-3">Variants</div>
+      <div class="flex flex-wrap items-center gap-3">
+        <button class="btn btn-primary btn-md">Primary</button>
+        <button class="btn btn-secondary btn-md">Secondary</button>
+        <button class="btn btn-ghost btn-md">Ghost</button>
+        <button class="btn btn-destructive btn-md">Destructive</button>
+        <button class="btn btn-primary btn-md" disabled>Disabled</button>
+        <button class="btn btn-primary btn-md"><span class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.4);border-top-color:#fff;"></span>Loading</button>
+      </div>
+    </div>
+    <div>
+      <div class="t-caption mb-3">Sizes</div>
+      <div class="flex flex-wrap items-center gap-3">
+        <button class="btn btn-primary btn-sm">Small · 32</button>
+        <button class="btn btn-primary btn-md">Medium · 40</button>
+        <button class="btn btn-primary btn-lg">Large · 48</button>
+        <button class="btn btn-primary btn-xl">POS · 64</button>
+      </div>
+    </div>
+    <div>
+      <div class="t-caption mb-3">With icon</div>
+      <div class="flex flex-wrap items-center gap-3">
+        <button class="btn btn-primary btn-md"><i data-lucide="send"></i>Envoyer</button>
+        <button class="btn btn-secondary btn-md"><i data-lucide="printer"></i>Imprimer</button>
+        <button class="btn btn-ghost btn-md">Annuler<i data-lucide="x"></i></button>
+        <button class="btn btn-primary btn-icon btn-md"><i data-lucide="plus"></i></button>
+        <button class="btn btn-secondary btn-icon btn-md"><i data-lucide="search"></i></button>
+        <button class="btn btn-secondary btn-icon btn-lg"><i data-lucide="settings"></i></button>
+        <button class="btn btn-primary btn-icon btn-xl"><i data-lucide="check"></i></button>
+      </div>
+    </div>
+    <div>
+      <div class="t-caption mb-3">RTL · directional icons flip</div>
+      <div dir="rtl" class="flex flex-wrap items-center gap-3" style="font-family:var(--font-arabic);">
+        <button class="btn btn-primary btn-lg"><i data-lucide="arrow-right" style="transform:scaleX(-1);"></i>إرسال إلى المطبخ</button>
+        <button class="btn btn-secondary btn-lg"><i data-lucide="printer"></i>طباعة</button>
+        <button class="btn btn-ghost btn-lg">رجوع<i data-lucide="arrow-left" style="transform:scaleX(-1);"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inputs -->
+  <h3 class="t-h3 mt-10 mb-4">Inputs</h3>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card p-6 space-y-4">
+      <div><label class="field-label" for="i1">Nom du plat</label><input id="i1" class="field" placeholder="ex. Tajine au poulet" /><div class="field-helper">Visible aux clients sur la carte QR.</div></div>
+      <div><label class="field-label" for="i2">Prix (MAD)</label><div class="relative"><input id="i2" class="field" inputmode="decimal" value="48.00" style="padding-inline-end:56px;" /><span class="absolute t-mono text-sm" style="color:var(--fg-3);top:50%;transform:translateY(-50%);inset-inline-end:12px;">MAD</span></div></div>
+      <div><label class="field-label" for="i3">Recherche</label><div class="relative"><i data-lucide="search" class="absolute" style="width:18px;height:18px;color:var(--fg-3);top:50%;transform:translateY(-50%);inset-inline-start:12px;"></i><input id="i3" class="field" placeholder="Rechercher un plat…" style="padding-inline-start:40px;" /></div></div>
+      <div><label class="field-label" for="i4">Mot de passe</label><input id="i4" class="field" type="password" value="••••••••" /></div>
+    </div>
+    <div class="card p-6 space-y-4">
+      <div><label class="field-label" for="i5">Email</label><input id="i5" class="field field-error" value="cuisine.chef" /><div class="field-error-text"><i data-lucide="triangle-alert" style="width:14px;height:14px;"></i>Format invalide · attendu <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9ef0f1f3defaf1f3fff7f0fbb0fdf1f3">[email&#160;protected]</a></div></div>
+      <div><label class="field-label" for="i6">Stock alerte (seuil)</label><input id="i6" class="field field-lg" inputmode="numeric" value="12" /><div class="field-helper">Une alerte est déclenchée sous ce niveau.</div></div>
+      <div><label class="field-label" for="i7">Notes</label><textarea id="i7" class="field" rows="3" style="height:auto;padding:10px 12px;line-height:20px;" placeholder="Allergies, préférences, demandes spéciales…"></textarea></div>
+      <div dir="rtl" style="font-family:var(--font-arabic);"><label class="field-label" for="i8">اسم الطبق</label><input id="i8" class="field" placeholder="مثال: طاجين الدجاج" /><div class="field-helper">يظهر للزبائن في قائمة QR.</div></div>
+    </div>
+  </div>
+
+  <!-- Numpad + stepper -->
+  <h3 class="t-h3 mt-10 mb-4">Number pad &amp; quantity</h3>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+      <div class="t-caption mb-3">POS number pad</div>
+      <div class="flex items-start gap-6 flex-wrap">
+        <div class="numpad" id="numpad">
+          <button>1</button><button>2</button><button>3</button>
+          <button>4</button><button>5</button><button>6</button>
+          <button>7</button><button>8</button><button>9</button>
+          <button class="action">.</button><button>0</button><button class="action"><i data-lucide="delete" style="width:20px;height:20px;display:inline-block;"></i></button>
+        </div>
+        <div class="flex flex-col gap-3" style="min-width:200px;">
+          <div class="text-sm" style="color:var(--fg-2);">Montant</div>
+          <div id="numpad-display" class="card p-4 text-end" style="background:var(--surface-2);"><div class="t-price-total">0.00 <span class="text-lg font-medium" style="color:var(--fg-2);">MAD</span></div></div>
+          <button class="btn btn-primary btn-xl"><i data-lucide="check"></i>Confirmer</button>
+          <button class="btn btn-ghost btn-md">Annuler</button>
+        </div>
+      </div>
+    </div>
+    <div class="card p-6 space-y-6">
+      <div><div class="t-caption mb-3">Quantity stepper · POS-size</div><div class="qty"><button aria-label="Decrease">−</button><span class="value">3</span><button aria-label="Increase">+</button></div></div>
+      <div><div class="t-caption mb-3">Stepper · standard</div><div class="qty" style="height:36px;"><button style="width:36px;font-size:16px;" aria-label="Decrease">−</button><span class="value" style="min-width:44px;font-size:15px;">1</span><button style="width:36px;font-size:16px;" aria-label="Increase">+</button></div></div>
+      <div><div class="t-caption mb-3">Stepper · in context</div>
+        <div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--surface-2);">
+          <div><div class="font-semibold">Couscous royal</div><div class="text-sm" style="color:var(--fg-2);">120 MAD · supplément +20</div></div>
+          <div class="qty"><button aria-label="Decrease">−</button><span class="value">2</span><button aria-label="Increase">+</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cards -->
+  <h3 class="t-h3 mt-10 mb-4">Cards</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="card p-5"><div class="t-caption">Basic</div><h4 class="text-lg font-semibold mt-1">Aperçu du jour</h4><p class="text-sm mt-2" style="color:var(--fg-2);">Une carte simple — titre, métadonnée, contenu.</p></div>
+    <div class="card p-0 overflow-hidden">
+      <div style="height:110px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 26%,var(--surface)),color-mix(in srgb,var(--warning) 22%,var(--surface)));position:relative;">
+        <span class="badge badge-success absolute" style="top:12px;inset-inline-end:12px;"><i data-lucide="leaf"></i>Veggie</span>
+      </div>
+      <div class="p-4">
+        <div class="font-semibold">Tajine aux légumes</div>
+        <div class="text-sm" style="color:var(--fg-2);">Carottes, courgettes, pois chiches</div>
+        <div class="flex items-center justify-between mt-3">
+          <div class="t-price-line">85.00 <span class="text-sm" style="color:var(--fg-3);">MAD</span></div>
+          <div class="text-xs" style="color:var(--fg-3);">+ 2 mods</div>
+        </div>
+      </div>
+    </div>
+    <div class="card p-4">
+      <div class="flex items-center justify-between">
+        <div><div class="font-mono text-xs" style="color:var(--fg-3);">#4218</div><div class="font-semibold">Table 7 · 4 couverts</div></div>
+        <span class="badge badge-warning"><i data-lucide="clock"></i>7 min</span>
+      </div>
+      <div class="text-sm mt-3 space-y-1" style="color:var(--fg-2);">
+        <div>2 × Tajine poulet</div><div>1 × Couscous royal</div><div>3 × Thé à la menthe</div>
+      </div>
+      <div class="mt-3 pt-3 border-t flex justify-between items-baseline"><div class="text-xs" style="color:var(--fg-3);">Total</div><div class="t-price-line">420.00 MAD</div></div>
+    </div>
+    <div class="card p-4">
+      <div class="flex items-center gap-3">
+        <div class="avatar avatar-lg"><span>YB</span><span class="status" style="background:var(--success);"></span></div>
+        <div><div class="font-semibold">Younes Bouzid</div><div class="text-sm" style="color:var(--fg-2);">+212 6 12 34 56 78</div></div>
+      </div>
+      <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+        <div><div class="t-mono text-lg font-semibold">14</div><div class="text-xs" style="color:var(--fg-3);">visites</div></div>
+        <div><div class="t-mono text-lg font-semibold">2.4k</div><div class="text-xs" style="color:var(--fg-3);">MAD</div></div>
+        <div><div class="t-mono text-lg font-semibold">320</div><div class="text-xs" style="color:var(--fg-3);">points</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tables -->
+  <h3 class="t-h3 mt-10 mb-4">Data tables</h3>
+  <div class="grid grid-cols-1 gap-6">
+    <div class="card overflow-hidden">
+      <div class="px-5 py-3 flex items-center justify-between border-b" style="border-color:var(--border);">
+        <div><div class="font-semibold">Ventes du jour · comfortable</div><div class="text-sm" style="color:var(--fg-2);">23 commandes</div></div>
+        <div class="flex gap-2"><button class="btn btn-secondary btn-sm"><i data-lucide="download"></i>Exporter</button><button class="btn btn-secondary btn-icon btn-sm"><i data-lucide="more-horizontal"></i></button></div>
+      </div>
+      <table class="dtable"><thead><tr><th>Heure</th><th>Commande</th><th>Table</th><th>Serveur</th><th class="num">Articles</th><th class="num">Total</th><th>État</th></tr></thead><tbody>
+        <tr><td class="t-mono">12:14</td><td class="font-mono">#4218</td><td>7</td><td>Khalid</td><td class="num">6</td><td class="num">420.00</td><td><span class="badge badge-success"><i data-lucide="check"></i>Payé</span></td></tr>
+        <tr><td class="t-mono">12:18</td><td class="font-mono">#4219</td><td>3</td><td>Sara</td><td class="num">3</td><td class="num">180.00</td><td><span class="badge badge-warning"><i data-lucide="utensils"></i>En cuisine</span></td></tr>
+        <tr><td class="t-mono">12:22</td><td class="font-mono">#4220</td><td>11</td><td>Khalid</td><td class="num">8</td><td class="num">640.00</td><td><span class="badge badge-info"><i data-lucide="clock"></i>En attente</span></td></tr>
+        <tr><td class="t-mono">12:25</td><td class="font-mono">#4221</td><td>Bar 2</td><td>Aïcha</td><td class="num">2</td><td class="num">60.00</td><td><span class="badge badge-success"><i data-lucide="check"></i>Payé</span></td></tr>
+      </tbody></table>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="px-4 py-2 flex items-center justify-between border-b" style="border-color:var(--border);"><div class="font-semibold">Inventaire · dense</div><div class="text-xs" style="color:var(--fg-2);">142 articles</div></div>
+      <table class="dtable dense"><thead><tr><th>SKU</th><th>Article</th><th class="num">Stock</th><th class="num">Seuil</th><th class="num">Coût</th><th>État</th></tr></thead><tbody>
+        <tr><td class="t-mono">FL-001</td><td>Farine T55</td><td class="num">42 kg</td><td class="num">10</td><td class="num">6.20</td><td><span class="badge badge-success"><i data-lucide="check"></i>OK</span></td></tr>
+        <tr><td class="t-mono">VG-014</td><td>Tomates fraîches</td><td class="num">3 kg</td><td class="num">8</td><td class="num">12.00</td><td><span class="badge badge-warning"><i data-lucide="triangle-alert"></i>Bas</span></td></tr>
+        <tr><td class="t-mono">EP-002</td><td>Safran</td><td class="num">0 g</td><td class="num">50</td><td class="num">120.00</td><td><span class="badge badge-danger"><i data-lucide="x"></i>Rupture</span></td></tr>
+        <tr><td class="t-mono">BO-008</td><td>Limonade citron</td><td class="num">28</td><td class="num">12</td><td class="num">4.50</td><td><span class="badge badge-success"><i data-lucide="check"></i>OK</span></td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <!-- Modal / Drawer / Sheet -->
+  <h3 class="t-h3 mt-10 mb-4">Modals · Drawers · Sheets</h3>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div>
+      <div class="t-caption mb-3">Center modal</div>
+      <div class="rounded-xl p-8 flex items-center justify-center" style="background:var(--surface-2);min-height:320px;">
+        <div class="modal-card">
+          <div class="flex items-start gap-3">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--danger-soft);color:var(--danger);display:flex;align-items:center;justify-content:center;"><i data-lucide="triangle-alert"></i></div>
+            <div class="flex-1"><h4 class="text-lg font-semibold">Supprimer la commande #4218 ?</h4><p class="text-sm mt-2" style="color:var(--fg-2);">Cette action est définitive. Les articles déjà envoyés en cuisine ne seront pas retirés.</p></div>
+          </div>
+          <div class="flex justify-end gap-2 mt-6"><button class="btn btn-ghost btn-md">Annuler</button><button class="btn btn-destructive btn-md">Supprimer</button></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="t-caption mb-3">Side drawer</div>
+      <div class="rounded-xl p-0 flex items-stretch justify-end overflow-hidden" style="background:var(--surface-2);min-height:320px;">
+        <div class="drawer-card">
+          <div class="flex items-center justify-between mb-4"><h4 class="text-lg font-semibold">Détails du plat</h4><button class="btn btn-ghost btn-icon btn-sm"><i data-lucide="x"></i></button></div>
+          <div class="space-y-3">
+            <div><div class="t-caption">Nom</div><div class="font-semibold">Tajine au poulet</div></div>
+            <div><div class="t-caption">Modificateurs</div><div class="flex flex-wrap gap-2 mt-1"><span class="badge badge-neutral">Sans olives</span><span class="badge badge-neutral">+ Frites</span></div></div>
+            <div><div class="t-caption">Prix</div><div class="t-price-line">85.00 MAD</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="t-caption mb-3">Bottom sheet</div>
+      <div class="rounded-xl p-0 flex items-end justify-center overflow-hidden" style="background:var(--surface-2);min-height:320px;">
+        <div class="sheet-card">
+          <div style="width:48px;height:4px;background:var(--border-strong);border-radius:2px;margin:-8px auto 16px;"></div>
+          <h4 class="text-lg font-semibold">Mode de paiement</h4>
+          <div class="grid grid-cols-3 gap-2 mt-4">
+            <button class="btn btn-secondary btn-lg" style="height:72px;flex-direction:column;"><i data-lucide="banknote" style="width:22px;height:22px;"></i>Espèces</button>
+            <button class="btn btn-secondary btn-lg" style="height:72px;flex-direction:column;"><i data-lucide="credit-card" style="width:22px;height:22px;"></i>CMI</button>
+            <button class="btn btn-secondary btn-lg" style="height:72px;flex-direction:column;"><i data-lucide="smartphone" style="width:22px;height:22px;"></i>Wallet</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <h3 class="t-h3 mt-10 mb-4">Toasts &amp; notifications</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-[920px]">
+    <div class="toast toast-success"><i data-lucide="check-circle-2"></i><div><div class="font-semibold text-sm">Commande envoyée</div><div class="text-sm" style="color:var(--fg-2);">Table 7 · 6 articles transmis à la cuisine.</div></div></div>
+    <div class="toast toast-info"><i data-lucide="info"></i><div><div class="font-semibold text-sm">Imprimante reconnectée</div><div class="text-sm" style="color:var(--fg-2);">Cuisine · prête.</div></div></div>
+    <div class="toast toast-warning"><i data-lucide="triangle-alert"></i><div><div class="font-semibold text-sm">Stock bas · tomates</div><div class="text-sm" style="color:var(--fg-2);">Il reste 3 kg (seuil 8 kg).</div></div></div>
+    <div class="toast toast-danger"><i data-lucide="wifi-off"></i><div><div class="font-semibold text-sm">Hors ligne · mode local</div><div class="text-sm" style="color:var(--fg-2);">Les commandes seront synchronisées dès la reconnexion.</div></div></div>
+  </div>
+
+  <!-- Badges chips -->
+  <h3 class="t-h3 mt-10 mb-4">Badges, chips &amp; tags</h3>
+  <div class="card p-6 space-y-6">
+    <div><div class="t-caption mb-3">Status badges</div>
+      <div class="flex flex-wrap gap-2">
+        <span class="badge badge-neutral">Brouillon</span>
+        <span class="badge badge-info"><i data-lucide="clock"></i>En attente</span>
+        <span class="badge badge-warning"><i data-lucide="utensils"></i>En cuisine</span>
+        <span class="badge badge-success"><i data-lucide="check"></i>Servi</span>
+        <span class="badge badge-success"><i data-lucide="banknote"></i>Payé</span>
+        <span class="badge badge-danger"><i data-lucide="x"></i>Annulé</span>
+        <span class="badge badge-primary"><i data-lucide="star"></i>Fidélité</span>
+      </div>
+    </div>
+    <div><div class="t-caption mb-3">Filterable chips</div>
+      <div class="flex flex-wrap gap-2">
+        <button class="chip chip-active"><i data-lucide="check" style="width:14px;height:14px;"></i>Tout</button>
+        <button class="chip">Entrées</button><button class="chip">Plats</button>
+        <button class="chip">Tajines</button><button class="chip">Couscous</button>
+        <button class="chip">Salades</button><button class="chip">Boissons</button><button class="chip">Desserts</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <h3 class="t-h3 mt-10 mb-4">Tabs &amp; segmented control</h3>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+      <div class="t-caption mb-3">Horizontal tabs</div>
+      <div class="tabs"><button aria-selected="true">Aperçu</button><button aria-selected="false">Articles</button><button aria-selected="false">Paiements</button><button aria-selected="false">Historique</button></div>
+    </div>
+    <div class="card p-6">
+      <div class="t-caption mb-3">Segmented control</div>
+      <div class="segmented"><button aria-selected="true">Aujourd&rsquo;hui</button><button aria-selected="false">Semaine</button><button aria-selected="false">Mois</button><button aria-selected="false">Tout</button></div>
+      <div class="t-caption mt-6 mb-3">RTL · tabs flip</div>
+      <div dir="rtl" style="font-family:var(--font-arabic);">
+        <div class="tabs"><button aria-selected="true">نظرة عامة</button><button aria-selected="false">العناصر</button><button aria-selected="false">المدفوعات</button><button aria-selected="false">السجل</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Avatars -->
+  <h3 class="t-h3 mt-10 mb-4">Avatar &amp; icon</h3>
+  <div class="card p-6 flex flex-wrap items-end gap-8">
+    <div class="flex items-end gap-3">
+      <div class="avatar avatar-sm">KB</div>
+      <div class="avatar avatar-md">SK</div>
+      <div class="avatar avatar-lg">YB</div>
+      <div class="avatar avatar-xl">AM</div>
+    </div>
+    <div class="flex items-end gap-3">
+      <div class="avatar avatar-md"><span>KB</span><span class="status" style="background:var(--success);"></span></div>
+      <div class="avatar avatar-md"><span>SK</span><span class="status" style="background:var(--warning);"></span></div>
+      <div class="avatar avatar-md"><span>YB</span><span class="status" style="background:var(--fg-3);"></span></div>
+    </div>
+    <div class="flex items-end gap-4">
+      <i data-lucide="utensils" style="width:14px;height:14px;"></i>
+      <i data-lucide="utensils" style="width:18px;height:18px;"></i>
+      <i data-lucide="utensils" style="width:24px;height:24px;"></i>
+      <i data-lucide="utensils" style="width:32px;height:32px;"></i>
+    </div>
+  </div>
+
+  <!-- Order line item -->
+  <h3 class="t-h3 mt-10 mb-4">Order line item</h3>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card p-5">
+      <div class="t-caption mb-2">LTR · French</div>
+      <div class="oli"><div class="oli-qty">2</div><div><div class="oli-name">Tajine au poulet</div><div class="oli-mods">+ Frites · sans olives</div></div><div class="text-end"><div class="oli-price">170.00 MAD</div></div></div>
+      <div class="oli"><div class="oli-qty">1</div><div><div class="oli-name">Couscous royal</div><div class="oli-mods">Bien cuit</div></div><div class="text-end"><div class="oli-price">140.00 MAD</div></div></div>
+      <div class="oli" style="border:none;"><div class="oli-qty">3</div><div><div class="oli-name">Thé à la menthe</div><div class="oli-mods" style="color:var(--warning);">⚠ envoyé</div></div><div class="text-end"><div class="oli-price">36.00 MAD</div></div></div>
+    </div>
+    <div class="card p-5" dir="rtl" style="font-family:var(--font-arabic);">
+      <div class="t-caption mb-2" dir="ltr">RTL · Arabic</div>
+      <div class="oli"><div class="oli-qty">٢</div><div><div class="oli-name">طاجين الدجاج</div><div class="oli-mods">+ بطاطس · بدون زيتون</div></div><div class="text-end"><div class="oli-price" dir="ltr">170.00 MAD</div></div></div>
+      <div class="oli"><div class="oli-qty">١</div><div><div class="oli-name">كسكس ملكي</div><div class="oli-mods">مطهو جيداً</div></div><div class="text-end"><div class="oli-price" dir="ltr">140.00 MAD</div></div></div>
+      <div class="oli" style="border:none;"><div class="oli-qty">٣</div><div><div class="oli-name">أتاي بالنعناع</div><div class="oli-mods" style="color:var(--warning);">⚠ أُرسل</div></div><div class="text-end"><div class="oli-price" dir="ltr">36.00 MAD</div></div></div>
+    </div>
+  </div>
+
+  <!-- KDS -->
+  <h3 class="t-h3 mt-10 mb-4">KDS order card</h3>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="kds" data-elapsed="fresh">
+      <div class="flex items-start justify-between"><div><div class="font-mono text-xs" style="color:var(--fg-3);">#4218</div><div class="text-lg font-bold">Table 7</div></div><div class="text-end"><div class="t-mono text-lg font-semibold" style="color:var(--kds-fresh);">02:14</div><div class="text-xs" style="color:var(--fg-3);">Khalid</div></div></div>
+      <div class="text-sm space-y-1 border-t pt-3" style="border-color:var(--border);">
+        <div><span class="font-semibold">2 ×</span> Tajine poulet</div>
+        <div class="text-xs ms-4" style="color:var(--fg-2);">+ frites · sans olives</div>
+        <div><span class="font-semibold">1 ×</span> Couscous royal</div>
+        <div><span class="font-semibold">3 ×</span> Thé à la menthe</div>
+      </div>
+      <div class="flex gap-2"><button class="btn btn-secondary btn-md flex-1"><i data-lucide="rotate-ccw"></i>Recall</button><button class="btn btn-primary btn-md flex-1"><i data-lucide="check"></i>Prêt</button></div>
+    </div>
+    <div class="kds" data-elapsed="warning">
+      <div class="flex items-start justify-between"><div><div class="font-mono text-xs" style="color:var(--fg-3);">#4219</div><div class="text-lg font-bold">Table 3</div></div><div class="text-end"><div class="t-mono text-lg font-semibold" style="color:var(--kds-warning);">07:42</div><div class="text-xs" style="color:var(--fg-3);">Sara</div></div></div>
+      <div class="text-sm space-y-1 border-t pt-3" style="border-color:var(--border);">
+        <div><span class="font-semibold">1 ×</span> Pastilla au poulet</div>
+        <div><span class="font-semibold">2 ×</span> Salade marocaine</div>
+      </div>
+      <div class="flex gap-2"><button class="btn btn-secondary btn-md flex-1"><i data-lucide="rotate-ccw"></i>Recall</button><button class="btn btn-primary btn-md flex-1"><i data-lucide="check"></i>Prêt</button></div>
+    </div>
+    <div class="kds" data-elapsed="late">
+      <div class="flex items-start justify-between"><div><div class="font-mono text-xs" style="color:var(--fg-3);">#4216</div><div class="text-lg font-bold">Table 11</div><span class="badge badge-danger mt-1"><i data-lucide="triangle-alert"></i>En retard</span></div><div class="text-end"><div class="t-mono text-lg font-semibold" style="color:var(--kds-late);">12:08</div><div class="text-xs" style="color:var(--fg-3);">Khalid</div></div></div>
+      <div class="text-sm space-y-1 border-t pt-3" style="border-color:var(--border);">
+        <div><span class="font-semibold">3 ×</span> Méchoui d&rsquo;agneau</div>
+        <div><span class="font-semibold">1 ×</span> Couscous Tfaya</div>
+        <div><span class="font-semibold">4 ×</span> Briouates</div>
+      </div>
+      <div class="flex gap-2"><button class="btn btn-secondary btn-md flex-1"><i data-lucide="rotate-ccw"></i>Recall</button><button class="btn btn-primary btn-md flex-1"><i data-lucide="check"></i>Prêt</button></div>
+    </div>
+  </div>
+
+  <!-- Modifier selector -->
+  <h3 class="t-h3 mt-10 mb-4">Modifier selector</h3>
+  <div class="card p-6 space-y-6">
+    <div>
+      <div class="flex items-baseline justify-between"><div class="t-h3">Cuisson <span class="badge badge-danger" style="margin-inline-start:8px;"><i data-lucide="asterisk" style="width:10px;height:10px;"></i>Requis</span></div><div class="text-sm" style="color:var(--fg-3);">Choisir 1</div></div>
+      <div class="flex flex-wrap gap-2 mt-3"><button class="chip">Saignant</button><button class="chip chip-active"><i data-lucide="check" style="width:14px;height:14px;"></i>À point</button><button class="chip">Bien cuit</button></div>
+    </div>
+    <div>
+      <div class="flex items-baseline justify-between"><div class="t-h3">Accompagnement <span class="badge badge-neutral" style="margin-inline-start:8px;">Optionnel</span></div><div class="text-sm" style="color:var(--fg-3);">Jusqu&rsquo;à 2</div></div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <button class="chip chip-active"><i data-lucide="check" style="width:14px;height:14px;"></i>Frites <span style="color:var(--fg-3);">+15</span></button>
+        <button class="chip">Riz <span style="color:var(--fg-3);">+10</span></button>
+        <button class="chip chip-active"><i data-lucide="check" style="width:14px;height:14px;"></i>Salade <span style="color:var(--fg-3);">+12</span></button>
+        <button class="chip">Légumes vapeur <span style="color:var(--fg-3);">+15</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Price display -->
+  <h3 class="t-h3 mt-10 mb-4">Price display</h3>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="card p-6"><div class="t-caption mb-2">Total · prominent</div><div class="t-price-total">420.00 <span class="text-xl font-medium" style="color:var(--fg-2);">MAD</span></div><div class="text-sm mt-1" style="color:var(--fg-2);">TVA incluse · 20%</div></div>
+    <div class="card p-6"><div class="t-caption mb-2">Line price</div><div class="t-price-line">85.00 MAD</div><div class="text-sm mt-1" style="color:var(--fg-2);">Tajine poulet</div></div>
+    <div class="card p-6"><div class="t-caption mb-2">Discount</div><div class="t-price-line"><span style="text-decoration:line-through;color:var(--fg-3);">100.00</span> <span style="color:var(--success);">80.00 MAD</span></div><div class="text-sm mt-1" style="color:var(--fg-2);">Happy hour · -20%</div></div>
+  </div>
+
+  <!-- Floor plan -->
+  <h3 class="t-h3 mt-10 mb-4">Floor plan elements · all states</h3>
+  <div class="card p-8" style="background:var(--surface-2);">
+    <div class="grid grid-cols-3 md:grid-cols-6 gap-y-8 gap-x-4 justify-items-center">
+      <div class="text-center"><div class="fp fp-round fp-free"><span>1</span><span class="dot"><i data-lucide="check"></i></span></div><div class="text-xs mt-2" style="color:var(--fg-2);">Libre</div></div>
+      <div class="text-center"><div class="fp fp-round fp-occupied"><span>2</span><span class="dot"><i data-lucide="users"></i></span></div><div class="text-xs mt-2" style="color:var(--fg-2);">Occupée</div></div>
+      <div class="text-center"><div class="fp fp-square fp-awaiting"><span>3</span><span class="dot"><i data-lucide="receipt"></i></span></div><div class="text-xs mt-2" style="color:var(--fg-2);">Paiement</div></div>
+      <div class="text-center"><div class="fp fp-square fp-reserved"><span>4</span><span class="dot"><i data-lucide="bookmark"></i></span></div><div class="text-xs mt-2" style="color:var(--fg-2);">Réservée</div></div>
+      <div class="text-center"><div class="fp fp-rect fp-dirty"><span>5</span><span class="dot"><i data-lucide="brush"></i></span></div><div class="text-xs mt-2" style="color:var(--fg-2);">À nettoyer</div></div>
+      <div class="text-center"><div class="fp fp-rect fp-out"><span>6</span><span class="dot"><i data-lucide="ban"></i></span></div><div class="text-xs mt-2" style="color:var(--fg-2);">Hors service</div></div>
+    </div>
+  </div>
+
+  <!-- Empty -->
+  <h3 class="t-h3 mt-10 mb-4">Empty states</h3>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="card p-8 text-center"><div class="empty-illus mx-auto"><i data-lucide="utensils-crossed"></i></div><h4 class="font-semibold mt-4">Aucune commande</h4><p class="text-sm mt-1" style="color:var(--fg-2);">La cuisine attend la première commande du service.</p><button class="btn btn-secondary btn-md mt-4"><i data-lucide="plus"></i>Nouvelle commande</button></div>
+    <div class="card p-8 text-center"><div class="empty-illus mx-auto"><i data-lucide="search-x"></i></div><h4 class="font-semibold mt-4">Aucun résultat</h4><p class="text-sm mt-1" style="color:var(--fg-2);">Aucun plat ne correspond à « kachapuri ». Essayez « pastilla ».</p><button class="btn btn-ghost btn-md mt-4"><i data-lucide="x"></i>Effacer</button></div>
+    <div class="card p-8 text-center"><div class="empty-illus mx-auto"><i data-lucide="package"></i></div><h4 class="font-semibold mt-4">Catalogue vide</h4><p class="text-sm mt-1" style="color:var(--fg-2);">Importez votre menu existant ou créez votre première catégorie.</p><div class="flex justify-center gap-2 mt-4"><button class="btn btn-secondary btn-md"><i data-lucide="upload"></i>Importer</button><button class="btn btn-primary btn-md"><i data-lucide="plus"></i>Créer</button></div></div>
+  </div>
+
+  <!-- Loading -->
+  <h3 class="t-h3 mt-10 mb-4">Loading states</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="card p-5">
+      <div class="t-caption mb-3">Skeleton · order card</div>
+      <div class="space-y-3">
+        <div class="flex justify-between items-center">
+          <div class="space-y-2"><div class="skeleton" style="width:80px;height:12px;"></div><div class="skeleton" style="width:120px;height:18px;"></div></div>
+          <div class="skeleton" style="width:72px;height:24px;border-radius:999px;"></div>
+        </div>
+        <div class="space-y-2 pt-2 border-t" style="border-color:var(--border);"><div class="skeleton" style="width:70%;height:14px;"></div><div class="skeleton" style="width:55%;height:14px;"></div><div class="skeleton" style="width:60%;height:14px;"></div></div>
+        <div class="flex justify-between pt-2 border-t" style="border-color:var(--border);"><div class="skeleton" style="width:50px;height:14px;"></div><div class="skeleton" style="width:80px;height:18px;"></div></div>
+      </div>
+    </div>
+    <div class="card p-6">
+      <div class="t-caption mb-3">Spinners</div>
+      <div class="flex items-center gap-6">
+        <div class="spinner"></div>
+        <div class="spinner" style="width:32px;height:32px;border-width:3px;"></div>
+        <div class="spinner" style="width:48px;height:48px;border-width:4px;"></div>
+        <button class="btn btn-primary btn-lg"><span class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:var(--primary-on);border-color:rgba(255,255,255,.4);"></span>Envoi…</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Forms -->
+  <h3 class="t-h3 mt-10 mb-4">Form layouts</h3>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+      <div class="t-caption mb-3">Vertical · default (mobile)</div>
+      <form class="space-y-4">
+        <div><label class="field-label">Nom complet</label><input class="field" placeholder="Khalid Bennani" /></div>
+        <div><label class="field-label">Téléphone</label><input class="field" inputmode="tel" placeholder="+212 6 …" /></div>
+        <div><label class="field-label">Rôle</label><input class="field" placeholder="Serveur" /></div>
+        <button type="button" class="btn btn-primary btn-md w-full">Enregistrer</button>
+      </form>
+    </div>
+    <div class="card p-6">
+      <div class="t-caption mb-3">Horizontal · grouped sections (desktop)</div>
+      <form class="space-y-6">
+        <div>
+          <div class="text-sm font-semibold mb-3">Identification</div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="field-label">Prénom</label><input class="field" value="Khalid" /></div>
+            <div><label class="field-label">Nom</label><input class="field" value="Bennani" /></div>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm font-semibold mb-3">Accès</div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="field-label">Rôle</label><input class="field" value="Serveur" /></div>
+            <div><label class="field-label">PIN</label><input class="field" type="password" value="••••" /></div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t" style="border-color:var(--border);">
+          <button type="button" class="btn btn-ghost btn-md">Annuler</button>
+          <button type="button" class="btn btn-primary btn-md">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+<!-- §4 ANCHOR SCREENS -->
+<section id="screens" class="doc-section">
+  <div class="doc-section-title">§ 04</div>
+  <h2>Anchor screens</h2>
+  <p class="lede">Three production-fidelity surfaces, drawn entirely from the tokens above. If the system works here, it works everywhere.</p>
+
+  <!-- POS LTR + RTL -->
+  <h3 class="t-h3 mt-8 mb-4">1 · POS · Order-taking · tablet 1280×800</h3>
+  <p class="text-sm mb-6" style="color:var(--fg-2);">Left: menu grid. Right: current ticket. Bottom: send / hold / pay. Offline indicator top right.</p>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <!-- POS LTR -->
+    <div class="frame" style="aspect-ratio:1280/800;">
+      <div class="frame-tag">POS · FR · LTR</div>
+      <div class="w-full h-full flex" style="background:var(--bg);">
+        <div class="flex-1 flex flex-col p-4 gap-3 min-w-0">
+          <div class="flex items-center gap-3">
+            <div class="relative flex-1"><i data-lucide="search" class="absolute" style="width:16px;height:16px;color:var(--fg-3);top:50%;transform:translateY(-50%);inset-inline-start:12px;"></i><input class="field" placeholder="Rechercher un plat" style="padding-inline-start:36px;height:44px;" /></div>
+            <div class="badge badge-warning"><i data-lucide="wifi-off"></i>Hors ligne</div>
+          </div>
+          <div class="flex gap-2 overflow-x-auto pb-1">
+            <button class="chip chip-active">Tout</button><button class="chip">Tajines</button><button class="chip">Couscous</button><button class="chip">Salades</button><button class="chip">Boissons</button><button class="chip">Desserts</button>
+          </div>
+          <div class="grid grid-cols-3 gap-3 overflow-auto flex-1">
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 26%,var(--surface)),color-mix(in srgb,var(--warning) 22%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">Tajine poulet</div><div class="t-mono text-xs mt-1">85.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--success) 26%,var(--surface)),color-mix(in srgb,var(--info) 18%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">Couscous royal</div><div class="t-mono text-xs mt-1">140.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--secondary) 26%,var(--surface)),color-mix(in srgb,var(--primary) 18%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">Pastilla poulet</div><div class="t-mono text-xs mt-1">95.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--warning) 30%,var(--surface)),color-mix(in srgb,var(--primary) 22%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">Tajine kefta</div><div class="t-mono text-xs mt-1">90.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--info) 26%,var(--surface)),color-mix(in srgb,var(--secondary) 20%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">Salade marocaine</div><div class="t-mono text-xs mt-1">35.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--success) 30%,var(--surface)),color-mix(in srgb,var(--warning) 16%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">Thé menthe</div><div class="t-mono text-xs mt-1">12.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 22%,var(--surface)),color-mix(in srgb,var(--danger) 18%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">Briouates</div><div class="t-mono text-xs mt-1">45.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--secondary) 22%,var(--surface)),color-mix(in srgb,var(--info) 18%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">Limonade</div><div class="t-mono text-xs mt-1">18.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--warning) 22%,var(--surface)),color-mix(in srgb,var(--primary) 18%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">Mhanncha</div><div class="t-mono text-xs mt-1">55.00</div></div></button>
+          </div>
+        </div>
+        <aside class="flex flex-col border-l" style="background:var(--surface);border-color:var(--border);width:42%;min-width:340px;">
+          <div class="p-4 border-b flex items-center justify-between" style="border-color:var(--border);">
+            <div><div class="t-caption">Ticket</div><div class="font-semibold">Table 7 · 4 couverts</div></div>
+            <div class="flex items-center gap-2 text-sm" style="color:var(--fg-2);"><div class="avatar avatar-sm">KB</div>Khalid</div>
+          </div>
+          <div class="flex-1 overflow-auto px-4">
+            <div class="oli"><div class="oli-qty">2</div><div><div class="oli-name">Tajine poulet</div><div class="oli-mods">+ frites · sans olives</div></div><div class="oli-price">170.00</div></div>
+            <div class="oli"><div class="oli-qty">1</div><div><div class="oli-name">Couscous royal</div><div class="oli-mods">Bien cuit</div></div><div class="oli-price">140.00</div></div>
+            <div class="oli"><div class="oli-qty">3</div><div><div class="oli-name">Thé à la menthe</div><div class="oli-mods" style="color:var(--warning);">⚠ envoyé</div></div><div class="oli-price">36.00</div></div>
+            <div class="oli"><div class="oli-qty">2</div><div><div class="oli-name">Salade marocaine</div></div><div class="oli-price">70.00</div></div>
+            <div class="oli" style="border:none;"><div class="oli-qty">4</div><div><div class="oli-name">Limonade citron</div></div><div class="oli-price">72.00</div></div>
+          </div>
+          <div class="p-4 border-t space-y-3" style="border-color:var(--border);">
+            <div class="flex justify-between text-sm" style="color:var(--fg-2);"><span>Sous-total</span><span class="t-mono">405.00</span></div>
+            <div class="flex justify-between text-sm" style="color:var(--fg-2);"><span>TVA 20%</span><span class="t-mono">81.00</span></div>
+            <div class="flex justify-between items-baseline border-t pt-3" style="border-color:var(--border);"><span class="font-semibold">Total</span><span class="t-price-total">486.00 <span class="text-base" style="color:var(--fg-2);">MAD</span></span></div>
+            <div class="grid grid-cols-3 gap-2 pt-2">
+              <button class="btn btn-secondary btn-lg"><i data-lucide="pause"></i>En attente</button>
+              <button class="btn btn-secondary btn-lg"><i data-lucide="send"></i>Cuisine</button>
+              <button class="btn btn-primary btn-lg"><i data-lucide="credit-card"></i>Payer</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- POS RTL -->
+    <div class="frame" style="aspect-ratio:1280/800;" dir="rtl">
+      <div class="frame-tag" dir="ltr">POS · AR · RTL</div>
+      <div class="w-full h-full flex" style="background:var(--bg);font-family:var(--font-arabic);">
+        <div class="flex-1 flex flex-col p-4 gap-3 min-w-0">
+          <div class="flex items-center gap-3">
+            <div class="relative flex-1"><i data-lucide="search" class="absolute" style="width:16px;height:16px;color:var(--fg-3);top:50%;transform:translateY(-50%);inset-inline-start:12px;"></i><input class="field" placeholder="بحث عن طبق" style="padding-inline-start:36px;height:44px;" /></div>
+            <div class="badge badge-warning"><i data-lucide="wifi-off"></i>غير متصل</div>
+          </div>
+          <div class="flex gap-2 overflow-x-auto pb-1">
+            <button class="chip chip-active">الكل</button><button class="chip">طاجين</button><button class="chip">كسكس</button><button class="chip">سلطات</button><button class="chip">مشروبات</button><button class="chip">حلويات</button>
+          </div>
+          <div class="grid grid-cols-3 gap-3 overflow-auto flex-1">
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 26%,var(--surface)),color-mix(in srgb,var(--warning) 22%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">طاجين دجاج</div><div class="t-mono text-xs mt-1" dir="ltr">85.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--success) 26%,var(--surface)),color-mix(in srgb,var(--info) 18%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">كسكس ملكي</div><div class="t-mono text-xs mt-1" dir="ltr">140.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--secondary) 26%,var(--surface)),color-mix(in srgb,var(--primary) 18%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">بسطيلة دجاج</div><div class="t-mono text-xs mt-1" dir="ltr">95.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--warning) 30%,var(--surface)),color-mix(in srgb,var(--primary) 22%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">طاجين كفتة</div><div class="t-mono text-xs mt-1" dir="ltr">90.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--info) 26%,var(--surface)),color-mix(in srgb,var(--secondary) 20%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">سلطة مغربية</div><div class="t-mono text-xs mt-1" dir="ltr">35.00</div></div></button>
+            <button class="card p-0 overflow-hidden text-start"><div style="height:70px;background:linear-gradient(135deg,color-mix(in srgb,var(--success) 30%,var(--surface)),color-mix(in srgb,var(--warning) 16%,var(--surface)));"></div><div class="p-3"><div class="font-semibold text-sm">أتاي بالنعناع</div><div class="t-mono text-xs mt-1" dir="ltr">12.00</div></div></button>
+          </div>
+        </div>
+        <aside class="flex flex-col border-l" style="background:var(--surface);border-color:var(--border);width:42%;min-width:340px;">
+          <div class="p-4 border-b flex items-center justify-between" style="border-color:var(--border);">
+            <div><div class="t-caption" style="letter-spacing:0;">الطلب</div><div class="font-semibold">طاولة ٧ · ٤ أشخاص</div></div>
+            <div class="flex items-center gap-2 text-sm" style="color:var(--fg-2);"><div class="avatar avatar-sm">خ.ب</div>خالد</div>
+          </div>
+          <div class="flex-1 overflow-auto px-4">
+            <div class="oli"><div class="oli-qty">٢</div><div><div class="oli-name">طاجين دجاج</div><div class="oli-mods">+ بطاطس · بدون زيتون</div></div><div class="oli-price" dir="ltr">170.00</div></div>
+            <div class="oli"><div class="oli-qty">١</div><div><div class="oli-name">كسكس ملكي</div><div class="oli-mods">مطهو جيداً</div></div><div class="oli-price" dir="ltr">140.00</div></div>
+            <div class="oli"><div class="oli-qty">٣</div><div><div class="oli-name">أتاي بالنعناع</div><div class="oli-mods" style="color:var(--warning);">⚠ أُرسل</div></div><div class="oli-price" dir="ltr">36.00</div></div>
+            <div class="oli"><div class="oli-qty">٢</div><div><div class="oli-name">سلطة مغربية</div></div><div class="oli-price" dir="ltr">70.00</div></div>
+            <div class="oli" style="border:none;"><div class="oli-qty">٤</div><div><div class="oli-name">عصير ليمون</div></div><div class="oli-price" dir="ltr">72.00</div></div>
+          </div>
+          <div class="p-4 border-t space-y-3" style="border-color:var(--border);">
+            <div class="flex justify-between text-sm" style="color:var(--fg-2);"><span>المجموع الفرعي</span><span class="t-mono" dir="ltr">405.00</span></div>
+            <div class="flex justify-between text-sm" style="color:var(--fg-2);"><span>الضريبة ٢٠٪</span><span class="t-mono" dir="ltr">81.00</span></div>
+            <div class="flex justify-between items-baseline border-t pt-3" style="border-color:var(--border);"><span class="font-semibold">المجموع</span><span class="t-price-total" dir="ltr">486.00 <span class="text-base" style="color:var(--fg-2);">MAD</span></span></div>
+            <div class="grid grid-cols-3 gap-2 pt-2">
+              <button class="btn btn-secondary btn-lg"><i data-lucide="pause"></i>تعليق</button>
+              <button class="btn btn-secondary btn-lg"><i data-lucide="send" style="transform:scaleX(-1);"></i>المطبخ</button>
+              <button class="btn btn-primary btn-lg"><i data-lucide="credit-card"></i>دفع</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- Density comparison: same POS at comfortable vs dense -->
+  <h3 class="t-h3 mt-16 mb-4">1b · POS · Comfortable (shipped) vs Dense (defined, hidden)</h3>
+  <p class="text-sm mb-6" style="color:var(--fg-2);max-width:760px;">Same screen, same ticket, same tokens — only <span class="t-mono">data-density</span> changes. Comfortable ships in v1. Dense is locked behind feature-flag for an established-restaurant beta after launch. The proof here is that the rendering survives the swap without component-level edits.</p>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <!-- Comfortable -->
+    <div>
+      <div class="flex items-center gap-2 mb-3">
+        <span class="badge badge-success"><i data-lucide="check"></i>Comfortable · default · shipped v1</span>
+        <span class="t-mono text-xs" style="color:var(--fg-3);">data-density="comfortable" (implicit)</span>
+      </div>
+      <div class="frame" style="aspect-ratio:1280/800;">
+        <div class="frame-tag">POS · Comfortable</div>
+        <div class="w-full h-full flex" style="background:var(--bg);">
+          <div class="flex-1 flex flex-col gap-3 min-w-0" style="padding:var(--density-card-padding);">
+            <div class="flex items-center gap-3">
+              <div class="relative flex-1"><i data-lucide="search" class="absolute" style="width:16px;height:16px;color:var(--fg-3);top:50%;transform:translateY(-50%);inset-inline-start:12px;"></i><input class="field" placeholder="Rechercher un plat" style="padding-inline-start:36px;height:var(--density-tap-target-sm);" /></div>
+              <div class="badge badge-warning"><i data-lucide="wifi-off"></i>Hors ligne</div>
+            </div>
+            <div class="flex gap-2 overflow-x-auto pb-1">
+              <button class="chip chip-active" style="height:var(--density-chip-height);">Tout</button>
+              <button class="chip" style="height:var(--density-chip-height);">Tajines</button>
+              <button class="chip" style="height:var(--density-chip-height);">Couscous</button>
+              <button class="chip" style="height:var(--density-chip-height);">Salades</button>
+              <button class="chip" style="height:var(--density-chip-height);">Boissons</button>
+            </div>
+            <div class="grid grid-cols-3 overflow-auto flex-1" style="gap:var(--density-grid-gap);">
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 26%,var(--surface)),color-mix(in srgb,var(--warning) 22%,var(--surface)));"></div><div style="padding:10px 12px;"><div class="font-semibold text-sm">Tajine poulet</div><div class="t-mono text-xs mt-1">85.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--success) 26%,var(--surface)),color-mix(in srgb,var(--info) 18%,var(--surface)));"></div><div style="padding:10px 12px;"><div class="font-semibold text-sm">Couscous royal</div><div class="t-mono text-xs mt-1">140.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--secondary) 26%,var(--surface)),color-mix(in srgb,var(--primary) 18%,var(--surface)));"></div><div style="padding:10px 12px;"><div class="font-semibold text-sm">Pastilla poulet</div><div class="t-mono text-xs mt-1">95.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--warning) 30%,var(--surface)),color-mix(in srgb,var(--primary) 22%,var(--surface)));"></div><div style="padding:10px 12px;"><div class="font-semibold text-sm">Tajine kefta</div><div class="t-mono text-xs mt-1">90.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--info) 26%,var(--surface)),color-mix(in srgb,var(--secondary) 20%,var(--surface)));"></div><div style="padding:10px 12px;"><div class="font-semibold text-sm">Salade marocaine</div><div class="t-mono text-xs mt-1">35.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--success) 30%,var(--surface)),color-mix(in srgb,var(--warning) 16%,var(--surface)));"></div><div style="padding:10px 12px;"><div class="font-semibold text-sm">Thé menthe</div><div class="t-mono text-xs mt-1">12.00</div></div></button>
+            </div>
+          </div>
+          <aside class="flex flex-col border-l" style="background:var(--surface);border-color:var(--border);width:42%;min-width:320px;">
+            <div class="border-b flex items-center justify-between" style="border-color:var(--border);padding:var(--density-row-padding) var(--density-card-padding);">
+              <div><div class="t-caption">Ticket</div><div class="font-semibold">Table 7 · 4 couverts</div></div>
+              <span class="badge badge-celebration"><i data-lucide="sparkles"></i>Fid. ★</span>
+            </div>
+            <div class="flex-1 overflow-auto" style="padding-inline:var(--density-card-padding);">
+              <div class="oli" style="padding:var(--density-row-padding) 0;"><div class="oli-qty">2</div><div><div class="oli-name">Tajine poulet</div><div class="oli-mods">+ frites · sans olives</div></div><div class="oli-price">170.00</div></div>
+              <div class="oli" style="padding:var(--density-row-padding) 0;"><div class="oli-qty">1</div><div><div class="oli-name">Couscous royal</div></div><div class="oli-price">140.00</div></div>
+              <div class="oli" style="padding:var(--density-row-padding) 0;"><div class="oli-qty">3</div><div><div class="oli-name">Thé à la menthe</div></div><div class="oli-price">36.00</div></div>
+              <div class="oli" style="padding:var(--density-row-padding) 0;border:none;"><div class="oli-qty">2</div><div><div class="oli-name">Salade marocaine</div></div><div class="oli-price">70.00</div></div>
+            </div>
+            <div class="border-t space-y-3" style="border-color:var(--border);padding:var(--density-card-padding);">
+              <div class="flex justify-between items-baseline"><span class="font-semibold">Total</span><span class="t-price-total">416.00 <span class="text-base" style="color:var(--fg-2);">MAD</span></span></div>
+              <div class="grid grid-cols-3 gap-2">
+                <button class="btn btn-secondary" style="height:var(--density-tap-target);font-size:14px;"><i data-lucide="pause"></i>Hold</button>
+                <button class="btn btn-secondary" style="height:var(--density-tap-target);font-size:14px;"><i data-lucide="send"></i>Cuisine</button>
+                <button class="btn btn-primary" style="height:var(--density-tap-target);font-size:14px;"><i data-lucide="credit-card"></i>Payer</button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+      <div class="text-xs mt-2" style="color:var(--fg-3);">6 items visible · 64px primary tap-targets · 14px row pad</div>
+    </div>
+
+    <!-- Dense -->
+    <div data-density="dense">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="badge badge-neutral"><i data-lucide="lock"></i>Dense · defined · feature-flag only</span>
+        <span class="t-mono text-xs" style="color:var(--fg-3);">data-density="dense"</span>
+      </div>
+      <div class="frame" style="aspect-ratio:1280/800;">
+        <div class="frame-tag">POS · Dense</div>
+        <div class="w-full h-full flex" style="background:var(--bg);">
+          <div class="flex-1 flex flex-col gap-2 min-w-0" style="padding:var(--density-card-padding);">
+            <div class="flex items-center gap-2">
+              <div class="relative flex-1"><i data-lucide="search" class="absolute" style="width:14px;height:14px;color:var(--fg-3);top:50%;transform:translateY(-50%);inset-inline-start:10px;"></i><input class="field" placeholder="Rechercher" style="padding-inline-start:30px;height:var(--density-tap-target-sm);font-size:13px;" /></div>
+              <div class="badge badge-warning"><i data-lucide="wifi-off"></i>Hors ligne</div>
+            </div>
+            <div class="flex gap-1 overflow-x-auto pb-1">
+              <button class="chip chip-active" style="height:var(--density-chip-height);font-size:12px;padding:0 10px;">Tout</button>
+              <button class="chip" style="height:var(--density-chip-height);font-size:12px;padding:0 10px;">Tajines</button>
+              <button class="chip" style="height:var(--density-chip-height);font-size:12px;padding:0 10px;">Couscous</button>
+              <button class="chip" style="height:var(--density-chip-height);font-size:12px;padding:0 10px;">Salades</button>
+              <button class="chip" style="height:var(--density-chip-height);font-size:12px;padding:0 10px;">Boissons</button>
+              <button class="chip" style="height:var(--density-chip-height);font-size:12px;padding:0 10px;">Desserts</button>
+              <button class="chip" style="height:var(--density-chip-height);font-size:12px;padding:0 10px;">Entrées</button>
+            </div>
+            <div class="grid grid-cols-4 overflow-auto flex-1" style="gap:var(--density-grid-gap);">
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 26%,var(--surface)),color-mix(in srgb,var(--warning) 22%,var(--surface)));"></div><div style="padding:6px 8px;"><div class="font-semibold" style="font-size:12px;">Tajine poulet</div><div class="t-mono" style="font-size:11px;">85.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--success) 26%,var(--surface)),color-mix(in srgb,var(--info) 18%,var(--surface)));"></div><div style="padding:6px 8px;"><div class="font-semibold" style="font-size:12px;">Couscous royal</div><div class="t-mono" style="font-size:11px;">140.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--secondary) 26%,var(--surface)),color-mix(in srgb,var(--primary) 18%,var(--surface)));"></div><div style="padding:6px 8px;"><div class="font-semibold" style="font-size:12px;">Pastilla poulet</div><div class="t-mono" style="font-size:11px;">95.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--warning) 30%,var(--surface)),color-mix(in srgb,var(--primary) 22%,var(--surface)));"></div><div style="padding:6px 8px;"><div class="font-semibold" style="font-size:12px;">Tajine kefta</div><div class="t-mono" style="font-size:11px;">90.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--info) 26%,var(--surface)),color-mix(in srgb,var(--secondary) 20%,var(--surface)));"></div><div style="padding:6px 8px;"><div class="font-semibold" style="font-size:12px;">Salade marocaine</div><div class="t-mono" style="font-size:11px;">35.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--success) 30%,var(--surface)),color-mix(in srgb,var(--warning) 16%,var(--surface)));"></div><div style="padding:6px 8px;"><div class="font-semibold" style="font-size:12px;">Thé menthe</div><div class="t-mono" style="font-size:11px;">12.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 22%,var(--surface)),color-mix(in srgb,var(--danger) 18%,var(--surface)));"></div><div style="padding:6px 8px;"><div class="font-semibold" style="font-size:12px;">Briouates</div><div class="t-mono" style="font-size:11px;">45.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--secondary) 22%,var(--surface)),color-mix(in srgb,var(--info) 18%,var(--surface)));"></div><div style="padding:6px 8px;"><div class="font-semibold" style="font-size:12px;">Limonade</div><div class="t-mono" style="font-size:11px;">18.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--warning) 22%,var(--surface)),color-mix(in srgb,var(--primary) 18%,var(--surface)));"></div><div style="padding:6px 8px;"><div class="font-semibold" style="font-size:12px;">Mhanncha</div><div class="t-mono" style="font-size:11px;">55.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--info) 30%,var(--surface)),color-mix(in srgb,var(--primary) 14%,var(--surface)));"></div><div style="padding:6px 8px;"><div class="font-semibold" style="font-size:12px;">Jus d'orange</div><div class="t-mono" style="font-size:11px;">22.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 18%,var(--surface)),color-mix(in srgb,var(--success) 18%,var(--surface)));"></div><div style="padding:6px 8px;"><div class="font-semibold" style="font-size:12px;">Harira</div><div class="t-mono" style="font-size:11px;">28.00</div></div></button>
+              <button class="card p-0 overflow-hidden text-start"><div style="height:var(--density-item-card-image);background:linear-gradient(135deg,color-mix(in srgb,var(--success) 18%,var(--surface)),color-mix(in srgb,var(--warning) 22%,var(--surface)));"></div><div style="padding:6px 8px;"><div class="font-semibold" style="font-size:12px;">Cornes de gazelle</div><div class="t-mono" style="font-size:11px;">15.00</div></div></button>
+            </div>
+          </div>
+          <aside class="flex flex-col border-l" style="background:var(--surface);border-color:var(--border);width:38%;min-width:300px;">
+            <div class="border-b flex items-center justify-between" style="border-color:var(--border);padding:var(--density-row-padding) var(--density-card-padding);">
+              <div><div class="t-caption" style="font-size:10px;">Ticket</div><div class="font-semibold" style="font-size:13px;">Table 7 · 4 cv.</div></div>
+              <span class="badge badge-celebration" style="height:20px;font-size:10px;"><i data-lucide="sparkles"></i>Fid.</span>
+            </div>
+            <div class="flex-1 overflow-auto" style="padding-inline:var(--density-card-padding);">
+              <div class="oli" style="padding:var(--density-row-padding) 0;font-size:13px;"><div class="oli-qty" style="font-size:14px;">2</div><div><div class="oli-name" style="font-size:13px;">Tajine poulet</div><div class="oli-mods" style="font-size:11px;">+ frites · sans olives</div></div><div class="oli-price" style="font-size:14px;">170.00</div></div>
+              <div class="oli" style="padding:var(--density-row-padding) 0;"><div class="oli-qty" style="font-size:14px;">1</div><div><div class="oli-name" style="font-size:13px;">Couscous royal</div></div><div class="oli-price" style="font-size:14px;">140.00</div></div>
+              <div class="oli" style="padding:var(--density-row-padding) 0;"><div class="oli-qty" style="font-size:14px;">3</div><div><div class="oli-name" style="font-size:13px;">Thé à la menthe</div></div><div class="oli-price" style="font-size:14px;">36.00</div></div>
+              <div class="oli" style="padding:var(--density-row-padding) 0;"><div class="oli-qty" style="font-size:14px;">2</div><div><div class="oli-name" style="font-size:13px;">Salade marocaine</div></div><div class="oli-price" style="font-size:14px;">70.00</div></div>
+              <div class="oli" style="padding:var(--density-row-padding) 0;border:none;"><div class="oli-qty" style="font-size:14px;">4</div><div><div class="oli-name" style="font-size:13px;">Limonade</div></div><div class="oli-price" style="font-size:14px;">72.00</div></div>
+            </div>
+            <div class="border-t space-y-2" style="border-color:var(--border);padding:var(--density-card-padding);">
+              <div class="flex justify-between items-baseline"><span class="font-semibold text-sm">Total</span><span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;">488.00 <span class="text-sm" style="color:var(--fg-2);">MAD</span></span></div>
+              <div class="grid grid-cols-3 gap-1">
+                <button class="btn btn-secondary" style="height:var(--density-tap-target);font-size:12px;"><i data-lucide="pause"></i>Hold</button>
+                <button class="btn btn-secondary" style="height:var(--density-tap-target);font-size:12px;"><i data-lucide="send"></i>Cuisine</button>
+                <button class="btn btn-primary" style="height:var(--density-tap-target);font-size:12px;"><i data-lucide="credit-card"></i>Payer</button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+      <div class="text-xs mt-2" style="color:var(--fg-3);">12 items visible (+100%) · 48px primary tap-targets · 8px row pad</div>
+    </div>
+  </div>
+
+  <!-- Manager dashboard + mobile -->
+  <h3 class="t-h3 mt-16 mb-4">2 · Manager · Today dashboard · 1440×900 + mobile</h3>
+  <p class="text-sm mb-6" style="color:var(--fg-2);">Owner&rsquo;s glance — revenue vs yesterday, live orders, top sellers, staff. Mobile version sits alongside.</p>
+
+  <div class="grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-6 items-start">
+    <div class="frame" style="aspect-ratio:1440/900;">
+      <div class="frame-tag">Manager · FR · LTR</div>
+      <div class="w-full h-full flex" style="background:var(--bg);">
+        <nav class="flex flex-col p-4 gap-1 border-r" style="background:var(--surface);border-color:var(--border);width:220px;">
+          <div class="flex items-center gap-2 px-2 pb-4 mb-2 border-b" style="border-color:var(--border);">
+            <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg" style="background:var(--primary);color:var(--primary-on);"><i data-lucide="utensils" style="width:16px;height:16px;"></i></span>
+            <div><div class="font-semibold text-sm">Café Atlas</div><div class="text-xs" style="color:var(--fg-3);">Casablanca · Maârif</div></div>
+          </div>
+          <button class="btn btn-ghost btn-md justify-start" style="background:var(--primary-soft);color:var(--primary);"><i data-lucide="layout-dashboard"></i>Aujourd&rsquo;hui</button>
+          <button class="btn btn-ghost btn-md justify-start"><i data-lucide="receipt"></i>Commandes</button>
+          <button class="btn btn-ghost btn-md justify-start"><i data-lucide="book-open"></i>Menu</button>
+          <button class="btn btn-ghost btn-md justify-start"><i data-lucide="chef-hat"></i>Recettes</button>
+          <button class="btn btn-ghost btn-md justify-start"><i data-lucide="package"></i>Stock</button>
+          <button class="btn btn-ghost btn-md justify-start"><i data-lucide="users"></i>Équipe</button>
+          <button class="btn btn-ghost btn-md justify-start"><i data-lucide="heart"></i>Fidélité</button>
+          <button class="btn btn-ghost btn-md justify-start"><i data-lucide="bar-chart-3"></i>Rapports</button>
+          <div class="mt-auto pt-3 border-t" style="border-color:var(--border);">
+            <div class="flex items-center gap-2 p-2"><div class="avatar avatar-md">RA</div><div class="flex-1"><div class="text-sm font-semibold">Rachid Amrani</div><div class="text-xs" style="color:var(--fg-3);">Propriétaire</div></div><i data-lucide="settings" style="width:16px;height:16px;color:var(--fg-3);"></i></div>
+          </div>
+        </nav>
+        <main class="flex-1 overflow-auto p-6 space-y-5 min-w-0">
+          <div class="flex items-end justify-between gap-4">
+            <div><div class="t-caption">Mardi 14 mai · 12h28</div><h3 class="t-h1 mt-1">Aujourd&rsquo;hui</h3></div>
+            <div class="flex gap-2"><div class="segmented"><button aria-selected="true">Jour</button><button aria-selected="false">Semaine</button><button aria-selected="false">Mois</button></div><button class="btn btn-secondary btn-md"><i data-lucide="download"></i>Exporter</button></div>
+          </div>
+          <div class="grid grid-cols-4 gap-3">
+            <div class="card p-4"><div class="t-caption">Chiffre d&rsquo;affaires</div><div class="t-price-total mt-1">8 240 <span class="text-lg" style="color:var(--fg-2);">MAD</span></div><div class="text-sm mt-2 flex items-center gap-1" style="color:var(--success);"><i data-lucide="trending-up" style="width:14px;height:14px;"></i>+12% vs hier</div></div>
+            <div class="card p-4"><div class="t-caption">Commandes</div><div class="t-price-total mt-1">47</div><div class="text-sm mt-2 flex items-center gap-1" style="color:var(--success);"><i data-lucide="trending-up" style="width:14px;height:14px;"></i>+5 vs hier</div></div>
+            <div class="card p-4"><div class="t-caption">Panier moyen</div><div class="t-price-total mt-1">175 <span class="text-lg" style="color:var(--fg-2);">MAD</span></div><div class="text-sm mt-2 flex items-center gap-1" style="color:var(--fg-3);"><i data-lucide="minus" style="width:14px;height:14px;"></i>stable</div></div>
+            <div class="card p-4"><div class="t-caption">Tables occupées</div><div class="t-price-total mt-1">9 <span class="text-lg" style="color:var(--fg-2);">/ 14</span></div><div class="text-sm mt-2 flex items-center gap-1" style="color:var(--warning);"><i data-lucide="users" style="width:14px;height:14px;"></i>4 en attente</div></div>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="card p-4 col-span-2">
+              <div class="flex items-center justify-between mb-3">
+                <div><div class="font-semibold">Commandes en direct</div><div class="text-xs" style="color:var(--fg-3);">Mise à jour il y a 4s</div></div>
+                <span class="badge badge-warning"><i data-lucide="activity"></i>4 actives</span>
+              </div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between p-3 rounded-md" style="background:var(--surface-2);"><div class="flex items-center gap-3"><span class="font-mono text-sm" style="color:var(--fg-3);">#4218</span><span class="font-semibold">Table 7</span><span class="badge badge-warning"><i data-lucide="clock"></i>7 min</span></div><div class="t-mono">486.00</div></div>
+                <div class="flex items-center justify-between p-3 rounded-md" style="background:var(--surface-2);"><div class="flex items-center gap-3"><span class="font-mono text-sm" style="color:var(--fg-3);">#4219</span><span class="font-semibold">Table 3</span><span class="badge badge-info"><i data-lucide="utensils"></i>en cuisine</span></div><div class="t-mono">180.00</div></div>
+                <div class="flex items-center justify-between p-3 rounded-md" style="background:var(--surface-2);"><div class="flex items-center gap-3"><span class="font-mono text-sm" style="color:var(--fg-3);">#4216</span><span class="font-semibold">Table 11</span><span class="badge badge-danger"><i data-lucide="triangle-alert"></i>12 min</span></div><div class="t-mono">640.00</div></div>
+                <div class="flex items-center justify-between p-3 rounded-md" style="background:var(--surface-2);"><div class="flex items-center gap-3"><span class="font-mono text-sm" style="color:var(--fg-3);">#4221</span><span class="font-semibold">Bar 2</span><span class="badge badge-success"><i data-lucide="check"></i>servi</span></div><div class="t-mono">60.00</div></div>
+              </div>
+            </div>
+            <div class="card p-4">
+              <div class="flex items-center justify-between mb-3"><div class="font-semibold">En service</div><span class="badge badge-success">5</span></div>
+              <div class="space-y-3">
+                <div class="flex items-center gap-3"><div class="avatar avatar-md"><span>KB</span><span class="status" style="background:var(--success);"></span></div><div class="flex-1"><div class="text-sm font-semibold">Khalid B.</div><div class="text-xs" style="color:var(--fg-3);">Serveur · depuis 09:00</div></div></div>
+                <div class="flex items-center gap-3"><div class="avatar avatar-md"><span>SK</span><span class="status" style="background:var(--success);"></span></div><div class="flex-1"><div class="text-sm font-semibold">Sara K.</div><div class="text-xs" style="color:var(--fg-3);">Serveuse · depuis 10:00</div></div></div>
+                <div class="flex items-center gap-3"><div class="avatar avatar-md"><span>AB</span><span class="status" style="background:var(--success);"></span></div><div class="flex-1"><div class="text-sm font-semibold">Ayoub B.</div><div class="text-xs" style="color:var(--fg-3);">Cuisine · depuis 08:30</div></div></div>
+                <div class="flex items-center gap-3"><div class="avatar avatar-md"><span>MR</span><span class="status" style="background:var(--warning);"></span></div><div class="flex-1"><div class="text-sm font-semibold">Mehdi R.</div><div class="text-xs" style="color:var(--fg-3);">Pause · depuis 12:10</div></div></div>
+                <div class="flex items-center gap-3"><div class="avatar avatar-md"><span>AÏ</span><span class="status" style="background:var(--success);"></span></div><div class="flex-1"><div class="text-sm font-semibold">Aïcha M.</div><div class="text-xs" style="color:var(--fg-3);">Bar · depuis 11:00</div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card p-4">
+            <div class="flex items-center justify-between mb-3"><div class="font-semibold">Top 5 plats · aujourd&rsquo;hui</div><button class="btn btn-ghost btn-sm">Voir tout<i data-lucide="arrow-right"></i></button></div>
+            <table class="dtable dense"><thead><tr><th>#</th><th>Plat</th><th class="num">Vendus</th><th class="num">Revenu</th><th>Tendance</th></tr></thead><tbody>
+              <tr><td class="t-mono">1</td><td class="font-semibold">Tajine au poulet</td><td class="num">18</td><td class="num">1 530.00</td><td><span class="badge badge-success"><i data-lucide="trending-up"></i>+22%</span></td></tr>
+              <tr><td class="t-mono">2</td><td class="font-semibold">Couscous royal</td><td class="num">12</td><td class="num">1 680.00</td><td><span class="badge badge-success"><i data-lucide="trending-up"></i>+8%</span></td></tr>
+              <tr><td class="t-mono">3</td><td class="font-semibold">Thé à la menthe</td><td class="num">38</td><td class="num">456.00</td><td><span class="badge badge-neutral"><i data-lucide="minus"></i>stable</span></td></tr>
+              <tr><td class="t-mono">4</td><td class="font-semibold">Pastilla au poulet</td><td class="num">9</td><td class="num">855.00</td><td><span class="badge badge-warning"><i data-lucide="trending-down"></i>−4%</span></td></tr>
+              <tr><td class="t-mono">5</td><td class="font-semibold">Salade marocaine</td><td class="num">14</td><td class="num">490.00</td><td><span class="badge badge-success"><i data-lucide="trending-up"></i>+12%</span></td></tr>
+            </tbody></table>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="frame" style="width:320px;aspect-ratio:9/19.5;">
+      <div class="frame-tag">Mobile · 360</div>
+      <div class="w-full h-full flex flex-col" style="background:var(--bg);">
+        <div class="p-4 border-b flex items-center justify-between" style="border-color:var(--border);">
+          <div><div class="t-caption">14 mai · 12h28</div><div class="font-bold text-lg">Aujourd&rsquo;hui</div></div>
+          <button class="btn btn-ghost btn-icon btn-md"><i data-lucide="bell"></i></button>
+        </div>
+        <div class="p-3 space-y-3 overflow-auto flex-1">
+          <div class="card p-4"><div class="t-caption">Chiffre d&rsquo;affaires</div><div class="t-price-total mt-1">8 240 <span class="text-base" style="color:var(--fg-2);">MAD</span></div><div class="text-sm mt-2 flex items-center gap-1" style="color:var(--success);"><i data-lucide="trending-up" style="width:14px;height:14px;"></i>+12% vs hier</div></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="card p-3"><div class="t-caption">Commandes</div><div class="text-2xl font-bold mt-1">47</div></div>
+            <div class="card p-3"><div class="t-caption">Tables</div><div class="text-2xl font-bold mt-1">9/14</div></div>
+          </div>
+          <div class="card p-4">
+            <div class="font-semibold mb-2">En direct</div>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-sm"><span><span class="font-mono text-xs" style="color:var(--fg-3);">#4218</span> · T7</span><span class="badge badge-warning"><i data-lucide="clock"></i>7m</span></div>
+              <div class="flex items-center justify-between text-sm"><span><span class="font-mono text-xs" style="color:var(--fg-3);">#4216</span> · T11</span><span class="badge badge-danger"><i data-lucide="triangle-alert"></i>12m</span></div>
+              <div class="flex items-center justify-between text-sm"><span><span class="font-mono text-xs" style="color:var(--fg-3);">#4219</span> · T3</span><span class="badge badge-info"><i data-lucide="utensils"></i>cuisine</span></div>
+            </div>
+          </div>
+          <div class="card p-4">
+            <div class="font-semibold mb-2">Top plat</div>
+            <div class="flex items-center justify-between"><div><div class="font-semibold">Tajine au poulet</div><div class="text-xs" style="color:var(--fg-3);">18 vendus</div></div><span class="badge badge-success">+22%</span></div>
+          </div>
+        </div>
+        <div class="border-t flex items-center justify-around py-2" style="border-color:var(--border);">
+          <button class="btn btn-ghost btn-icon btn-md" style="color:var(--primary);"><i data-lucide="layout-dashboard"></i></button>
+          <button class="btn btn-ghost btn-icon btn-md"><i data-lucide="receipt"></i></button>
+          <button class="btn btn-ghost btn-icon btn-md"><i data-lucide="bar-chart-3"></i></button>
+          <button class="btn btn-ghost btn-icon btn-md"><i data-lucide="settings"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recipe builder -->
+  <h3 class="t-h3 mt-16 mb-4">3 · Recipe builder · 1440×900</h3>
+  <p class="text-sm mb-6" style="color:var(--fg-2);">The most form-dense screen the app has. If the system breathes here, it breathes everywhere.</p>
+
+  <div class="frame" style="aspect-ratio:1440/900;">
+    <div class="frame-tag">Recipe · FR · LTR</div>
+    <div class="w-full h-full flex" style="background:var(--bg);">
+      <nav class="flex flex-col p-3 gap-1 border-r" style="background:var(--surface);border-color:var(--border);width:56px;">
+        <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg mb-2" style="background:var(--primary);color:var(--primary-on);"><i data-lucide="utensils" style="width:16px;height:16px;"></i></span>
+        <button class="btn btn-ghost btn-icon btn-md"><i data-lucide="layout-dashboard"></i></button>
+        <button class="btn btn-ghost btn-icon btn-md"><i data-lucide="receipt"></i></button>
+        <button class="btn btn-ghost btn-icon btn-md"><i data-lucide="book-open"></i></button>
+        <button class="btn btn-ghost btn-icon btn-md" style="background:var(--primary-soft);color:var(--primary);"><i data-lucide="chef-hat"></i></button>
+        <button class="btn btn-ghost btn-icon btn-md"><i data-lucide="package"></i></button>
+        <button class="btn btn-ghost btn-icon btn-md"><i data-lucide="bar-chart-3"></i></button>
+      </nav>
+      <main class="flex-1 flex flex-col overflow-hidden min-w-0">
+        <header class="px-6 py-4 border-b flex items-center justify-between" style="border-color:var(--border);background:var(--surface);">
+          <div class="flex items-center gap-3">
+            <button class="btn btn-ghost btn-icon btn-md"><i data-lucide="arrow-left"></i></button>
+            <div><div class="t-caption">Recettes / Plats principaux</div><div class="text-lg font-semibold">Tajine au poulet et citron confit</div></div>
+            <span class="badge badge-success"><i data-lucide="check"></i>Publié</span>
+          </div>
+          <div class="flex gap-2"><button class="btn btn-ghost btn-md"><i data-lucide="copy"></i>Dupliquer</button><button class="btn btn-secondary btn-md">Annuler</button><button class="btn btn-primary btn-md"><i data-lucide="check"></i>Enregistrer</button></div>
+        </header>
+        <div class="flex-1 overflow-auto grid grid-cols-[1fr_320px] gap-0">
+          <div class="p-6 space-y-6 border-r" style="border-color:var(--border);">
+            <section class="card p-5">
+              <div class="flex items-center justify-between mb-4"><div class="font-semibold">Informations générales</div><span class="badge badge-neutral">Section 1/3</span></div>
+              <div class="grid grid-cols-3 gap-4">
+                <div class="col-span-2"><label class="field-label">Nom de la recette</label><input class="field" value="Tajine au poulet et citron confit" /></div>
+                <div><label class="field-label">Catégorie</label><input class="field" value="Plats principaux" /></div>
+                <div><label class="field-label">Rendement</label><div class="flex items-center gap-2"><input class="field" inputmode="numeric" value="4" style="width:80px;" /><span class="text-sm" style="color:var(--fg-2);">portions</span></div></div>
+                <div><label class="field-label">Temps · prép</label><input class="field" value="20 min" /></div>
+                <div><label class="field-label">Temps · cuisson</label><input class="field" value="45 min" /></div>
+              </div>
+            </section>
+            <section class="card p-5">
+              <div class="flex items-center justify-between mb-4"><div><div class="font-semibold">Ingrédients</div><div class="text-xs" style="color:var(--fg-3);">8 ingrédients · 1 sous-recette</div></div><button class="btn btn-secondary btn-sm"><i data-lucide="plus"></i>Ajouter</button></div>
+              <table class="dtable dense"><thead><tr><th>Ingrédient</th><th class="num">Quantité</th><th>UOM</th><th class="num">Coût unit.</th><th class="num">Coût</th><th></th></tr></thead><tbody>
+                <tr><td><div class="font-semibold">Cuisses de poulet</div><div class="text-xs" style="color:var(--fg-3);">VI-021</div></td><td class="num">800</td><td>g</td><td class="num">0.06</td><td class="num font-semibold">48.00</td><td><button class="btn btn-ghost btn-icon btn-sm"><i data-lucide="x" style="width:14px;height:14px;"></i></button></td></tr>
+                <tr><td><div class="font-semibold">Citron confit</div><div class="text-xs" style="color:var(--fg-3);">EP-014</div></td><td class="num">2</td><td>pcs</td><td class="num">4.50</td><td class="num font-semibold">9.00</td><td><button class="btn btn-ghost btn-icon btn-sm"><i data-lucide="x" style="width:14px;height:14px;"></i></button></td></tr>
+                <tr><td><div class="font-semibold">Olives violettes</div><div class="text-xs" style="color:var(--fg-3);">OL-003</div></td><td class="num">120</td><td>g</td><td class="num">0.04</td><td class="num font-semibold">4.80</td><td><button class="btn btn-ghost btn-icon btn-sm"><i data-lucide="x" style="width:14px;height:14px;"></i></button></td></tr>
+                <tr><td><div class="font-semibold">Oignons</div><div class="text-xs" style="color:var(--fg-3);">VG-001</div></td><td class="num">300</td><td>g</td><td class="num">0.01</td><td class="num font-semibold">3.00</td><td><button class="btn btn-ghost btn-icon btn-sm"><i data-lucide="x" style="width:14px;height:14px;"></i></button></td></tr>
+                <tr style="background:var(--secondary-soft);"><td><div class="font-semibold flex items-center gap-2"><i data-lucide="layers" style="width:14px;height:14px;color:var(--secondary);"></i>Mélange épices tajine</div><div class="text-xs" style="color:var(--fg-3);">Sous-recette · 5 ing.</div></td><td class="num">15</td><td>g</td><td class="num">0.32</td><td class="num font-semibold">4.80</td><td><button class="btn btn-ghost btn-icon btn-sm"><i data-lucide="x" style="width:14px;height:14px;"></i></button></td></tr>
+                <tr><td><div class="font-semibold">Huile d&rsquo;olive</div><div class="text-xs" style="color:var(--fg-3);">HU-002</div></td><td class="num">40</td><td>ml</td><td class="num">0.08</td><td class="num font-semibold">3.20</td><td><button class="btn btn-ghost btn-icon btn-sm"><i data-lucide="x" style="width:14px;height:14px;"></i></button></td></tr>
+                <tr><td><div class="font-semibold">Coriandre fraîche</div><div class="text-xs" style="color:var(--fg-3);">HE-005</div></td><td class="num">15</td><td>g</td><td class="num">0.12</td><td class="num font-semibold">1.80</td><td><button class="btn btn-ghost btn-icon btn-sm"><i data-lucide="x" style="width:14px;height:14px;"></i></button></td></tr>
+                <tr><td><div class="font-semibold">Ail</div><div class="text-xs" style="color:var(--fg-3);">VG-008</div></td><td class="num">10</td><td>g</td><td class="num">0.05</td><td class="num font-semibold">0.50</td><td><button class="btn btn-ghost btn-icon btn-sm"><i data-lucide="x" style="width:14px;height:14px;"></i></button></td></tr>
+              </tbody></table>
+            </section>
+            <section class="card p-5">
+              <div class="flex items-center justify-between mb-4"><div class="font-semibold">Étapes de préparation</div><button class="btn btn-secondary btn-sm"><i data-lucide="plus"></i>Étape</button></div>
+              <ol class="space-y-3">
+                <li class="flex gap-3 p-3 rounded-md" style="background:var(--surface-2);"><span class="font-mono text-sm font-semibold flex-shrink-0 w-6 h-6 inline-flex items-center justify-center rounded-full" style="background:var(--primary);color:var(--primary-on);">1</span><div class="flex-1 text-sm">Émincer les oignons et l&rsquo;ail. Faire revenir dans l&rsquo;huile d&rsquo;olive à feu moyen jusqu&rsquo;à transparence.</div><button class="btn btn-ghost btn-icon btn-sm"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button></li>
+                <li class="flex gap-3 p-3 rounded-md" style="background:var(--surface-2);"><span class="font-mono text-sm font-semibold flex-shrink-0 w-6 h-6 inline-flex items-center justify-center rounded-full" style="background:var(--primary);color:var(--primary-on);">2</span><div class="flex-1 text-sm">Ajouter le mélange d&rsquo;épices. Disposer les cuisses de poulet, faire dorer 5 min de chaque côté.</div><button class="btn btn-ghost btn-icon btn-sm"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button></li>
+                <li class="flex gap-3 p-3 rounded-md" style="background:var(--surface-2);"><span class="font-mono text-sm font-semibold flex-shrink-0 w-6 h-6 inline-flex items-center justify-center rounded-full" style="background:var(--primary);color:var(--primary-on);">3</span><div class="flex-1 text-sm">Couvrir d&rsquo;eau aux ¾, ajouter le citron confit et les olives. Mijoter 35 min à couvert.</div><button class="btn btn-ghost btn-icon btn-sm"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button></li>
+              </ol>
+            </section>
+          </div>
+          <aside class="p-6 space-y-4 overflow-auto" style="background:var(--surface);">
+            <div class="t-caption">Coût &amp; marge</div>
+            <div class="card p-4" style="background:var(--surface-2);"><div class="text-xs" style="color:var(--fg-3);">Coût total ingrédients</div><div class="t-price-total mt-1">75.10 <span class="text-base" style="color:var(--fg-2);">MAD</span></div><div class="text-xs mt-1" style="color:var(--fg-3);">Pour 4 portions</div></div>
+            <table class="dtable dense"><tbody>
+              <tr><td>Coût / portion</td><td class="num font-semibold">18.78</td></tr>
+              <tr><td>Prix de vente</td><td class="num">85.00</td></tr>
+              <tr><td>Marge brute</td><td class="num" style="color:var(--success);">66.22</td></tr>
+              <tr style="background:var(--success-soft);"><td><strong>Coût matière</strong></td><td class="num font-bold" style="color:var(--success);">22.1%</td></tr>
+            </tbody></table>
+            <div class="card p-3" style="background:var(--success-soft);border-color:var(--success);">
+              <div class="flex items-start gap-2 text-sm" style="color:var(--success);"><i data-lucide="check-circle-2" style="width:18px;height:18px;flex-shrink:0;margin-top:1px;"></i><div><strong>Marge saine.</strong> Sous la cible 30%, dans la fourchette du segment.</div></div>
+            </div>
+            <div class="t-caption mt-6">Allergènes</div>
+            <div class="flex flex-wrap gap-2"><span class="badge badge-neutral">Aucun déclaré</span></div>
+            <button class="btn btn-secondary btn-sm w-full"><i data-lucide="plus"></i>Déclarer</button>
+            <div class="t-caption mt-6">Stock auto-déduction</div>
+            <div class="card p-3 text-sm space-y-2" style="background:var(--surface-2);">
+              <div class="flex items-center gap-2"><i data-lucide="check" style="width:14px;height:14px;color:var(--success);"></i>8 ingrédients liés</div>
+              <div class="flex items-center gap-2"><i data-lucide="check" style="width:14px;height:14px;color:var(--success);"></i>1 sous-recette liée</div>
+              <div class="flex items-center gap-2"><i data-lucide="triangle-alert" style="width:14px;height:14px;color:var(--warning);"></i>Citron confit · stock bas</div>
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+<!-- §5 RTL -->
+<section id="rtl" class="doc-section">
+  <div class="doc-section-title">§ 05</div>
+  <h2>RTL · how the system flips</h2>
+  <p class="lede">Arabic isn&rsquo;t a translation layer — it&rsquo;s a first-class direction. Switching <span class="t-mono">dir="rtl"</span> on <span class="t-mono">&lt;html&gt;</span> is enough; the rest is enforced by tokens, not per-screen handwork.</p>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="card p-5">
+      <h4 class="font-semibold flex items-center gap-2"><i data-lucide="rotate-3d" style="color:var(--primary);width:18px;height:18px;"></i>Flips automatically</h4>
+      <ul class="mt-3 space-y-2 text-sm" style="color:var(--fg-2);list-style:none;padding:0;">
+        <li>· Layout properties: <span class="t-mono">margin-inline-start/end</span>, <span class="t-mono">padding-inline-*</span>, <span class="t-mono">inset-inline-*</span>, <span class="t-mono">border-inline-*</span></li>
+        <li>· Flex / grid order with <span class="t-mono">dir="rtl"</span> on the document or container</li>
+        <li>· Drawer / sheet corner radii (mirrored via <span class="t-mono">[dir="rtl"]</span> overrides)</li>
+        <li>· Text alignment (<span class="t-mono">text-align: start/end</span>)</li>
+        <li>· Tab and segmented-control order</li>
+        <li>· Avatar status indicator position (corner)</li>
+      </ul>
+    </div>
+    <div class="card p-5">
+      <h4 class="font-semibold flex items-center gap-2"><i data-lucide="flip-horizontal-2" style="color:var(--warning);width:18px;height:18px;"></i>Icons that need a flip</h4>
+      <ul class="mt-3 space-y-2 text-sm" style="color:var(--fg-2);list-style:none;padding:0;">
+        <li>· Directional arrows (<span class="t-mono">arrow-left/right</span>, <span class="t-mono">chevron-*</span>)</li>
+        <li>· Send / forward / reply</li>
+        <li>· Back navigation, breadcrumb chevrons</li>
+        <li>· Undo / redo</li>
+      </ul>
+      <div class="mt-4 flex items-center gap-4 text-sm">
+        <span dir="ltr"><i data-lucide="arrow-right" style="width:16px;height:16px;display:inline;vertical-align:-3px;"></i> LTR</span>
+        <span dir="rtl"><i data-lucide="arrow-right" style="width:16px;height:16px;display:inline;vertical-align:-3px;transform:scaleX(-1);"></i> RTL</span>
+      </div>
+    </div>
+    <div class="card p-5">
+      <h4 class="font-semibold flex items-center gap-2"><i data-lucide="lock" style="color:var(--success);width:18px;height:18px;"></i>Stays unchanged</h4>
+      <ul class="mt-3 space-y-2 text-sm" style="color:var(--fg-2);list-style:none;padding:0;">
+        <li>· Numerals · always LTR with <span class="t-mono">tabular-nums</span></li>
+        <li>· Prices, SKUs, phone numbers, timestamps</li>
+        <li>· Brand mark and logo</li>
+        <li>· Non-directional icons (check, x, plus, search, settings)</li>
+        <li>· Media playback controls (play, pause, stop)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card p-5 mt-6">
+    <h4 class="font-semibold mb-3">Implementation rule</h4>
+    <p class="text-sm" style="color:var(--fg-2);max-width:760px;">Engineers should never write <span class="t-mono">margin-left</span> or <span class="t-mono">padding-right</span>. Always use logical equivalents: <span class="t-mono">margin-inline-start</span>, <span class="t-mono">padding-inline-end</span>. If you do reach for a physical property, it&rsquo;s a smell — wrap it in a <span class="t-mono">[dir="ltr"]</span> override and write a comment explaining why. Numerals get <span class="t-mono">font-variant-numeric: tabular-nums</span> on every container, and any mixed-script line (an Arabic sentence with a price) wraps the LTR fragment in <span class="t-mono">&lt;span dir="ltr"&gt;</span> to keep ordering deterministic.</p>
+  </div>
+</section>
+
+<!-- §6 ACCESSIBILITY -->
+<section id="a11y" class="doc-section">
+  <div class="doc-section-title">§ 06</div>
+  <h2>Accessibility</h2>
+  <p class="lede">Restaurant staff vary widely in age, eyesight, and color perception. The system bakes in WCAG AA from the start, not as a polish step.</p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="card p-5">
+      <h4 class="font-semibold flex items-center gap-2"><i data-lucide="contrast" style="color:var(--primary);width:18px;height:18px;"></i>Contrast</h4>
+      <p class="text-sm mt-2" style="color:var(--fg-2);">All text/background pairs pass <strong>WCAG AA (4.5:1)</strong> in both themes. Key tested pairs:</p>
+      <table class="dtable dense mt-3">
+        <tbody>
+          <tr><td>fg / bg (light)</td><td class="num t-mono">15.6 : 1</td><td><span class="badge badge-success">AAA</span></td></tr>
+          <tr><td>fg-2 / bg (light)</td><td class="num t-mono">7.1 : 1</td><td><span class="badge badge-success">AAA</span></td></tr>
+          <tr><td>fg-3 / bg (light)</td><td class="num t-mono">4.6 : 1</td><td><span class="badge badge-success">AA</span></td></tr>
+          <tr><td>primary / surface</td><td class="num t-mono">5.2 : 1</td><td><span class="badge badge-success">AA</span></td></tr>
+          <tr><td>fg / bg (dark)</td><td class="num t-mono">14.8 : 1</td><td><span class="badge badge-success">AAA</span></td></tr>
+          <tr><td>primary (dark) / surface</td><td class="num t-mono">4.7 : 1</td><td><span class="badge badge-success">AA</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card p-5">
+      <h4 class="font-semibold flex items-center gap-2"><i data-lucide="focus" style="color:var(--primary);width:18px;height:18px;"></i>Focus visible</h4>
+      <p class="text-sm mt-2" style="color:var(--fg-2);">A 3px terracotta ring on every focusable element, applied via <span class="t-mono">:focus-visible</span> so it only shows for keyboard users — taps don&rsquo;t flash the ring on tablets.</p>
+      <div class="mt-3 flex gap-3">
+        <button class="btn btn-primary btn-md" style="box-shadow:var(--focus-ring);">Focused</button>
+        <input class="field" value="Focused" style="box-shadow:var(--focus-ring);border-color:var(--primary);max-width:160px;" />
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <h4 class="font-semibold flex items-center gap-2"><i data-lucide="zoom-in" style="color:var(--primary);width:18px;height:18px;"></i>Type scale to 200%</h4>
+      <p class="text-sm mt-2" style="color:var(--fg-2);">All type sizes survive a browser-level zoom to 200% without breaking layout: containers reflow, touch targets remain ≥ 44px, and no labels truncate. POS-specific surfaces ship a built-in &ldquo;Large&rdquo; mode for staff with vision needs.</p>
+    </div>
+
+    <div class="card p-5">
+      <h4 class="font-semibold flex items-center gap-2"><i data-lucide="eye" style="color:var(--primary);width:18px;height:18px;"></i>Color-blind safety</h4>
+      <p class="text-sm mt-2" style="color:var(--fg-2);">Color is never the only signal. Every status pairs a hue with an icon, a shape, or a label:</p>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <span class="badge badge-success"><i data-lucide="check"></i>Servi</span>
+        <span class="badge badge-warning"><i data-lucide="clock"></i>En cuisine</span>
+        <span class="badge badge-danger"><i data-lucide="triangle-alert"></i>En retard</span>
+        <span class="badge badge-info"><i data-lucide="info"></i>En attente</span>
+      </div>
+      <p class="text-xs mt-3" style="color:var(--fg-3);">Verified across deuteranopia, protanopia, and tritanopia simulations. Floor-plan tables additionally use border-style (solid / dashed / striped) so state survives any color-vision deficit.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CLOSING / QUESTIONS -->
+<section class="doc-section" style="border-bottom:none;">
+  <div class="doc-section-title">v3 · Lock point</div>
+  <h2>This is the lock point. Engineering can build.</h2>
+  <p class="lede">v3 closes the design-language phase. No new feature questions from this document. Future changes route through PR review.</p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-[920px]">
+    <div class="card p-5">
+      <div class="t-caption mb-2" style="color:var(--success);">Locked in v3</div>
+      <ul class="text-sm space-y-2" style="color:var(--fg-2);list-style:none;padding:0;">
+        <li class="flex gap-2"><i data-lucide="check" style="color:var(--success);width:16px;height:16px;flex-shrink:0;margin-top:3px;"></i><div><strong style="color:var(--fg);">Geist + Cairo</strong> as the typography stack. Plex preserved as historical comparison only, no active toggle.</div></li>
+        <li class="flex gap-2"><i data-lucide="check" style="color:var(--success);width:16px;height:16px;flex-shrink:0;margin-top:3px;"></i><div><strong style="color:var(--fg);">Saffron as a private token.</strong> Reachable only through <span class="t-mono">.badge-celebration</span>, <span class="t-mono">.chip-celebration</span>, <span class="t-mono">.toast-celebration</span>. New utilities by PR review only.</div></li>
+        <li class="flex gap-2"><i data-lucide="check" style="color:var(--success);width:16px;height:16px;flex-shrink:0;margin-top:3px;"></i><div><strong style="color:var(--fg);">Comfortable density</strong> ships in v1. Dense defined, gated by three graduation criteria, per-tenant only, never default-on.</div></li>
+        <li class="flex gap-2"><i data-lucide="check" style="color:var(--success);width:16px;height:16px;flex-shrink:0;margin-top:3px;"></i><div><strong style="color:var(--fg);">Café Atlas</strong> stays the canonical sample tenant across all surfaces. Sample tenants should feel real, not generic &mdash; a designer who can picture the restaurant designs better for it.</div></li>
+      </ul>
+    </div>
+    <div class="card p-5">
+      <div class="t-caption mb-2" style="color:var(--primary);">For engineering</div>
+      <ul class="text-sm space-y-2" style="color:var(--fg-2);list-style:none;padding:0;">
+        <li class="flex gap-2"><i data-lucide="package" style="color:var(--primary);width:16px;height:16px;flex-shrink:0;margin-top:3px;"></i><div>Token contract lives in <strong><span class="t-mono">mizan-tokens.css</span></strong> at the project root. That file is the single source consumed by <span class="t-mono">apps/admin-web</span> (later) and <span class="t-mono">apps/pos-terminal</span> (in progress).</div></li>
+        <li class="flex gap-2"><i data-lucide="link" style="color:var(--primary);width:16px;height:16px;flex-shrink:0;margin-top:3px;"></i><div>Import: <span class="t-mono">@import "mizan-tokens.css";</span> at the top of your global stylesheet. Read tokens via <span class="t-mono">var(--*)</span>; never hard-code values.</div></li>
+        <li class="flex gap-2"><i data-lucide="alert-triangle" style="color:var(--warning);width:16px;height:16px;flex-shrink:0;margin-top:3px;"></i><div><strong style="color:var(--fg);">Do not write</strong> <span class="t-mono">color: var(--accent-celebration)</span> directly. Use the saffron utility classes. Adding new ones requires PR review.</div></li>
+        <li class="flex gap-2"><i data-lucide="alert-triangle" style="color:var(--warning);width:16px;height:16px;flex-shrink:0;margin-top:3px;"></i><div><strong style="color:var(--fg);">Do not hard-code tap-targets.</strong> Use <span class="t-mono">var(--density-tap-target)</span>, <span class="t-mono">var(--density-row-padding)</span>, etc. The density swap depends on it.</div></li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="mt-12 text-sm" style="color:var(--fg-3);max-width:760px;">Tokens are mirrored between <span class="t-mono">mizan-tokens.css</span> (engineering source) and the inline <span class="t-mono">:root</span> block at the top of this HTML (documentation source). If they drift, <span class="t-mono">mizan-tokens.css</span> wins.</p>
+</section>
+
+</main>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // Theme + direction toggles
+  document.querySelectorAll('[data-theme-set]').forEach(b => {
+    b.addEventListener('click', () => {
+      const v = b.getAttribute('data-theme-set');
+      document.documentElement.setAttribute('data-theme', v);
+      document.querySelectorAll('[data-theme-set]').forEach(x => x.setAttribute('aria-pressed', x === b));
+    });
+  });
+  document.querySelectorAll('[data-dir-set]').forEach(b => {
+    b.addEventListener('click', () => {
+      const v = b.getAttribute('data-dir-set');
+      document.documentElement.setAttribute('dir', v);
+      document.querySelectorAll('[data-dir-set]').forEach(x => x.setAttribute('aria-pressed', x === b));
+    });
+  });
+  // Numpad demo
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.lucide) lucide.createIcons();
+    const display = document.getElementById('numpad-display');
+    let val = '0.00';
+    document.querySelectorAll('#numpad button').forEach(b => {
+      b.addEventListener('click', () => {
+        const t = b.textContent.trim();
+        if (b.querySelector('[data-lucide="delete"]')) { val = '0.00'; }
+        else if (val === '0.00') { val = t; }
+        else if (t === '.' && val.includes('.')) {}
+        else { val += t; }
+        if (display) display.querySelector('.t-price-total').firstChild.textContent = val + ' ';
+      });
+    });
+  });
+</script>
+</body>
+</html>

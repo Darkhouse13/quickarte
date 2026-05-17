@@ -1,0 +1,290 @@
+/* ==========================================================================
+   mizan-tokens.css  ·  v3 LOCK
+   ==========================================================================
+   The single source of truth for Mizan design tokens.
+
+   This file is consumed by:
+     - apps/admin-web      (later)
+     - apps/pos-terminal   (in progress)
+
+   Import in your global stylesheet:
+       @import "mizan-tokens.css";
+
+   USAGE
+   -----
+   Read tokens with var(--name). Never hard-code hex, px, ms, or font names.
+   When you reach for a literal, ask whether a token should exist; if yes,
+   open a PR; if no, you're probably misusing the system.
+
+   PRIVATE TOKENS
+   --------------
+   --accent-celebration (saffron) is a PRIVATE token. Components do not
+   reference it directly. Use the .badge-celebration, .chip-celebration,
+   or .toast-celebration utility classes shipped in the design system CSS.
+   New saffron utilities require a PR review. This rule is documented in
+   `Mizan Design System.html` §2 Tokens · Color · Saffron.
+
+   DENSITY
+   -------
+   Tap dimensions are routed through --density-* tokens so the entire
+   product can swap density via one attribute. Comfortable ships in v1;
+   dense is defined but feature-flagged. Do not read raw px for tap-targets;
+   always read var(--density-tap-target), var(--density-row-padding), etc.
+
+   THEMING
+   -------
+   Light is :root. Dark is [data-theme="dark"]. Tokens swap atomically.
+   ========================================================================== */
+
+
+/* -----------------------------------------------------------------------
+   LIGHT MODE · default
+   ----------------------------------------------------------------------- */
+:root {
+  /* === SURFACES =========================================================
+     Warm-tinted neutrals — the "Moroccan whisper" lives here.
+     Off-whites lean bone, grays lean stone. No motifs, no patterns. */
+  --bg:               #FAF8F4;  /* page canvas */
+  --surface:          #FFFFFF;  /* cards, panels at rest */
+  --surface-2:        #F2EEE6;  /* subtle fills, hover row backgrounds */
+  --surface-elevated: #FFFFFF;  /* dropdowns, modals (paired with shadow) */
+  --overlay:          rgba(28, 25, 22, 0.45);
+
+  /* === TEXT ============================================================= */
+  --fg:          #1C1916;       /* primary text */
+  --fg-2:        #5E574E;       /* secondary text */
+  --fg-3:        #8C857A;       /* tertiary, captions */
+  --fg-disabled: #BDB6A8;
+  --fg-on-primary: #FFFFFF;
+
+  /* === BORDERS ========================================================== */
+  --border:        #E7E1D5;     /* at-rest card borders */
+  --border-strong: #CFC7B7;     /* inputs, interactive elements */
+
+  /* === BRAND ============================================================
+     Single restrained terracotta. Confident. Reserved for action. */
+  --primary:       #B8543A;
+  --primary-hover: #9F4630;
+  --primary-press: #863A28;
+  --primary-soft:  #F5E5DF;     /* selected nav, soft chip backgrounds */
+  --primary-on:    #FFFFFF;
+
+  /* Secondary teal — used sparingly for structural info (sub-recipes). */
+  --secondary:       #2C6B6B;
+  --secondary-hover: #225454;
+  --secondary-soft:  #D9E8E8;
+
+  /* === SEMANTIC ========================================================= */
+  --success:      #2E7D52;  --success-soft: #DCEFE2;
+  --warning:      #B57214;  --warning-soft: #F8E8C9;
+  --danger:       #B83A2A;  --danger-soft:  #F6DDD7;
+  --info:         #2E6FA8;  --info-soft:    #DBE9F5;
+
+  /* === FOCUS RING ======================================================= */
+  --focus-ring: 0 0 0 3px rgba(184, 84, 58, 0.32);
+
+  /* === POS STATUS · TABLES ==============================================
+     Every state pairs color + shape/border-style/icon. Never color alone. */
+  --table-free:     #2E7D52;
+  --table-occupied: #2E6FA8;
+  --table-awaiting: #B57214;
+  --table-reserved: #6B4E9E;
+  --table-dirty:    #8C857A;
+  --table-out:      #5E574E;
+
+  /* === KDS · TIMER THRESHOLDS =========================================== */
+  --kds-fresh:   #2E7D52;       /* 0–5 min  · on pace */
+  --kds-warning: #B57214;       /* 5–10 min · approaching */
+  --kds-late:    #B83A2A;       /* 10+ min  · pulses in app */
+
+  /* === SAFFRON · PRIVATE TOKEN ==========================================
+     DO NOT reference --accent-celebration directly in component CSS.
+     Use .badge-celebration / .chip-celebration / .toast-celebration. */
+  --accent-celebration:       #E0A422;
+  --accent-celebration-hover: #C58E16;
+  --accent-celebration-soft:  #FBEFD0;
+  --accent-celebration-on:    #1C1916;
+
+  /* === TYPE FAMILIES ====================================================
+     Locked: Geist (Latin) + Cairo (Arabic) + IBM Plex Mono.
+     Plex is loaded by the design-system doc for the historical comparison
+     panel only and is not part of the production stack. */
+  --font-sans:   "Geist", "Cairo", system-ui, -apple-system, sans-serif;
+  --font-arabic: "Cairo", "Geist", system-ui, sans-serif;
+  --font-mono:   "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* === TYPE SCALE =======================================================
+     Sizes / line-heights / weights. Cairo weights match Geist 1:1:
+     400 body · 500 medium · 600 emphasis · 700 headings. */
+  --t-display:  48px;  --lh-display:  56px;  --fw-display:  700;
+  --t-h1:       32px;  --lh-h1:       40px;  --fw-h1:       700;
+  --t-h2:       24px;  --lh-h2:       32px;  --fw-h2:       600;
+  --t-h3:       20px;  --lh-h3:       28px;  --fw-h3:       600;
+  --t-body-lg:  18px;  --lh-body-lg:  28px;  --fw-body-lg:  400;
+  --t-body:     16px;  --lh-body:     24px;  --fw-body:     400;
+  --t-body-sm:  14px;  --lh-body-sm:  20px;  --fw-body-sm:  400;
+  --t-caption:  12px;  --lh-caption:  16px;  --fw-caption:  500;
+  --t-mono:     14px;  --lh-mono:     20px;
+
+  /* POS-specific type */
+  --t-price-total: 32px; --fw-price-total: 700;
+  --t-price-line:  18px; --fw-price-line:  500;
+  --t-button-pos:  18px; --fw-button-pos:  600;
+  --t-numpad:      28px; --fw-numpad:      500;
+
+  /* Weights */
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  /* === SPACING · 4px base ============================================== */
+  --s-1:   4px;
+  --s-2:   8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  20px;
+  --s-6:  24px;
+  --s-8:  32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-14: 56px;
+  --s-16: 64px;
+  --s-20: 80px;
+  --s-24: 96px;
+
+  /* === RADIUS =========================================================== */
+  --r-sm:   4px;        /* inputs, chips */
+  --r-md:   8px;        /* buttons, fields */
+  --r-lg:  12px;        /* cards, panels */
+  --r-xl:  16px;        /* modals, sheets */
+  --r-2xl: 24px;        /* hero cards */
+  --r-full: 9999px;     /* pills, avatars */
+
+  /* === ELEVATION · 4 levels ============================================= */
+  --shadow-1: 0 1px 2px rgba(28, 25, 22, 0.05),
+              0 1px 1px rgba(28, 25, 22, 0.03);
+  --shadow-2: 0 2px 4px rgba(28, 25, 22, 0.06),
+              0 4px 8px rgba(28, 25, 22, 0.04);
+  --shadow-3: 0 4px 8px rgba(28, 25, 22, 0.06),
+              0 12px 24px rgba(28, 25, 22, 0.08);
+  --shadow-4: 0 8px 16px rgba(28, 25, 22, 0.08),
+              0 24px 48px rgba(28, 25, 22, 0.14);
+
+  /* === MOTION ===========================================================
+     The POS terminal ceiling is 200ms. Do not exceed it. */
+  --d-instant: 100ms;   /* tap reaction, toggle flip */
+  --d-fast:    150ms;   /* hover / micro-feedback */
+  --d-base:    200ms;   /* modal entry, drawer slide */
+
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-in:     cubic-bezier(0.5,  0, 0.75, 0);
+
+  /* === STATIC TOUCH FLOORS ==============================================
+     Use the density-aware tokens below for *layout-driven* sizing.
+     These two are absolute minima — never violate, regardless of density. */
+  --touch-min: 44px;    /* WCAG-aligned floor */
+  --touch-pos: 64px;    /* POS terminal floor (comfortable) */
+
+  /* === DENSITY LAYER · COMFORTABLE (v1 SHIPPED) ========================
+     Components reference these tokens — never hard-code tap dimensions.
+     Override at any container with `data-density="dense"` (see below). */
+  --density-tap-target:      64px;  /* primary POS buttons */
+  --density-tap-target-sm:   44px;  /* steppers, secondary chrome */
+  --density-row-padding:     14px;  /* order-line vertical pad */
+  --density-card-padding:    24px;  /* POS panel padding */
+  --density-grid-gap:        12px;  /* menu-grid gutters */
+  --density-item-card-image: 84px;  /* item-card image height */
+  --density-numpad-cell:     64px;  /* number-pad button height */
+  --density-list-row:        56px;  /* list-row min height */
+  --density-chip-height:     36px;  /* filter chip height */
+}
+
+
+/* -----------------------------------------------------------------------
+   DARK MODE
+   ----------------------------------------------------------------------- */
+[data-theme="dark"] {
+  --bg:               #15130F;
+  --surface:          #1E1B16;
+  --surface-2:        #28241D;
+  --surface-elevated: #2A2620;
+  --overlay:          rgba(0, 0, 0, 0.6);
+
+  --fg:          #F2EEE6;
+  --fg-2:        #A39C8E;
+  --fg-3:        #767065;
+  --fg-disabled: #4A453D;
+
+  --border:        #322D25;
+  --border-strong: #463F34;
+
+  --primary:       #D26B4D;
+  --primary-hover: #E07859;
+  --primary-press: #BC5A3E;
+  --primary-soft:  #3A1F18;
+  --primary-on:    #1C1916;
+
+  --secondary:       #4D9999;
+  --secondary-hover: #5FACAC;
+  --secondary-soft:  #1F3535;
+
+  --success: #4DB37C; --success-soft: #1F3528;
+  --warning: #D9A24A; --warning-soft: #3D2E14;
+  --danger:  #E27466; --danger-soft:  #3D1F1A;
+  --info:    #5FA0CC; --info-soft:    #1A2C3D;
+
+  --focus-ring: 0 0 0 3px rgba(210, 107, 77, 0.42);
+
+  --table-free:     #4DB37C;
+  --table-occupied: #5FA0CC;
+  --table-awaiting: #D9A24A;
+  --table-reserved: #9D87C7;
+  --table-dirty:    #A39C8E;
+  --table-out:      #767065;
+
+  --kds-fresh:   #4DB37C;
+  --kds-warning: #D9A24A;
+  --kds-late:    #E27466;
+
+  /* Saffron darkens slightly so it still reads as warm-gold on dark surfaces */
+  --accent-celebration:       #E5B046;
+  --accent-celebration-hover: #F0C067;
+  --accent-celebration-soft:  #3D2F14;
+  --accent-celebration-on:    #1C1916;
+
+  /* Shadows in dark mode — softer */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 2px 4px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-3: 0 4px 8px rgba(0, 0, 0, 0.4), 0 12px 24px rgba(0, 0, 0, 0.3);
+  --shadow-4: 0 8px 16px rgba(0, 0, 0, 0.5), 0 24px 48px rgba(0, 0, 0, 0.4);
+}
+
+
+/* -----------------------------------------------------------------------
+   DENSITY · DENSE (defined, feature-flagged, NOT default)
+   -----------------------------------------------------------------------
+   Activated by `data-density="dense"` on any ancestor (typically <html>
+   gated by a per-tenant setting). Three graduation criteria must hold
+   before shipping:
+       a) 3–6 months stable comfortable mode in production
+       b) Module 14 (Settings infrastructure) built
+       c) ≥ 1 pilot restaurant has explicitly asked for it
+
+   Hard rules:
+     - Never default-on globally.
+     - Per-restaurant only — never per-user — so all shifts on one terminal
+       share the same muscle memory.
+   ----------------------------------------------------------------------- */
+[data-density="dense"] {
+  --density-tap-target:      48px;
+  --density-tap-target-sm:   36px;
+  --density-row-padding:      8px;
+  --density-card-padding:    16px;
+  --density-grid-gap:         8px;
+  --density-item-card-image: 56px;
+  --density-numpad-cell:     48px;
+  --density-list-row:        40px;
+  --density-chip-height:     28px;
+}
