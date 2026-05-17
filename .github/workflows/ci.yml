@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, phase-0-foundation]
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: quickarte
+          POSTGRES_USER: quickarte
+          POSTGRES_DB: quickarte
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://quickarte:quickarte@localhost:5432/quickarte
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-test-secret-ci-test-secret-ci-test
+      JWT_ISSUER: http://ci/api
+      JWT_AUDIENCE: quickarte-api
+      API_PORT: 3001
+      LOG_LEVEL: info
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Generate SDK
+        run: pnpm sdk:generate
+
+      - name: Verify generated SDK is committed
+        run: git diff --exit-code packages/shared-types/src/api.ts packages/shared-types/openapi.json
+
+      - name: Secrets scan
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --no-git --source . --redact --verbose
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

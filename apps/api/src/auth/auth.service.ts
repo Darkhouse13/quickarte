@@ -7,9 +7,9 @@ import {
   staffMembers,
   users,
 } from "@quickarte/db-schema";
-import { verifyPassword } from "better-auth/crypto";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
 import { DatabaseService } from "../database/database.service";
+import { verifyBetterAuthPassword } from "./better-auth-password";
 import { ApiJwtService } from "./jwt.strategy";
 import { PinHashingService } from "./pin-hashing.service";
 
@@ -99,7 +99,7 @@ export class AuthService {
           .where(eq(permissionVersions.businessId, input.businessId))
           .limit(1);
 
-        const refresh = this.jwtService.createRefreshToken();
+        const refresh = this.jwtService.createRefreshToken(input.businessId);
         await tx.insert(apiRefreshTokens).values({
           businessId: input.businessId,
           userId: staff.userId,
@@ -166,10 +166,7 @@ export class AuthService {
         throw this.invalidCredentials();
       }
 
-      const passwordMatches = await verifyPassword({
-        hash: staff.passwordHash,
-        password: input.password,
-      });
+      const passwordMatches = await verifyBetterAuthPassword(staff.passwordHash, input.password);
       if (!passwordMatches) {
         throw this.invalidCredentials();
       }
@@ -203,7 +200,7 @@ export class AuthService {
         .where(eq(permissionVersions.businessId, businessId))
         .limit(1);
 
-      const refresh = this.jwtService.createRefreshToken();
+      const refresh = this.jwtService.createRefreshToken(businessId);
       await tx.insert(apiRefreshTokens).values({
         businessId,
         userId: staff.userId,
@@ -226,10 +223,118 @@ export class AuthService {
     });
   }
 
+  async refreshToken(input: {
+    refreshToken: string;
+    expectedBusinessId?: string;
+  }): Promise<TokenPair> {
+    const businessId = this.jwtService.getRefreshTokenBusinessId(input.refreshToken);
+    if (!businessId || (input.expectedBusinessId && input.expectedBusinessId !== businessId)) {
+      throw this.invalidRefreshToken();
+    }
+
+    const tokenHash = this.jwtService.hashOpaqueToken(input.refreshToken);
+
+    return this.databaseService.withTenant(businessId, async (tx) => {
+      const [storedToken] = await tx
+        .select({
+          id: apiRefreshTokens.id,
+          businessId: apiRefreshTokens.businessId,
+          userId: apiRefreshTokens.userId,
+        })
+        .from(apiRefreshTokens)
+        .where(
+          and(
+            eq(apiRefreshTokens.businessId, businessId),
+            eq(apiRefreshTokens.tokenHash, tokenHash),
+            gt(apiRefreshTokens.expiresAt, new Date()),
+            isNull(apiRefreshTokens.revokedAt),
+          ),
+        )
+        .limit(1);
+
+      if (!storedToken) {
+        throw this.invalidRefreshToken();
+      }
+
+      const [staff] = await tx
+        .select({
+          role: staffMembers.role,
+        })
+        .from(staffMembers)
+        .where(
+          and(
+            eq(staffMembers.businessId, businessId),
+            eq(staffMembers.userId, storedToken.userId),
+            isNull(staffMembers.revokedAt),
+          ),
+        )
+        .limit(1);
+
+      const roleName = staff ? STAFF_ROLE_TO_SYSTEM_ROLE[staff.role] : undefined;
+      if (!roleName) {
+        throw this.invalidRefreshToken();
+      }
+
+      const [role] = await tx
+        .select({ id: roles.id })
+        .from(roles)
+        .where(and(eq(roles.businessId, businessId), eq(roles.name, roleName)))
+        .limit(1);
+
+      if (!role) {
+        throw this.invalidRefreshToken();
+      }
+
+      await tx
+        .insert(permissionVersions)
+        .values({ businessId, version: 1 })
+        .onConflictDoNothing();
+
+      const [versionRow] = await tx
+        .select({ version: permissionVersions.version })
+        .from(permissionVersions)
+        .where(eq(permissionVersions.businessId, businessId))
+        .limit(1);
+
+      await tx
+        .update(apiRefreshTokens)
+        .set({ revokedAt: new Date() })
+        .where(eq(apiRefreshTokens.id, storedToken.id));
+
+      const refresh = this.jwtService.createRefreshToken(businessId);
+      await tx.insert(apiRefreshTokens).values({
+        businessId,
+        userId: storedToken.userId,
+        tokenHash: refresh.tokenHash,
+        expiresAt: refresh.expiresAt,
+      });
+
+      return {
+        accessToken: this.jwtService.signAccessToken({
+          sub: storedToken.userId,
+          business_id: businessId,
+          role_id: role.id,
+          permissions_version: versionRow?.version ?? 1,
+          is_platform_admin: false,
+        }),
+        refreshToken: refresh.token,
+        tokenType: "Bearer",
+        expiresIn: 15 * 60,
+      };
+    });
+  }
+
   private invalidCredentials(): UnauthorizedException {
     return new UnauthorizedException({
       type: `${PROBLEM_BASE_URL}/auth-invalid-credentials`,
       message: "Invalid credentials.",
+    });
+  }
+
+  private invalidRefreshToken(): UnauthorizedException {
+    return new UnauthorizedException({
+      type: `${PROBLEM_BASE_URL}/auth-refresh-invalid`,
+      message: "Refresh token is invalid.",
     });
   }
 }

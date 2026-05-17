@@ -66,13 +66,21 @@ export class ApiJwtService {
     return payload;
   }
 
-  createRefreshToken(): { token: string; tokenHash: string; expiresAt: Date } {
-    const token = randomBytes(48).toString("base64url");
+  createRefreshToken(businessId: string): { token: string; tokenHash: string; expiresAt: Date } {
+    const token = `${businessId}.${randomBytes(48).toString("base64url")}`;
     return {
       token,
       tokenHash: this.hashOpaqueToken(token),
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     };
+  }
+
+  getRefreshTokenBusinessId(token: string): string | null {
+    const [businessId, opaqueSecret] = token.split(".");
+    if (!businessId || !opaqueSecret || token.split(".").length !== 2) {
+      return null;
+    }
+    return businessId;
   }
 
   hashOpaqueToken(token: string): string {

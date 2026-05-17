@@ -19,19 +19,44 @@ COPY --from=deps /app/packages/config/node_modules ./packages/config/node_module
 COPY --from=deps /app/packages/db-schema/node_modules ./packages/db-schema/node_modules
 COPY . .
 RUN pnpm --filter @quickarte/api build
+# pnpm deploy creates a self-contained production directory for the API
+# workspace. This keeps the runner image from copying the root pnpm virtual
+# store, which otherwise drags in unrelated Quickarte web and Expo packages.
+RUN pnpm --config.auto-install-peers=false --filter @quickarte/api --prod deploy /deploy-out
+# better-auth declares broad framework peers, so pnpm may materialize unused
+# peer folders in the deploy virtual store. The API does not run Next/Expo/RN;
+# remove those unreferenced framework packages from the production payload.
+RUN find /deploy-out/node_modules -type d \( \
+    -name next -o \
+    -name '@next' -o \
+    -name 'expo*' -o \
+    -name '@expo' -o \
+    -name 'react-native*' -o \
+    -name 'hermes-compiler' \
+  \) -prune -exec rm -rf '{}' +
+# Strip source-only artifacts from the production payload. Swagger UI stays
+# because @nestjs/swagger loads it when the decorated controllers are imported.
+RUN rm -rf /deploy-out/src /deploy-out/test /deploy-out/scripts \
+    /deploy-out/README.md /deploy-out/Dockerfile /deploy-out/eslint.config.mjs \
+    /deploy-out/nest-cli.json /deploy-out/tsconfig.json /deploy-out/.turbo \
+    /deploy-out/node_modules/.pnpm/@opentelemetry+semantic-conventions@* \
+  && find /deploy-out/node_modules -type d \( \
+      -name test -o -name tests -o -name docs -o -name examples -o -name benchmark \
+    \) -prune -exec rm -rf '{}' + \
+  && find /deploy-out/node_modules -type f \( \
+      -name '*.md' -o -name '*.map' -o -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts' \
+    \) -delete
 
-FROM node:20-alpine AS runner
+FROM alpine:3.20 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-RUN addgroup --system --gid 1001 nodejs \
+RUN apk add --no-cache ca-certificates libstdc++ \
+  && addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nestjs
+COPY --from=builder /usr/local/bin/node /usr/local/bin/node
 
-COPY --from=builder --chown=nestjs:nodejs /app/apps/api/dist ./apps/api/dist
-COPY --from=deps --chown=nestjs:nodejs /app/node_modules ./node_modules
-COPY --from=deps --chown=nestjs:nodejs /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=builder --chown=nestjs:nodejs /app/packages ./packages
-COPY --from=builder --chown=nestjs:nodejs /app/apps/api/package.json ./apps/api/package.json
+COPY --from=builder --chown=nestjs:nodejs /deploy-out ./
 
 USER nestjs
 EXPOSE 3001
-CMD ["node", "apps/api/dist/src/main.js"]
+CMD ["node", "dist/src/main.js"]
