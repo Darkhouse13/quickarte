@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { LoggerModule } from "nestjs-pino";
 import { randomUUID } from "node:crypto";
 import { AuditLogModule } from "./audit-log/audit-log.module";
+import { AuthModule } from "./auth/auth.module";
 import { BusinessesModule } from "./businesses/businesses.module";
 import { TenantContextMiddleware } from "./common/middleware/tenant-context.middleware";
 import { validateEnv } from "./config/env";
@@ -57,6 +58,7 @@ import { HealthModule } from "./health/health.module";
       },
     }),
     HealthModule,
+    AuthModule,
     AuditLogModule,
     BusinessesModule,
   ],

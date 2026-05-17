@@ -13,6 +13,8 @@ async function main() {
     "postgres://openapi:openapi@localhost:5432/openapi";
   process.env.LOG_LEVEL ??= "silent";
   process.env.NODE_ENV ??= "development";
+  process.env.JWT_SECRET ??= "openapi-dev-secret-openapi-dev-secret";
+  process.env.REDIS_URL ??= "redis://localhost:6379";
 
   process.stdout.write("Creating Nest application context\n");
   const { AppModule } = await import("../src/app.module");

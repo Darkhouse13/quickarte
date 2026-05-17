@@ -1,16 +1,35 @@
-import { BadRequestException, Injectable, type NestMiddleware } from "@nestjs/common";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  type NestMiddleware,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import type { NextFunction, Request, Response } from "express";
+import { ApiJwtService } from "../../auth/jwt.strategy";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       businessId?: string;
+      userId?: string;
+      roleId?: string;
+      permissionsVersion?: number;
+      isPlatformAdmin?: boolean;
     }
   }
 }
 
 export type TenantRequest = Request & { businessId?: string };
+export type AuthenticatedRequest = Request & {
+  businessId?: string;
+  userId?: string;
+  roleId?: string;
+  permissionsVersion?: number;
+  isPlatformAdmin?: boolean;
+};
 
 const PROBLEM_BASE_URL = "https://api.quickarte.ma/problems";
 const UUID_PATTERN =
@@ -18,20 +37,56 @@ const UUID_PATTERN =
 
 @Injectable()
 export class TenantContextMiddleware implements NestMiddleware {
+  constructor(
+    @Inject(ApiJwtService) private readonly jwtService: ApiJwtService,
+    @Inject(ConfigService) private readonly configService: ConfigService,
+  ) {}
+
   use(request: TenantRequest, _response: Response, next: NextFunction): void {
     if (this.isPublicPath(request)) {
       next();
       return;
     }
 
+    const authHeader = request.headers.authorization;
+    const bearerToken = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice("Bearer ".length)
+      : undefined;
+
+    if (bearerToken) {
+      try {
+        const claims = this.jwtService.verifyAccessToken(bearerToken);
+        request.businessId = claims.business_id;
+        request.userId = claims.sub;
+        request.roleId = claims.role_id;
+        request.permissionsVersion = claims.permissions_version;
+        request.isPlatformAdmin = claims.is_platform_admin;
+        next();
+        return;
+      } catch (error) {
+        next(error);
+        return;
+      }
+    }
+
     const tenantHeader = request.headers["x-tenant-id"];
     const businessId = Array.isArray(tenantHeader) ? tenantHeader[0] : tenantHeader;
 
+    if (businessId && this.configService.get<string>("NODE_ENV") === "production") {
+      next(
+        new UnauthorizedException({
+          type: `${PROBLEM_BASE_URL}/auth-required`,
+          message: "Authorization bearer token is required in production.",
+        }),
+      );
+      return;
+    }
+
     if (!businessId) {
       next(
-        new BadRequestException({
-          type: `${PROBLEM_BASE_URL}/tenant-context-required`,
-          message: "Tenant context is required. Send X-Tenant-Id for tenanted API routes.",
+        new UnauthorizedException({
+          type: `${PROBLEM_BASE_URL}/auth-required`,
+          message: "Authorization bearer token is required.",
         }),
       );
       return;
@@ -56,6 +111,8 @@ export class TenantContextMiddleware implements NestMiddleware {
     return (
       path === "/health" ||
       path === "/v1/health" ||
+      path === "/auth/staff/pin-login" ||
+      path === "/v1/auth/staff/pin-login" ||
       path === "/docs" ||
       path === "/v1/docs" ||
       path === "/docs-json" ||

@@ -110,6 +110,7 @@ export const staffMembers = pgTable(
     email: text("email"),
     displayName: text("display_name").notNull(),
     role: staffRoleEnum("role").notNull(),
+    pinHash: text("pin_hash"),
     invitedAt: timestamp("invited_at", { withTimezone: true }),
     acceptedAt: timestamp("accepted_at", { withTimezone: true }),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
