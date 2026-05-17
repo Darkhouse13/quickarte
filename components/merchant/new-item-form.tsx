@@ -135,7 +135,7 @@ export function NewItemForm({
   };
 
   return (
-    <main className="w-full max-w-[390px] mx-auto bg-base min-h-screen relative flex flex-col border-x border-outline/50 shadow-2xl shadow-black/5 pb-24">
+    <main className="w-full max-w-[390px] mx-auto bg-base min-h-screen relative flex flex-col border-x border-outline/50 shadow-2xl shadow-black/5 pb-48">
       <header className="h-16 px-4 flex justify-between items-center border-b-2 border-ink sticky top-0 bg-base z-20">
         <button
           type="button"
