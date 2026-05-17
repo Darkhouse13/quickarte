@@ -16,15 +16,15 @@ const securityHeaders = [
   {
     key: "Content-Security-Policy",
     value: [
-      "default-src self",
-      "script-src self unsafe-inline unsafe-eval https://*.sentry.io",
-      "style-src self unsafe-inline",
-      "img-src self data: blob: https://images.unsplash.com https://res.cloudinary.com",
-      "font-src self data:",
-      "connect-src self https://*.sentry.io",
-      "frame-ancestors none",
-      "base-uri self",
-      "form-action self",
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.sentry.io",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://images.unsplash.com https://res.cloudinary.com",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.sentry.io",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
     ].join("; "),
   },
 ];
@@ -33,6 +33,7 @@ const nextConfig: NextConfig = {
   output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
   reactStrictMode: true,
   outputFileTracingRoot: __dirname,
+  poweredByHeader: false,
   async headers() {
     return [
       {
