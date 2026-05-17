@@ -11,9 +11,8 @@ export type ProblemDetails = {
 };
 
 export function apiClient() {
-  const token = useAuthStore.getState().accessToken;
   return createClient(import.meta.env.VITE_API_BASE_URL ?? defaultBaseUrl, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    fetch: fetchWithAuthRefresh,
   });
 }
 
@@ -30,4 +29,48 @@ export function readProblem(error: unknown): ProblemDetails {
     return error as ProblemDetails;
   }
   return {};
+}
+
+async function fetchWithAuthRefresh(input: Request): Promise<Response> {
+  const retryTemplate = input.clone();
+  let response = await fetch(withAuthorization(input));
+
+  if (response.status !== 401) {
+    return response;
+  }
+
+  const problem = await readProblemResponse(response.clone());
+  if (problem.type?.endsWith("/auth-token-expired")) {
+    const refreshed = await useAuthStore.getState().refreshAccessToken();
+    if (refreshed) {
+      response = await fetch(withAuthorization(retryTemplate));
+      return response;
+    }
+  }
+
+  if (
+    problem.type?.endsWith("/auth-token-expired") ||
+    problem.type?.endsWith("/permissions-stale")
+  ) {
+    useAuthStore.getState().clear();
+  }
+
+  return response;
+}
+
+function withAuthorization(input: Request): Request {
+  const token = useAuthStore.getState().accessToken;
+  const headers = new Headers(input.headers);
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  return new Request(input, { headers });
+}
+
+async function readProblemResponse(response: Response): Promise<ProblemDetails> {
+  try {
+    return (await response.json()) as ProblemDetails;
+  } catch {
+    return {};
+  }
 }

@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Inject, Post, Query, Req } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Inject, Post, Query, Req } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { IsISO8601, IsObject, IsOptional } from "class-validator";
+import { RateLimitService } from "../auth/rate-limit.service";
 import { RequirePermission } from "../common/decorators/require-permission.decorator";
 import type { AuthenticatedRequest } from "../common/middleware/tenant-context.middleware";
 import { SyncService, type SyncPullResponse } from "./sync.service";
@@ -20,10 +21,15 @@ class SyncPushBody {
   lastPulledAt?: string;
 }
 
+const PROBLEM_BASE_URL = "https://api.quickarte.ma/problems";
+
 @ApiTags("Sync")
 @Controller("sync")
 export class SyncController {
-  constructor(@Inject(SyncService) private readonly syncService: SyncService) {}
+  constructor(
+    @Inject(SyncService) private readonly syncService: SyncService,
+    @Inject(RateLimitService) private readonly rateLimitService: RateLimitService,
+  ) {}
 
   @Get("pull")
   @RequirePermission("business.view")
@@ -67,7 +73,9 @@ export class SyncController {
     @Req() request: AuthenticatedRequest,
     @Query() query: SyncPullQuery,
   ): Promise<SyncPullResponse> {
-    return this.syncService.pull(request.businessId!, query.since);
+    const businessId = request.businessId!;
+    await this.enforceRateLimit("pull", businessId);
+    return this.syncService.pull(businessId, query.since);
   }
 
   @Post("push")
@@ -96,7 +104,29 @@ export class SyncController {
     @Req() request: AuthenticatedRequest,
     @Body() body: SyncPushBody,
   ): Promise<{ status: "ok" }> {
-    await this.syncService.push(request.businessId!, body.changes, body.lastPulledAt);
+    const businessId = request.businessId!;
+    await this.enforceRateLimit("push", businessId);
+    await this.syncService.push(businessId, body.changes, body.lastPulledAt);
     return { status: "ok" };
+  }
+
+  private async enforceRateLimit(operation: "pull" | "push", businessId: string): Promise<void> {
+    const rateLimit = await this.rateLimitService.checkFixedWindow(
+      `sync:${operation}`,
+      businessId,
+      60,
+      60,
+    );
+
+    if (!rateLimit.allowed) {
+      throw new HttpException(
+        {
+          type: `${PROBLEM_BASE_URL}/rate-limit-exceeded`,
+          message: "Too many sync requests. Try again later.",
+          retry_after_seconds: rateLimit.retryAfterSeconds,
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
   }
 }

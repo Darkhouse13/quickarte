@@ -8,6 +8,7 @@ const envSchema = z.object({
     .min(32, "JWT_SECRET must be at least 32 characters"),
   JWT_ISSUER: z.string().url().default("http://localhost:3001"),
   JWT_AUDIENCE: z.string().default("quickarte-api"),
+  TENANT_ROOT_DOMAIN: z.string().min(1).default("lvh.me"),
   LOG_LEVEL: z
     .enum(["trace", "debug", "info", "warn", "error", "fatal", "silent"])
     .default("info"),

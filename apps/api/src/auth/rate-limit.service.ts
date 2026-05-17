@@ -41,6 +41,28 @@ export class RateLimitService implements OnApplicationShutdown {
     return { allowed: true };
   }
 
+  async checkFixedWindow(
+    namespace: string,
+    key: string,
+    limit: number,
+    windowSeconds: number,
+  ): Promise<RateLimitResult> {
+    await this.ensureConnected();
+
+    const redisKey = `${namespace}:${key}`;
+    const current = await this.redis.incr(redisKey);
+    if (current === 1) {
+      await this.redis.expire(redisKey, windowSeconds);
+    }
+
+    if (current > limit) {
+      const ttl = await this.redis.ttl(redisKey);
+      return { allowed: false, retryAfterSeconds: Math.max(ttl, 1) };
+    }
+
+    return { allowed: true };
+  }
+
   async clearPinAttempts(key: string): Promise<void> {
     await this.ensureConnected();
     await this.redis.del(`pin-login:attempts:${key}`, `pin-login:lock:${key}`);

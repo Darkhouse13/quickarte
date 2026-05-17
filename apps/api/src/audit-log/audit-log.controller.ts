@@ -1,9 +1,10 @@
-import { Controller, Get, Inject, Query, Req } from "@nestjs/common";
+import { Controller, Get, HttpException, HttpStatus, Inject, Query, Req } from "@nestjs/common";
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { auditLog } from "@quickarte/db-schema";
 import { and, desc, eq, lt } from "drizzle-orm";
 import { RequirePermission } from "../common/decorators/require-permission.decorator";
 import type { AuthenticatedRequest } from "../common/middleware/tenant-context.middleware";
+import { RateLimitService } from "../auth/rate-limit.service";
 import { DatabaseService } from "../database/database.service";
 
 type AuditLogResponse = {
@@ -23,10 +24,15 @@ type AuditLogResponse = {
   }>;
 };
 
+const PROBLEM_BASE_URL = "https://api.quickarte.ma/problems";
+
 @ApiTags("Audit Log")
 @Controller("audit-log")
 export class AuditLogController {
-  constructor(@Inject(DatabaseService) private readonly databaseService: DatabaseService) {}
+  constructor(
+    @Inject(DatabaseService) private readonly databaseService: DatabaseService,
+    @Inject(RateLimitService) private readonly rateLimitService: RateLimitService,
+  ) {}
 
   @Get()
   @RequirePermission("audit_log.view")
@@ -40,6 +46,7 @@ export class AuditLogController {
     @Query("before") beforeQuery?: string,
   ): Promise<AuditLogResponse> {
     const businessId = request.businessId!;
+    await this.enforceRateLimit(businessId);
     const limit = Math.min(Math.max(Number(limitQuery ?? 50) || 50, 1), 100);
     const before = beforeQuery ? new Date(beforeQuery) : undefined;
 
@@ -72,5 +79,25 @@ export class AuditLogController {
         createdAt: row.createdAt.toISOString(),
       })),
     };
+  }
+
+  private async enforceRateLimit(businessId: string): Promise<void> {
+    const rateLimit = await this.rateLimitService.checkFixedWindow(
+      "audit-log:list",
+      businessId,
+      30,
+      60,
+    );
+
+    if (!rateLimit.allowed) {
+      throw new HttpException(
+        {
+          type: `${PROBLEM_BASE_URL}/rate-limit-exceeded`,
+          message: "Too many audit-log requests. Try again later.",
+          retry_after_seconds: rateLimit.retryAfterSeconds,
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
   }
 }

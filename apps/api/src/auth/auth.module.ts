@@ -9,10 +9,11 @@ import { OwnerLoginController } from "./owner-login.controller";
 import { PinHashingService } from "./pin-hashing.service";
 import { PinLoginController } from "./pin-login.controller";
 import { RateLimitService } from "./rate-limit.service";
+import { RefreshController } from "./refresh.controller";
 
 @Module({
   imports: [DatabaseModule],
-  controllers: [PinLoginController, OwnerLoginController],
+  controllers: [PinLoginController, OwnerLoginController, RefreshController],
   providers: [
     ApiJwtService,
     AuthService,

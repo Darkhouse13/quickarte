@@ -15,11 +15,11 @@ import {
   users,
 } from "@quickarte/db-schema";
 import * as schema from "@quickarte/db-schema";
-import { hashPassword } from "better-auth/crypto";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
+import { hashBetterAuthPassword } from "../src/auth/better-auth-password";
 import { ProblemDetailsFilter } from "../src/common/filters/problem-details.filter";
 
 const databaseUrl =
@@ -75,7 +75,7 @@ before(async () => {
   ownerEmail = `owner-${runId}@example.test`;
   managerEmail = `manager-${runId}@example.test`;
   cashierEmail = `cashier-${runId}@example.test`;
-  const passwordHash = await hashPassword("quickarte123");
+  const passwordHash = await hashBetterAuthPassword("quickarte123");
 
   await adminDb.insert(users).values([
     { id: ownerUserId, name: "Admin Owner", email: ownerEmail, role: "owner" },

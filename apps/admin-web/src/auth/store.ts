@@ -33,9 +33,12 @@ type AuthState = {
   hydrate: () => void;
   setTokens: (tokens: { accessToken: string; refreshToken: string }) => void;
   login: (input: LoginInput) => Promise<LoginResult>;
+  refreshAccessToken: () => Promise<boolean>;
   clear: () => void;
   isAuthenticated: () => boolean;
 };
+
+let silentRefreshTimer: ReturnType<typeof setTimeout> | null = null;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   accessToken: null,
@@ -52,6 +55,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
     get().setTokens(stored);
+    if (!get().isAuthenticated()) {
+      void get().refreshAccessToken();
+    }
   },
   setTokens: (tokens) => {
     const payload = decodeToken(tokens.accessToken);
@@ -64,6 +70,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       roleId: payload?.role_id ?? null,
       issuedAt: payload?.iat ?? null,
       error: null,
+    });
+    scheduleSilentRefresh(payload, () => {
+      void get().refreshAccessToken();
     });
   },
   login: async (input) => {
@@ -94,7 +103,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ loading: false });
     return { ok: true };
   },
+  refreshAccessToken: async () => {
+    const { refreshToken, businessId } = get();
+    if (!refreshToken) {
+      get().clear();
+      return false;
+    }
+
+    const response = await createClient(apiBaseUrl()).POST("/v1/auth/refresh", {
+      headers: businessId ? { "X-Tenant-Id": businessId } : undefined,
+      body: { refreshToken },
+    });
+
+    if (response.error || !response.data) {
+      get().clear();
+      return false;
+    }
+
+    get().setTokens({
+      accessToken: response.data.accessToken,
+      refreshToken: response.data.refreshToken,
+    });
+    return true;
+  },
   clear: () => {
+    clearSilentRefreshTimer();
     localStorage.removeItem(STORAGE_KEY);
     set({
       accessToken: null,
@@ -157,5 +190,25 @@ function decodeToken(token: string): TokenPayload | null {
     return JSON.parse(atob(padded)) as TokenPayload;
   } catch {
     return null;
+  }
+}
+
+function scheduleSilentRefresh(
+  payload: TokenPayload | null,
+  refresh: () => void,
+): void {
+  clearSilentRefreshTimer();
+  if (!payload?.exp) {
+    return;
+  }
+
+  const refreshInMs = Math.max(payload.exp * 1000 - Date.now() - 2 * 60_000, 0);
+  silentRefreshTimer = setTimeout(refresh, refreshInMs);
+}
+
+function clearSilentRefreshTimer(): void {
+  if (silentRefreshTimer) {
+    clearTimeout(silentRefreshTimer);
+    silentRefreshTimer = null;
   }
 }
