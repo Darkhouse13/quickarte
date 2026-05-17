@@ -72,6 +72,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/sync/pull": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pull POS terminal sync changes */
+        get: operations["SyncController_pull"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sync/push": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Push POS terminal sync changes */
+        post: operations["SyncController_push"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -118,14 +152,31 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    businessId: string;
+                    pin: string;
+                };
+            };
+        };
         responses: {
             /** @description Access and refresh tokens issued. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        accessToken: string;
+                        refreshToken: string;
+                        /** @enum {string} */
+                        tokenType: "Bearer";
+                        /** @example 900 */
+                        expiresIn: number;
+                    };
+                };
             };
             /** @description Invalid PIN. */
             401: {
@@ -186,6 +237,84 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    SyncController_pull: {
+        parameters: {
+            query?: {
+                since?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description WatermelonDB-compatible pull payload. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        changes: {
+                            businesses?: {
+                                created: {
+                                    [key: string]: unknown;
+                                }[];
+                                updated: {
+                                    [key: string]: unknown;
+                                }[];
+                                deleted: string[];
+                            };
+                            staff_members?: {
+                                created: {
+                                    [key: string]: unknown;
+                                }[];
+                                updated: {
+                                    [key: string]: unknown;
+                                }[];
+                                deleted: string[];
+                            };
+                        };
+                        /** Format: date-time */
+                        timestamp: string;
+                    };
+                };
+            };
+        };
+    };
+    SyncController_push: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    changes: {
+                        [key: string]: unknown;
+                    };
+                    /** Format: date-time */
+                    lastPulledAt?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Push accepted. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "ok";
+                    };
+                };
             };
         };
     };

@@ -34,9 +34,64 @@
       "post": {
         "operationId": "PinLoginController_login",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "businessId",
+                  "pin"
+                ],
+                "properties": {
+                  "businessId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "pin": {
+                    "type": "string",
+                    "pattern": "^\\d{4,6}$"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Access and refresh tokens issued."
+            "description": "Access and refresh tokens issued.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "accessToken",
+                    "refreshToken",
+                    "tokenType",
+                    "expiresIn"
+                  ],
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "enum": [
+                        "Bearer"
+                      ]
+                    },
+                    "expiresIn": {
+                      "type": "number",
+                      "example": 900
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Invalid PIN."
@@ -98,6 +153,168 @@
         "summary": "Get the current tenant business profile",
         "tags": [
           "Businesses"
+        ]
+      }
+    },
+    "/v1/sync/pull": {
+      "get": {
+        "operationId": "SyncController_pull",
+        "parameters": [
+          {
+            "name": "since",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-05-17T10:00:00.000Z"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "WatermelonDB-compatible pull payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "changes",
+                    "timestamp"
+                  ],
+                  "properties": {
+                    "changes": {
+                      "type": "object",
+                      "properties": {
+                        "businesses": {
+                          "type": "object",
+                          "required": [
+                            "created",
+                            "updated",
+                            "deleted"
+                          ],
+                          "properties": {
+                            "created": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                              }
+                            },
+                            "updated": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                              }
+                            },
+                            "deleted": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "staff_members": {
+                          "type": "object",
+                          "required": [
+                            "created",
+                            "updated",
+                            "deleted"
+                          ],
+                          "properties": {
+                            "created": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                              }
+                            },
+                            "updated": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                              }
+                            },
+                            "deleted": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Pull POS terminal sync changes",
+        "tags": [
+          "Sync"
+        ]
+      }
+    },
+    "/v1/sync/push": {
+      "post": {
+        "operationId": "SyncController_push",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "changes"
+                ],
+                "properties": {
+                  "changes": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "lastPulledAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Push accepted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Push POS terminal sync changes",
+        "tags": [
+          "Sync"
         ]
       }
     }
