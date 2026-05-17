@@ -1,5 +1,6 @@
 import { Inject, Injectable, OnApplicationShutdown } from "@nestjs/common";
-import { sql } from "drizzle-orm";
+import { businesses } from "@quickarte/db-schema";
+import { eq, sql } from "drizzle-orm";
 import type { Pool } from "pg";
 import { DRIZZLE_CLIENT, PG_POOL, type QuickarteDatabase } from "./database.tokens";
 
@@ -29,6 +30,16 @@ export class DatabaseService implements OnApplicationShutdown {
     } catch {
       return "error";
     }
+  }
+
+  async findBusinessIdBySlug(slug: string): Promise<string | null> {
+    const [row] = await this.db
+      .select({ id: businesses.id })
+      .from(businesses)
+      .where(eq(businesses.slug, slug))
+      .limit(1);
+
+    return row?.id ?? null;
   }
 
   /**

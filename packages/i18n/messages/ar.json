@@ -81,6 +81,52 @@
       "newItem": "منتج جديد"
     }
   },
+  "admin": {
+    "auth": {
+      "title": "Connexion admin",
+      "email": "Email",
+      "password": "Mot de passe",
+      "signIn": "Se connecter",
+      "signingIn": "Connexion",
+      "logout": "Deconnexion",
+      "invalidCredentials": "Email ou mot de passe invalide",
+      "rateLimited": "Trop de tentatives. Reessayez dans {seconds} secondes."
+    },
+    "tenant": {
+      "slug": "Tenant",
+      "requiredTitle": "Tenant requis",
+      "requiredBody": "Ouvrez l'admin depuis le sous-domaine de votre restaurant."
+    },
+    "shell": {
+      "brand": "Quickarte Admin",
+      "navigation": "Navigation admin",
+      "comingSoon": "Bientot disponible",
+      "notFound": "Page introuvable"
+    },
+    "nav": {
+      "dashboard": "Tableau de bord",
+      "menu": "Menu",
+      "orders": "Commandes",
+      "reports": "Rapports",
+      "staff": "Equipe",
+      "settings": "Parametres"
+    },
+    "dashboard": {
+      "eyebrow": "Admin",
+      "title": "Tableau de bord",
+      "business": "Business",
+      "slug": "Slug",
+      "user": "Utilisateur",
+      "role": "Role",
+      "memberSince": "Connecte depuis",
+      "loading": "Chargement",
+      "error": "Impossible de charger le business",
+      "loadError": "Impossible de charger le business"
+    },
+    "settings": {
+      "language": "Langue"
+    }
+  },
   "pos": {
     "auth": {
       "title": "Connexion terminal",

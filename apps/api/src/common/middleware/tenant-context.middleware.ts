@@ -113,6 +113,8 @@ export class TenantContextMiddleware implements NestMiddleware {
       path === "/v1/health" ||
       path === "/auth/staff/pin-login" ||
       path === "/v1/auth/staff/pin-login" ||
+      path === "/auth/owner/login" ||
+      path === "/v1/auth/owner/login" ||
       path === "/docs" ||
       path === "/v1/docs" ||
       path === "/docs-json" ||

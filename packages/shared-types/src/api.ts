@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/owner/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Owner or manager email/password login */
+        post: operations["OwnerLoginController_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/audit-log": {
         parameters: {
             query?: never;
@@ -186,6 +203,57 @@ export interface operations {
                 content?: never;
             };
             /** @description Too many PIN attempts. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OwnerLoginController_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                    password: string;
+                    /** @example cafe-atlas */
+                    businessSlug: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Access and refresh tokens issued. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        accessToken: string;
+                        refreshToken: string;
+                        /** @enum {string} */
+                        tokenType: "Bearer";
+                        /** @example 900 */
+                        expiresIn: number;
+                    };
+                };
+            };
+            /** @description Invalid credentials. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Too many login attempts. */
             429: {
                 headers: {
                     [name: string]: unknown;
