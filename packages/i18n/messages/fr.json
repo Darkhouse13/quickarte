@@ -78,5 +78,32 @@
     "title": {
       "newItem": "Nouvel Article"
     }
+  },
+  "pos": {
+    "auth": {
+      "title": "Connexion terminal",
+      "businessId": "Identifiant business",
+      "businessIdPlaceholder": "UUID du business",
+      "pin": "PIN",
+      "pinPlaceholder": "4 Ã  6 chiffres",
+      "signIn": "Se connecter",
+      "invalidPin": "PIN invalide",
+      "rateLimited": "Trop de tentatives. RÃ©essayez dans {seconds} secondes."
+    },
+    "home": {
+      "terminal": "Terminal POS",
+      "noBusiness": "Business non synchronisÃ©",
+      "noStaff": "Staff non synchronisÃ©",
+      "signOut": "DÃ©connexion"
+    },
+    "settings": {
+      "language": "Langue"
+    },
+    "sync": {
+      "green": "SynchronisÃ©",
+      "yellow": "{count, plural, =0 {Synchronisation} one {# en attente} other {# en attente}}",
+      "red": "Hors ligne",
+      "syncNow": "Synchroniser"
+    }
   }
 }

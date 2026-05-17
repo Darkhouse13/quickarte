@@ -8,6 +8,7 @@ import { BusinessesModule } from "./businesses/businesses.module";
 import { TenantContextMiddleware } from "./common/middleware/tenant-context.middleware";
 import { validateEnv } from "./config/env";
 import { HealthModule } from "./health/health.module";
+import { SyncModule } from "./sync/sync.module";
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { HealthModule } from "./health/health.module";
     AuthModule,
     AuditLogModule,
     BusinessesModule,
+    SyncModule,
   ],
 })
 export class AppModule implements NestModule {

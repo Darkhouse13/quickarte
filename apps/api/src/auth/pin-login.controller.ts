@@ -10,7 +10,7 @@ import {
   Req,
   UnauthorizedException,
 } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { IsUUID, Matches } from "class-validator";
 import type { Request } from "express";
 import { AuthService, type TokenPair } from "./auth.service";
@@ -37,7 +37,30 @@ export class PinLoginController {
   @Post("pin-login")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Staff PIN login" })
-  @ApiResponse({ status: 200, description: "Access and refresh tokens issued." })
+  @ApiBody({
+    schema: {
+      type: "object",
+      required: ["businessId", "pin"],
+      properties: {
+        businessId: { type: "string", format: "uuid" },
+        pin: { type: "string", pattern: "^\\d{4,6}$" },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Access and refresh tokens issued.",
+    schema: {
+      type: "object",
+      required: ["accessToken", "refreshToken", "tokenType", "expiresIn"],
+      properties: {
+        accessToken: { type: "string" },
+        refreshToken: { type: "string" },
+        tokenType: { type: "string", enum: ["Bearer"] },
+        expiresIn: { type: "number", example: 900 },
+      },
+    },
+  })
   @ApiResponse({ status: 401, description: "Invalid PIN." })
   @ApiResponse({ status: 429, description: "Too many PIN attempts." })
   async login(
