@@ -15,7 +15,7 @@ import {
 const BUSINESS = {
   ownerName: "Hamza Bakhat",
   email: "hamza@labocateria.ma",
-  password: "labocatería26",
+  password: "labocateria26",
   name: "La Bocatería",
   slug: "la-bocateria",
   type: "restaurant" as const,
