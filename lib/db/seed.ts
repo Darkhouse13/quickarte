@@ -30,6 +30,8 @@ async function main() {
   console.log("→ Seeding Quickarte demo data…");
 
   await seedFullDemo();
+  const { seedLaBocateriaDemo } = await import("./seed/la-bocateria");
+  await seedLaBocateriaDemo();
   await seedSnackAtlasDemo();
   await seedSingleModuleDemo();
 
