@@ -3,8 +3,7 @@ import { env } from "@/lib/env";
 import { requireBusiness } from "@/lib/auth/get-business";
 import { assertRole } from "@/lib/identity/permissions";
 import { SectionHeader } from "@/components/ui/section-header";
-import { getEntitlements, hasEntitlement } from "@/lib/entitlements/queries";
-import { NotificationsSettings } from "@/components/merchant/notifications-settings";
+import { getEntitlements } from "@/lib/entitlements/queries";
 import { BusinessProfileSection } from "@/components/merchant/business-profile-section";
 import {
   AddressSettingsSection,
@@ -30,10 +29,7 @@ export default async function SettingsPage({ params }: Props) {
   const { session, business } = await requireBusiness();
   await assertRole(session.user.id, business.id, ["owner", "manager"]);
 
-  const [hasOrdering, entitlements] = await Promise.all([
-    hasEntitlement(business.id, "online_ordering"),
-    getEntitlements(business.id),
-  ]);
+  const entitlements = await getEntitlements(business.id);
 
   const locationLabel =
     [business.city, business.address].filter(Boolean).join(" · ") ||
@@ -125,12 +121,6 @@ export default async function SettingsPage({ params }: Props) {
             initialCount={settings.tableQrCount}
           />
         </section>
-
-        {hasOrdering && env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ? (
-          <NotificationsSettings
-            vapidPublicKey={env.NEXT_PUBLIC_VAPID_PUBLIC_KEY}
-          />
-        ) : null}
       </div>
     </>
   );

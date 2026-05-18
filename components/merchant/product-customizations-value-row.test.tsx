@@ -8,9 +8,8 @@ import {
 } from "./product-customizations-value-row";
 
 // The DOM order of the three zones in the value-row grid is what determines
-// their on-screen left-to-right placement (grid-template-columns:
-// minmax(0,1fr) auto auto). Asserting on DOM order is the SSR-friendly proxy
-// for the visual non-overlap a playwright snapshot would otherwise check.
+// their on-screen left-to-right placement. Asserting on DOM order is the
+// SSR-friendly proxy for the compact HTML-design row layout.
 
 const sampleValue: ProductCustomizationOptionValue = {
   id: "v_1",
@@ -39,64 +38,52 @@ function renderRow(overrides: Partial<typeof sampleValue> = {}) {
   );
 }
 
-test("ValueRow uses a 1fr/auto/auto three-column grid", () => {
+test("ValueRow uses compact 1fr/auto/auto grid columns", () => {
   const html = renderRow();
-  assert.match(
-    html,
-    /grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto\s+auto/,
-  );
-  assert.match(html, /class="[^"]*\bgrid\b[^"]*\bgap-3\b/);
+  assert.match(html, /grid-cols-\[minmax\(0,1fr\)_auto_auto\]/);
+  assert.match(html, /class="[^"]*\bgrid\b[^"]*\bgap-2\b/);
 });
 
-test("ValueRow renders info, toggle, and arrows zones in left-to-right DOM order", () => {
+test("ValueRow renders info, toggle, and controls zones in left-to-right DOM order", () => {
   const html = renderRow();
   const info = html.indexOf('data-testid="value-row-info"');
   const toggle = html.indexOf('data-testid="value-row-toggle"');
-  const arrows = html.indexOf('data-testid="value-row-arrows"');
+  const controls = html.indexOf('data-testid="value-row-arrows"');
   assert.ok(info > -1, "info zone missing");
   assert.ok(toggle > -1, "toggle zone missing");
-  assert.ok(arrows > -1, "arrows zone missing");
+  assert.ok(controls > -1, "controls zone missing");
   assert.ok(
-    info < toggle && toggle < arrows,
-    `zones out of order: info=${info} toggle=${toggle} arrows=${arrows}`,
+    info < toggle && toggle < controls,
+    `zones out of order: info=${info} toggle=${toggle} controls=${controls}`,
   );
 });
 
-test("SUPPRIMER lives inside the info zone, not under the controls", () => {
+test("delete control lives with the compact row controls", () => {
   const html = renderRow();
-  const info = html.indexOf('data-testid="value-row-info"');
-  const toggle = html.indexOf('data-testid="value-row-toggle"');
+  const controls = html.indexOf('data-testid="value-row-arrows"');
   const del = html.indexOf('data-testid="value-row-delete"');
   assert.ok(
-    del > info && del < toggle,
-    `SUPPRIMER not in info zone: del=${del} info=${info} toggle=${toggle}`,
+    del > controls,
+    `delete button not in controls zone: del=${del} controls=${controls}`,
   );
+  assert.match(html.slice(del, del + 300), /aria-label="Supprimer"/);
 });
 
-test("toggle zone has its own left-border separator from the info zone", () => {
+test("toggle uses the extracted small track treatment", () => {
   const html = renderRow();
-  const toggle = html.indexOf('data-testid="value-row-toggle"');
-  const arrows = html.indexOf('data-testid="value-row-arrows"');
-  const toggleMarkup = html.slice(toggle, arrows);
-  assert.match(
-    toggleMarkup,
-    /border-l/,
-    "toggle zone is missing its left-border separator",
-  );
+  const toggle = html.indexOf('data-testid="value-row-toggle-button"');
+  assert.ok(toggle > -1, "toggle button missing");
+  const toggleSlice = html.slice(toggle, toggle + 500);
+  assert.match(toggleSlice, /\bw-11\b/, "toggle tap target < 44px wide");
+  assert.match(toggleSlice, /min-h-\[44px\]/, "toggle tap target < 44px tall");
+  assert.match(toggleSlice, /\bw-9\b/, "visual toggle track should be compact");
+  assert.match(toggleSlice, /\bbg-ink\b/, "enabled track should use ink fill");
 });
 
-test("toggle and arrow buttons each have ≥44px tap targets", () => {
+test("arrow and delete controls keep ≥44px tap targets", () => {
   const html = renderRow();
-  const toggleBtn = html.indexOf('data-testid="value-row-toggle-button"');
-  assert.ok(toggleBtn > -1, "toggle button missing");
-  const toggleSlice = html.slice(toggleBtn, toggleBtn + 400);
-  assert.match(toggleSlice, /min-h-\[44px\]/, "toggle tap target < 44px");
-  assert.match(toggleSlice, /\bw-12\b/, "toggle tap target < 44px wide");
-
-  const arrows = html.indexOf('data-testid="value-row-arrows"');
-  const arrowsSlice = html.slice(arrows);
-  const tall = arrowsSlice.match(/min-h-\[44px\]/g) ?? [];
-  const wide = arrowsSlice.match(/\bw-11\b/g) ?? [];
-  assert.ok(tall.length >= 2, "both arrow buttons must be ≥44px tall");
-  assert.ok(wide.length >= 2, "both arrow buttons must be ≥44px wide");
+  const controls = html.indexOf('data-testid="value-row-arrows"');
+  const controlsSlice = html.slice(controls);
+  const tall = controlsSlice.match(/min-h-\[44px\]/g) ?? [];
+  assert.ok(tall.length >= 3, "up, down, and delete buttons must be ≥44px tall");
 });

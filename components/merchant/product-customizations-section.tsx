@@ -1069,29 +1069,32 @@ function OptionCard({
 
   return (
     <div
-      className={cn("border-2 border-ink", !option.available && "opacity-55")}
+      data-testid="option-choice-card"
+      className={cn("border border-ink bg-base", !option.available && "opacity-55")}
     >
       <div className="flex items-stretch">
-        <div className="flex-1 min-w-0 p-3 flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <InlineText
-              ariaLabel="Nom de l'option"
-              value={option.name}
-              placeholder="Nom"
-              inputRef={registerName}
-              className={cn(
-                "flex-1 min-w-0 font-bold",
-                !option.available && "line-through",
-              )}
-              onCommit={onCommitName}
-            />
-            {savedId === option.id ? <SavedFlash key={savedKey} /> : null}
+        <div className="flex-1 min-w-0 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <InlineText
+                ariaLabel="Nom de l'option"
+                value={option.name}
+                placeholder="Nom"
+                inputRef={registerName}
+                className={cn(
+                  "min-w-0 flex-1 px-0 py-0 font-sans text-[17px] font-bold hover:border-transparent focus:px-2 focus:py-2",
+                  !option.available && "line-through",
+                )}
+                onCommit={onCommitName}
+              />
+              {savedId === option.id ? <SavedFlash key={savedKey} /> : null}
+            </div>
             <button
               type="button"
               onClick={onToggleType}
               disabled={pending}
               aria-label="Changer le type de choix"
-              className="shrink-0 border-2 border-ink px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-ink bg-base hover:bg-ink hover:text-base transition-colors disabled:opacity-50 focus:outline-none"
+              className="shrink-0 border border-ink px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-ink bg-base hover:bg-ink hover:text-base transition-colors disabled:opacity-50 focus:outline-none"
             >
               {option.type === "single_select"
                 ? "Choix unique"
@@ -1099,34 +1102,36 @@ function OptionCard({
             </button>
           </div>
 
-          {!option.available ? <Pill>Indisponible</Pill> : null}
+          {!option.available ? <div className="mt-3"><Pill>Indisponible</Pill></div> : null}
 
-          <InlineToggle
-            label="Obligatoire"
-            checked={option.required}
-            disabled={pending}
-            onChange={onRequired}
-          />
+          <div className="mt-3 border-b border-outline py-3">
+            <InlineToggle
+              label="Obligatoire"
+              checked={option.required}
+              disabled={pending}
+              onChange={onRequired}
+            />
+          </div>
 
           {showMinMax ? (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-ink">
+            <div className="flex flex-col gap-2 py-3">
+              <div className="flex items-center gap-8">
+                <label className="flex items-baseline gap-2">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent">
                     Min
                   </span>
                   <InlineText
                     ariaLabel="Nombre minimum de choix"
                     numeric
                     value={String(option.minSelect)}
-                    className="w-16 font-mono"
+                    className="w-12 px-0 py-0 font-mono text-lg font-bold hover:border-transparent focus:px-2 focus:py-2"
                     onCommit={(raw) => {
                       onCommitMin(raw);
                     }}
                   />
                 </label>
-                <label className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-ink">
+                <label className="flex items-baseline gap-2">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent">
                     Max
                   </span>
                   <InlineText
@@ -1138,7 +1143,7 @@ function OptionCard({
                         : ""
                     }
                     placeholder="Illimité"
-                    className="w-16 font-mono"
+                    className="w-16 px-0 py-0 font-mono text-lg font-bold hover:border-transparent focus:px-2 focus:py-2"
                     onCommit={(raw) => {
                       onCommitMax(raw);
                     }}
@@ -1154,35 +1159,45 @@ function OptionCard({
           ) : null}
 
           {incomplete ? (
-            <p className="font-sans text-sm text-accent leading-snug border border-accent px-3 py-2">
+            <p className="mt-3 font-sans text-sm text-accent leading-snug border border-accent px-3 py-2">
               Configuration incomplète : ajoutez au moins une valeur.
             </p>
           ) : null}
 
-          <div className="pl-6 flex flex-col gap-2">
-            {option.values.length === 0 ? (
-              <p className="font-sans text-sm text-ink/50 leading-snug">
-                Aucune valeur. Ajoutez au moins une valeur pour cette option.
-              </p>
-            ) : (
-              option.values.map((value, index) => (
-                <ValueRow
-                  key={value.id}
-                  value={value}
-                  first={index === 0}
-                  last={index === option.values.length - 1}
-                  pending={pending}
-                  saved={savedId === value.id}
-                  savedKey={savedKey}
-                  registerName={registerValueName(value.id)}
-                  onCommitName={(raw) => onCommitValueName(value, raw)}
-                  onCommitPrice={(raw) => onCommitValuePrice(value, raw)}
-                  onAvailability={(a) => onValueAvailability(value, a)}
-                  onMove={(d) => onMoveValue(index, d)}
-                  onDelete={() => onDeleteValue(value)}
-                />
-              ))
-            )}
+          <div className="mt-4 border-t border-outline pt-3">
+            <div className="mb-2 flex items-baseline justify-between gap-3">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-ink/50">
+                Valeurs
+              </span>
+              <span className="font-mono text-[10px] text-ink/50">
+                {String(option.values.length).padStart(2, "0")}
+              </span>
+            </div>
+            <div className="border border-outline">
+              {option.values.length === 0 ? (
+                <p className="px-3 py-4 font-sans text-sm text-ink/50 leading-snug">
+                  Aucune valeur. Ajoutez au moins une valeur pour cette option.
+                </p>
+              ) : (
+                option.values.map((value, index) => (
+                  <ValueRow
+                    key={value.id}
+                    value={value}
+                    first={index === 0}
+                    last={index === option.values.length - 1}
+                    pending={pending}
+                    saved={savedId === value.id}
+                    savedKey={savedKey}
+                    registerName={registerValueName(value.id)}
+                    onCommitName={(raw) => onCommitValueName(value, raw)}
+                    onCommitPrice={(raw) => onCommitValuePrice(value, raw)}
+                    onAvailability={(a) => onValueAvailability(value, a)}
+                    onMove={(d) => onMoveValue(index, d)}
+                    onDelete={() => onDeleteValue(value)}
+                  />
+                ))
+              )}
+            </div>
             <AddButton
               label="+ Ajouter une valeur"
               onClick={onAddValue}
@@ -1194,9 +1209,9 @@ function OptionCard({
           <button
             type="button"
             onClick={onDelete}
-            className="self-start font-mono text-[10px] uppercase tracking-widest text-ink/50 hover:text-accent transition-colors focus:outline-none"
+            className="mt-4 font-mono text-[10px] uppercase tracking-widest text-ink/50 hover:text-accent transition-colors focus:outline-none"
           >
-            Supprimer
+            Supprimer l'option
           </button>
         </div>
 
