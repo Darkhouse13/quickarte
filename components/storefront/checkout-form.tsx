@@ -264,7 +264,7 @@ export function CheckoutForm({
           </div>
           <div>
             <FormInput
-              label="Téléphone"
+              label="Téléphone (optionnel)"
               name="customerPhone"
               type="tel"
               placeholder="+212 6 12 34 56 78"

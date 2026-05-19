@@ -59,7 +59,7 @@ export type PlaceOrderResult =
 
 type PlaceOrderPayload = {
   customerName: string;
-  customerPhone: string;
+  customerPhone: string | null;
   orderType: "dine_in" | "takeaway";
   tableNumber?: number;
   notes?: string;
@@ -281,7 +281,7 @@ export async function placeOrder(
     if (hasLoyalty && hasOrdering) {
       const program = await getProgram(business.id);
       if (program && program.enabled) {
-        await recordAccrual({
+        if (data.customerPhone) await recordAccrual({
           businessId: business.id,
           phone: data.customerPhone,
           name: data.customerName,
