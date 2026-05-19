@@ -35,3 +35,4 @@ tsconfig.tsbuildinfo
 
 # Audit env (never commit secrets)
 .env.audit
+.hermes/
