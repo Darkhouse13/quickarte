@@ -70,14 +70,14 @@ export function CheckoutForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (hydrated && getItemCount() === 0 && !isPending) {
-      router.replace(`/${locale}/${businessSlug}`);
-    }
-  }, [hydrated, getItemCount, isPending, router, locale, businessSlug]);
-
   const itemCount = hydrated ? getItemCount() : 0;
   const total = hydrated ? getTotal() : 0;
+
+  useEffect(() => {
+    if (hydrated && itemCount === 0 && !isPending) {
+      router.replace(`/${locale}/${businessSlug}`);
+    }
+  }, [hydrated, itemCount, isPending, router, locale, businessSlug]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

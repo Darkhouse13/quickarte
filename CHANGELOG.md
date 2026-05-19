@@ -1,3 +1,27 @@
+## 2026-05-19 — Checkout empty-cart redirect after removing last item
+
+### Context
+
+- Overnight final-demo QA on production found a mobile La Bocatería cart edge case: after adding an item, opening checkout, increasing/decreasing quantity, then tapping `Retirer` on the final item, the customer stayed on `/la-bocateria/order?table=22` with an empty checkout instead of returning to the storefront.
+- Console and page-error capture were clean; no order was submitted and no customer/merchant data was created.
+
+### Root cause
+
+`components/storefront/checkout-form.tsx` computed `itemCount`, but the empty-cart redirect effect depended on the stable `getItemCount` store function rather than the computed `itemCount` value. Removing the final cart line re-rendered the component, but the effect dependencies did not change, so the redirect did not re-run.
+
+### Changed
+
+- Moved `itemCount`/`total` computation before the redirect effect.
+- Changed the effect to check and depend on `itemCount`, so removing the last cart item redirects back to the storefront immediately.
+- Added `components/storefront/checkout-form.test.ts` as a focused regression contract and wired it into `npm test`.
+
+### Verification
+
+- `npm test` — 369 passed, 8 skipped, 0 failed.
+- `npm run typecheck` — passed.
+- `npm run build` — passed.
+- Live production browser verification after deploy: `https://quickarte.fr/la-bocateria?table=22` add → checkout → increase → decrease → `Retirer` redirected back to `https://quickarte.fr/la-bocateria` with no console/page errors.
+
 # Changelog
 
 All notable Quickarte production/demo-readiness changes are documented here.
