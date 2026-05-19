@@ -27,6 +27,7 @@ export async function createProduct(
     description: formData.get("description"),
     price: formData.get("price"),
     categoryId: formData.get("categoryId"),
+    image: formData.get("image"),
     available: formData.get("available"),
   };
 
@@ -62,6 +63,7 @@ export async function createProduct(
     name: parsed.data.name,
     description: parsed.data.description ?? null,
     price: parsed.data.price.toFixed(2),
+    image: parsed.data.image ?? null,
     available: parsed.data.available,
     position: 999,
   });
@@ -81,6 +83,7 @@ export async function updateProduct(
     description: formData.get("description"),
     price: formData.get("price"),
     categoryId: formData.get("categoryId"),
+    image: formData.get("image"),
     available: formData.get("available"),
   };
 
@@ -101,7 +104,7 @@ export async function updateProduct(
       eq(products.id, productId),
       eq(products.businessId, business.id),
     ),
-    columns: { id: true },
+    columns: { id: true, image: true },
   });
   if (!existing) {
     return { status: "error", message: "Article introuvable" };
@@ -128,6 +131,7 @@ export async function updateProduct(
       name: parsed.data.name,
       description: parsed.data.description ?? null,
       price: parsed.data.price.toFixed(2),
+      image: parsed.data.image ?? existing.image ?? null,
       available: parsed.data.available,
       updatedAt: new Date(),
     })

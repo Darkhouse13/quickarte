@@ -1,6 +1,24 @@
 import { z } from "zod";
 import { optionMaxSelectionsOverridesSchema } from "./variant-option-overrides";
 
+export const imageDataUrlSchema = z
+  .string()
+  .trim()
+  .transform((value) => (value.length === 0 ? undefined : value))
+  .refine(
+    (value) =>
+      value === undefined ||
+      /^data:image\/(jpeg|png|webp|gif|avif|heic|heif);base64,[A-Za-z0-9+/=]+$/.test(
+        value,
+      ),
+    "Image invalide",
+  )
+  .refine(
+    (value) => value === undefined || value.length <= 2_800_000,
+    "Image trop volumineuse",
+  )
+  .optional();
+
 export const createProductSchema = z.object({
   name: z.string().trim().min(1, "Le nom est requis"),
   description: z
@@ -12,6 +30,7 @@ export const createProductSchema = z.object({
     .number({ invalid_type_error: "Prix invalide" })
     .positive("Le prix doit etre positif"),
   categoryId: z.string().uuid("Categorie invalide"),
+  image: imageDataUrlSchema,
   available: z
     .union([z.boolean(), z.literal("true"), z.literal("false"), z.literal("on")])
     .transform((v) => v === true || v === "true" || v === "on")
