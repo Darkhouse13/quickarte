@@ -46,7 +46,7 @@ The checkout success path cleared the cart before the confirmation navigation ha
 
 ### Verification
 
-- `npm test` — 370 passed, 8 skipped, 0 failed.
+- `npm test` — 371 passed, 8 skipped, 0 failed.
 - `npx tsx --test components/storefront/checkout-form.test.ts` — passed with the focused confirmation-navigation contract.
 - `npm run typecheck` — passed.
 - `npm run build` — passed.
