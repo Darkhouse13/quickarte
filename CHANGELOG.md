@@ -26,6 +26,32 @@
 
 All notable Quickarte production/demo-readiness changes are documented here.
 
+## 2026-05-19 — Checkout confirmation redirect after validation error
+
+### Context
+
+- Final pre-demo live QA on production found a public La Bocatería checkout edge case: after an empty submit displayed validation, filling valid contact details and submitting created the order server-side but left the customer on `/la-bocateria/order?table=31` with `ENVOI…`, `0 ARTICLES`, and no visible tracker handoff.
+- Console/page-error capture was clean; network evidence showed the successful order POST and confirmation RSC fetch, but the client stayed on the checkout screen.
+
+### Root cause
+
+The checkout success path cleared the cart before the confirmation navigation had visibly committed. That cart clear made `itemCount` drop to zero, which could race with the empty-cart redirect effect introduced for the final-item removal fix, especially after a prior validation-error render.
+
+### Changed
+
+- Added an `orderSubmitted` guard in `components/storefront/checkout-form.tsx` so the empty-cart redirect is suppressed once a valid submit succeeds.
+- Switched the successful confirmation handoff to `window.location.assign(...)` so the customer gets a deterministic confirmation/tracker document navigation after a server-action submit, including after prior validation errors.
+- Kept the existing final-item-removal redirect for non-submitted empty carts.
+- Added a focused regression contract to `components/storefront/checkout-form.test.ts`.
+
+### Verification
+
+- `npm test` — 370 passed, 8 skipped, 0 failed.
+- `npx tsx --test components/storefront/checkout-form.test.ts` — passed with the focused confirmation-navigation contract.
+- `npm run typecheck` — passed.
+- `npm run build` — passed.
+- Live production verification to be recorded in the overnight QA report after manual container deploy.
+
 ## 2026-05-19 — Catalogue image upload stabilization for La Bocatería demo
 
 ### Context
