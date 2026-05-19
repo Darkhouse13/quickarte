@@ -74,3 +74,28 @@ quickarte-manual:catalogue-image-bodylimit-20260519012211
 ```
 
 - Removed temporary QA artifacts, stopped rollback containers, and temporary QA account after verification.
+
+## 2026-05-19 — French auth error copy for demo login/register flows
+
+### Context
+
+- Overnight final-demo QA on production found that the French login screen rendered Better Auth's raw English provider message after an invalid login attempt: `Invalid email or password`.
+- The affected live path was `https://quickarte.fr/login` on mobile viewport. The form stayed functional, but the mixed-language error copy was demo-visible.
+
+### Root cause
+
+`components/auth/login-form.tsx` and `components/auth/register-form.tsx` surfaced `err.message` from `authClient` directly. Better Auth returns some default provider errors in English, so French UI pages could show English failure text.
+
+### Changed
+
+- Added `formatAuthErrorMessage` to translate known auth provider failures to French and fall back to French generic copy for unknown messages.
+- Applied the formatter to login and register error handling.
+- Added regression coverage for invalid-login, duplicate-account, and unknown-provider auth messages.
+
+### Verification
+
+- Source validation passed:
+  - `npm test -- lib/auth/error-messages.test.ts`
+  - `npm run typecheck`
+  - `npm run build`
+- Live production verification before the patch reproduced the English error with an invalid login attempt and no browser console JS exceptions.
