@@ -29,4 +29,15 @@ describe("catalogue product image upload", () => {
     assert.match(actions, /image: parsed\.data\.image \?\? existing\.image \?\? null/);
     assert.match(editPage, /image: true/);
   });
+
+  it("allows catalogue image payloads within the client-side limit", () => {
+    const config = read("next.config.ts");
+    const schema = read("lib/catalog/schemas.ts");
+    const form = read("components/merchant/new-item-form.tsx");
+
+    assert.match(config, /serverActions:\s*{[\s\S]*bodySizeLimit:\s*\"4mb\"/);
+    assert.match(schema, /value\.length <= 2_800_000/);
+    assert.match(form, /file\.size > 2 \* 1024 \* 1024/);
+  });
+
 });
