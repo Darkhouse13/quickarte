@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   useTransition,
+  type ChangeEvent,
   type FormEvent,
 } from "react";
 import { ArrowLeft, Camera } from "lucide-react";
@@ -40,6 +41,7 @@ type ExistingProduct = {
   price: string;
   categoryId: string | null;
   available: boolean;
+  image: string | null;
 };
 
 type Props = {
@@ -64,6 +66,9 @@ export function NewItemForm({
 
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [available, setAvailable] = useState(product?.available ?? true);
+  const [imageValue, setImageValue] = useState(product?.image ?? "");
+  const [imagePreview, setImagePreview] = useState(product?.image ?? "");
+  const [imageError, setImageError] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string>(
     product?.categoryId ?? "",
   );
@@ -89,6 +94,43 @@ export function NewItemForm({
     state.status === "error" ? state.message : null;
   const fieldErrors =
     state.status === "error" ? state.fieldErrors ?? {} : {};
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setImageError(null);
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setImageError("Choisissez une image.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setImageError("Image trop volumineuse (max 2 Mo).");
+      event.target.value = "";
+      return;
+    }
+
+    setImagePreview(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setImageValue(reader.result);
+      }
+    };
+    reader.onerror = () => {
+      setImageError("Lecture de l'image impossible.");
+      setImagePreview(product?.image ?? "");
+      setImageValue(product?.image ?? "");
+      event.target.value = "";
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setImageValue("");
+    setImagePreview("");
+    setImageError(null);
+  };
 
   const handleCreateCategory = () => {
     const name = newCategoryName.trim();
@@ -167,6 +209,7 @@ export function NewItemForm({
           value={available ? "true" : "false"}
         />
         <input type="hidden" name="categoryId" value={categoryId} />
+        <input type="hidden" name="image" value={imageValue} />
 
         <h2 className="font-mono font-bold text-sm uppercase tracking-widest text-ink/40 mb-6">
           01 / Informations
@@ -177,17 +220,47 @@ export function NewItemForm({
             <label className="block font-mono text-[11px] uppercase tracking-widest text-ink mb-3">
               Photo
             </label>
-            <button
-              type="button"
-              className="w-[120px] h-[120px] border-2 border-dashed border-outline flex items-center justify-center text-ink/30 hover:border-ink hover:text-ink transition-colors cursor-pointer bg-base group relative focus:outline-none focus:border-accent"
-            >
-              <Camera
-                className="w-8 h-8"
-                strokeWidth={1.5}
-                strokeLinecap="square"
-                strokeLinejoin="miter"
-              />
-            </button>
+            <div className="flex items-start gap-3">
+              <label className="w-[120px] h-[120px] border-2 border-dashed border-outline flex items-center justify-center text-ink/30 hover:border-ink hover:text-ink transition-colors cursor-pointer bg-base group relative focus-within:border-accent overflow-hidden">
+                <input
+                  type="file"
+                  name="imageFile"
+                  accept="image/*"
+                  aria-label="Ajouter une photo"
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  onChange={handleImageChange}
+                />
+                {imagePreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={imagePreview}
+                    alt="Aperçu de la photo"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <Camera
+                    className="w-8 h-8 pointer-events-none"
+                    strokeWidth={1.5}
+                    strokeLinecap="square"
+                    strokeLinejoin="miter"
+                  />
+                )}
+              </label>
+              {imagePreview ? (
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="font-mono text-[11px] uppercase tracking-widest text-accent hover:text-ink transition-colors mt-2"
+                >
+                  Retirer
+                </button>
+              ) : null}
+            </div>
+            {imageError ? (
+              <p className="font-mono text-[11px] text-accent mt-2">
+                {imageError}
+              </p>
+            ) : null}
           </div>
 
           <FormInput

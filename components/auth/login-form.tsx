@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FormInput } from "@/components/ui/form-input";
 import { authClient } from "@/lib/auth/client";
+import { formatAuthErrorMessage } from "@/lib/auth/error-messages";
 import { cn } from "@/lib/utils/cn";
 
 export function LoginForm() {
@@ -28,7 +29,7 @@ export function LoginForm() {
         password,
       });
       if (err) {
-        setError(err.message ?? "Échec de la connexion");
+        setError(formatAuthErrorMessage(err.message, "Échec de la connexion"));
         return;
       }
       router.replace("/home");

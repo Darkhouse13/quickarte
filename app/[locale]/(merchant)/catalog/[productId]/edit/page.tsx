@@ -37,6 +37,7 @@ export default async function EditCatalogItemPage({ params }: Props) {
       description: true,
       price: true,
       categoryId: true,
+      image: true,
       available: true,
     },
   });

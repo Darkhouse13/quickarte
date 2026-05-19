@@ -30,6 +30,24 @@
   }
 }
 
+@utility category-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink) var(--color-outline);
+  scrollbar-gutter: stable;
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--color-outline);
+    border-top: 3px solid var(--color-base);
+    border-bottom: 3px solid var(--color-base);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-ink);
+    border: 2px solid var(--color-base);
+  }
+}
+
 @utility brutalist-img {
   filter: contrast(1.1) saturate(0.9);
 }

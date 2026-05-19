@@ -68,21 +68,23 @@ export function CheckoutForm({
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [orderSubmitted, setOrderSubmitted] = useState(false);
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    if (hydrated && getItemCount() === 0 && !isPending) {
-      router.replace(`/${locale}/${businessSlug}`);
-    }
-  }, [hydrated, getItemCount, isPending, router, locale, businessSlug]);
 
   const itemCount = hydrated ? getItemCount() : 0;
   const total = hydrated ? getTotal() : 0;
+
+  useEffect(() => {
+    if (hydrated && itemCount === 0 && !isPending && !orderSubmitted) {
+      router.replace(`/${locale}/${businessSlug}`);
+    }
+  }, [hydrated, itemCount, isPending, orderSubmitted, router, locale, businessSlug]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFieldErrors({});
     setFormError(null);
+    setOrderSubmitted(false);
 
     if (!orderingEnabled) {
       setFormError("Commande en ligne désactivée pour ce restaurant");
@@ -115,9 +117,10 @@ export function CheckoutForm({
         setFormError(result.message);
         return;
       }
+      setOrderSubmitted(true);
       clearCart();
 
-      router.replace(
+      window.location.assign(
         `/${locale}/${businessSlug}/order/confirmation?orderId=${result.orderId}`,
       );
     });

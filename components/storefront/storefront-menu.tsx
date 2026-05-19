@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CategoryPills } from "@/components/ui/category-pills";
 import { MenuItemCard } from "@/components/ui/menu-item-card";
@@ -20,6 +20,10 @@ export function StorefrontMenu({ business, locale, initialTableNumber }: Props) 
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState(
     business.sections[0]?.id ?? "",
+  );
+  const sectionIds = useMemo(
+    () => business.sections.map((section) => section.id),
+    [business.sections],
   );
 
   const items = useCartStore((s) => s.items);
@@ -63,6 +67,53 @@ export function StorefrontMenu({ business, locale, initialTableNumber }: Props) 
     0,
   );
   const menuEmpty = totalItemCount === 0;
+
+  useEffect(() => {
+    const firstSectionId = sectionIds[0];
+    if (!firstSectionId) return;
+
+    let frame = 0;
+
+    const updateActiveCategory = () => {
+      frame = 0;
+      const stickyOffset = 172;
+      let current = firstSectionId;
+
+      for (const id of sectionIds) {
+        const section = document.getElementById(id);
+        if (!section) continue;
+        const top = section.getBoundingClientRect().top;
+        if (top <= stickyOffset) {
+          current = id;
+        } else {
+          break;
+        }
+      }
+
+      if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 4) {
+        current = sectionIds[sectionIds.length - 1] ?? current;
+      }
+
+      setActiveCategory((previous) =>
+        previous === current ? previous : current,
+      );
+    };
+
+    const requestUpdate = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(updateActiveCategory);
+    };
+
+    updateActiveCategory();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", requestUpdate);
+    };
+  }, [sectionIds]);
 
   const handleSelect = (id: string) => {
     setActiveCategory(id);

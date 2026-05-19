@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FormInput } from "@/components/ui/form-input";
 import { authClient } from "@/lib/auth/client";
+import { formatAuthErrorMessage } from "@/lib/auth/error-messages";
 import { cn } from "@/lib/utils/cn";
 
 export function RegisterForm() {
@@ -34,7 +35,7 @@ export function RegisterForm() {
         password,
       });
       if (err) {
-        setError(err.message ?? "Échec de la création du compte");
+        setError(formatAuthErrorMessage(err.message, "Échec de la création du compte"));
         return;
       }
       router.replace("/onboarding");
