@@ -12,6 +12,7 @@ import { HealthModule } from "./health/health.module";
 import { OperatingHoursModule } from "./operating-hours/operating-hours.module";
 import { PaymentMethodsModule } from "./payment-methods/payment-methods.module";
 import { SyncModule } from "./sync/sync.module";
+import { TaxConfigModule } from "./tax-config/tax-config.module";
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { SyncModule } from "./sync/sync.module";
     BranchesModule,
     OperatingHoursModule,
     PaymentMethodsModule,
+    TaxConfigModule,
     SyncModule,
   ],
 })

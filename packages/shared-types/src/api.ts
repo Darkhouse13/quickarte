@@ -231,6 +231,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tax-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active Moroccan TVA rates */
+        get: operations["TaxConfigController_listRates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/tax-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get branch tax configuration */
+        get: operations["TaxConfigController_getBranchConfig"];
+        /** Upsert branch tax configuration */
+        put: operations["TaxConfigController_upsertBranchConfig"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/sync/pull": {
         parameters: {
             query?: never;
@@ -531,6 +566,50 @@ export interface components {
         };
         PaymentMethodsPutBodyDto: {
             methods: components["schemas"]["PaymentMethodInputDto"][];
+        };
+        TaxRateResponseDto: {
+            id: string;
+            /** @example MA */
+            countryCode: string;
+            /** @example TVA 10% (restauration) */
+            label: string;
+            /** @example 10 */
+            rate: number;
+            isActive: boolean;
+        };
+        TaxRatesResponseDto: {
+            rates: components["schemas"]["TaxRateResponseDto"][];
+        };
+        BranchTaxConfigResponseDto: {
+            /** Format: uuid */
+            branchId: string;
+            defaultTaxRateId: string;
+            /** @enum {string} */
+            taxApplicationLevel: "item" | "category";
+            /** @enum {string} */
+            priceDisplayMode: "ttc" | "ht_plus_tva";
+            serviceChargeEnabled: boolean;
+            serviceChargeRate?: number | null;
+            serviceChargeLabel?: string | null;
+            isDefaultPresentation: boolean;
+        };
+        BranchTaxConfigPutBodyDto: {
+            /** @example ma_tva_10 */
+            defaultTaxRateId: string;
+            /**
+             * @default category
+             * @enum {string}
+             */
+            taxApplicationLevel: "item" | "category";
+            /**
+             * @default ttc
+             * @enum {string}
+             */
+            priceDisplayMode: "ttc" | "ht_plus_tva";
+            /** @default false */
+            serviceChargeEnabled: boolean;
+            serviceChargeRate?: number | null;
+            serviceChargeLabel?: string | null;
         };
     };
     responses: never;
@@ -1060,6 +1139,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BranchPaymentMethodsResponseDto"];
+                };
+            };
+        };
+    };
+    TaxConfigController_listRates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active tax rates. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxRatesResponseDto"];
+                };
+            };
+        };
+    };
+    TaxConfigController_getBranchConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Branch tax configuration. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchTaxConfigResponseDto"];
+                };
+            };
+        };
+    };
+    TaxConfigController_upsertBranchConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BranchTaxConfigPutBodyDto"];
+            };
+        };
+        responses: {
+            /** @description Updated branch tax configuration. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchTaxConfigResponseDto"];
                 };
             };
         };

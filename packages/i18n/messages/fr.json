@@ -111,7 +111,8 @@
       "profile": "Profil restaurant",
       "branches": "Branches",
       "operatingHours": "Horaires",
-      "paymentMethods": "Paiements"
+      "paymentMethods": "Paiements",
+      "tax": "TVA"
     },
     "dashboard": {
       "eyebrow": "Admin",
@@ -212,6 +213,26 @@
         "loadError": "Impossible de charger les moyens de paiement",
         "saveError": "Impossible d'enregistrer les moyens de paiement",
         "saved": "Moyens de paiement enregistres"
+      },
+      "tax": {
+        "title": "Configuration TVA",
+        "rateSection": "TVA par defaut",
+        "serviceChargeSection": "Frais de service",
+        "defaultRate": "Taux TVA par defaut",
+        "applicationLevel": "Application de la TVA",
+        "category": "Par categorie",
+        "item": "Par article",
+        "priceDisplayMode": "Affichage des prix",
+        "ttc": "Prix TTC",
+        "htPlusTva": "Prix HT + TVA",
+        "serviceChargeEnabled": "Activer les frais de service",
+        "serviceChargeRate": "Taux de frais (%)",
+        "serviceChargeLabel": "Libelle des frais",
+        "defaultPresentation": "Valeurs par defaut",
+        "save": "Enregistrer",
+        "loadError": "Impossible de charger la configuration TVA",
+        "saveError": "Impossible d'enregistrer la configuration TVA",
+        "saved": "Configuration TVA enregistree"
       }
     }
   },

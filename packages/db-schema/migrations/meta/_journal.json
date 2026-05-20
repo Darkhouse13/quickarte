@@ -183,6 +183,13 @@
       "when": 1779306364869,
       "tag": "0025_hours_payments",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1779311190443,
+      "tag": "0026_tax_config",
+      "breakpoints": true
     }
   ]
 }

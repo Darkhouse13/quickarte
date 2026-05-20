@@ -706,6 +706,98 @@
         ]
       }
     },
+    "/v1/tax-rates": {
+      "get": {
+        "operationId": "TaxConfigController_listRates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active tax rates.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxRatesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List active Moroccan TVA rates",
+        "tags": [
+          "Tax configuration"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/tax-config": {
+      "get": {
+        "operationId": "TaxConfigController_getBranchConfig",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branch tax configuration.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchTaxConfigResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get branch tax configuration",
+        "tags": [
+          "Tax configuration"
+        ]
+      },
+      "put": {
+        "operationId": "TaxConfigController_upsertBranchConfig",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BranchTaxConfigPutBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated branch tax configuration.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchTaxConfigResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Upsert branch tax configuration",
+        "tags": [
+          "Tax configuration"
+        ]
+      }
+    },
     "/v1/sync/pull": {
       "get": {
         "operationId": "SyncController_pull",
@@ -1844,6 +1936,143 @@
         },
         "required": [
           "methods"
+        ]
+      },
+      "TaxRateResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "countryCode": {
+            "type": "string",
+            "example": "MA"
+          },
+          "label": {
+            "type": "string",
+            "example": "TVA 10% (restauration)"
+          },
+          "rate": {
+            "type": "number",
+            "example": 10
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "countryCode",
+          "label",
+          "rate",
+          "isActive"
+        ]
+      },
+      "TaxRatesResponseDto": {
+        "type": "object",
+        "properties": {
+          "rates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxRateResponseDto"
+            }
+          }
+        },
+        "required": [
+          "rates"
+        ]
+      },
+      "BranchTaxConfigResponseDto": {
+        "type": "object",
+        "properties": {
+          "branchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "defaultTaxRateId": {
+            "type": "string"
+          },
+          "taxApplicationLevel": {
+            "type": "string",
+            "enum": [
+              "item",
+              "category"
+            ]
+          },
+          "priceDisplayMode": {
+            "type": "string",
+            "enum": [
+              "ttc",
+              "ht_plus_tva"
+            ]
+          },
+          "serviceChargeEnabled": {
+            "type": "boolean"
+          },
+          "serviceChargeRate": {
+            "type": "number",
+            "nullable": true
+          },
+          "serviceChargeLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "isDefaultPresentation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "branchId",
+          "defaultTaxRateId",
+          "taxApplicationLevel",
+          "priceDisplayMode",
+          "serviceChargeEnabled",
+          "isDefaultPresentation"
+        ]
+      },
+      "BranchTaxConfigPutBodyDto": {
+        "type": "object",
+        "properties": {
+          "defaultTaxRateId": {
+            "type": "string",
+            "example": "ma_tva_10"
+          },
+          "taxApplicationLevel": {
+            "type": "string",
+            "enum": [
+              "item",
+              "category"
+            ],
+            "default": "category"
+          },
+          "priceDisplayMode": {
+            "type": "string",
+            "enum": [
+              "ttc",
+              "ht_plus_tva"
+            ],
+            "default": "ttc"
+          },
+          "serviceChargeEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "serviceChargeRate": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 100
+          },
+          "serviceChargeLabel": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "defaultTaxRateId",
+          "taxApplicationLevel",
+          "priceDisplayMode",
+          "serviceChargeEnabled"
         ]
       }
     }
