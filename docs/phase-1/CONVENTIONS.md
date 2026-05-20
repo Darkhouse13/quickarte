@@ -14,3 +14,7 @@ Admin web and POS terminal must consume the generated SDK directly. Do not add `
 ## Tenant And Branch Scope
 
 `business_id` remains the RLS tenant key. `branch_id` is a filtering and authorization dimension, never a tenant key. New tenant-scoped tables must include strict RLS in the same migration that creates them.
+
+## Milestone Reporting
+
+Every milestone report pastes the verbatim files the PM requested in that milestone's prompt, in fenced code blocks with file-path headers. A report without the requested files is an incomplete milestone and is sent back before review begins. This is not optional.
