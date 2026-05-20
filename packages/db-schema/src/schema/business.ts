@@ -291,6 +291,73 @@ export const branchPaymentMethods = pgTable(
   }),
 );
 
+export const taxRates = pgTable("tax_rates", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  countryCode: varchar("country_code", { length: 2 }).notNull().default("MA"),
+  label: text("label").notNull(),
+  rate: numeric("rate", { precision: 5, scale: 2 }).notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+});
+
+export const branchTaxSettings = pgTable(
+  "branch_tax_settings",
+  {
+    branchId: uuid("branch_id")
+      .primaryKey()
+      .references(() => branches.id, { onDelete: "cascade" }),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    defaultTaxRateId: varchar("default_tax_rate_id", { length: 64 })
+      .notNull()
+      .references(() => taxRates.id, { onDelete: "restrict" }),
+    taxApplicationLevel: varchar("tax_application_level", { length: 24 })
+      .notNull()
+      .default("category"),
+    priceDisplayMode: varchar("price_display_mode", { length: 24 })
+      .notNull()
+      .default("ttc"),
+    serviceChargeEnabled: boolean("service_charge_enabled")
+      .notNull()
+      .default(false),
+    serviceChargeRate: numeric("service_charge_rate", {
+      precision: 5,
+      scale: 2,
+    }),
+    serviceChargeLabel: text("service_charge_label"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    businessIdx: index("branch_tax_settings_business_idx").on(
+      table.businessId,
+    ),
+    defaultTaxRateIdx: index("branch_tax_settings_tax_rate_idx").on(
+      table.defaultTaxRateId,
+    ),
+    taxApplicationLevelCheck: check(
+      "branch_tax_settings_application_level_check",
+      sql`${table.taxApplicationLevel} in ('item', 'category')`,
+    ),
+    priceDisplayModeCheck: check(
+      "branch_tax_settings_price_display_mode_check",
+      sql`${table.priceDisplayMode} in ('ttc', 'ht_plus_tva')`,
+    ),
+    serviceChargeRateRangeCheck: check(
+      "branch_tax_settings_service_charge_rate_range_check",
+      sql`${table.serviceChargeRate} is null or (${table.serviceChargeRate} >= 0 and ${table.serviceChargeRate} <= 100)`,
+    ),
+    serviceChargeEnabledRateCheck: check(
+      "branch_tax_settings_service_charge_enabled_rate_check",
+      sql`${table.serviceChargeEnabled} = false or ${table.serviceChargeRate} is not null`,
+    ),
+  }),
+);
+
 export const businessSettings = pgTable("business_settings", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   businessId: uuid("business_id")
@@ -421,6 +488,28 @@ export const branchPaymentMethodsRelations = relations(
   }),
 );
 
+export const taxRatesRelations = relations(taxRates, ({ many }) => ({
+  branchSettings: many(branchTaxSettings),
+}));
+
+export const branchTaxSettingsRelations = relations(
+  branchTaxSettings,
+  ({ one }) => ({
+    branch: one(branches, {
+      fields: [branchTaxSettings.branchId],
+      references: [branches.id],
+    }),
+    business: one(businesses, {
+      fields: [branchTaxSettings.businessId],
+      references: [businesses.id],
+    }),
+    defaultTaxRate: one(taxRates, {
+      fields: [branchTaxSettings.defaultTaxRateId],
+      references: [taxRates.id],
+    }),
+  }),
+);
+
 export const businessLegalProfilesRelations = relations(
   businessLegalProfiles,
   ({ one }) => ({
@@ -447,4 +536,8 @@ export type PaymentMethodDefinition = typeof paymentMethodDefinitions.$inferSele
 export type NewPaymentMethodDefinition = typeof paymentMethodDefinitions.$inferInsert;
 export type BranchPaymentMethod = typeof branchPaymentMethods.$inferSelect;
 export type NewBranchPaymentMethod = typeof branchPaymentMethods.$inferInsert;
+export type TaxRate = typeof taxRates.$inferSelect;
+export type NewTaxRate = typeof taxRates.$inferInsert;
+export type BranchTaxSetting = typeof branchTaxSettings.$inferSelect;
+export type NewBranchTaxSetting = typeof branchTaxSettings.$inferInsert;
 export type BusinessSettings = typeof businessSettings.$inferSelect;
