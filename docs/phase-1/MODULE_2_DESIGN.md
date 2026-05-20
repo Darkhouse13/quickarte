@@ -1435,3 +1435,17 @@ Why sixth:
 - No separate printer subsystem.
 - No implementation during this design milestone.
 
+## PM Decisions - Locked
+
+1. Branch model: Option A is approved. `business_id` remains the RLS tenant key. `branch_id` is a filtering and authorization dimension, never the tenant key.
+2. `businesses.name` is the trade/display name. `legal_name` lives in `business_legal_profiles`. No `trade_name` column.
+3. Legal address is optional in Module 2. Legal address fields are present but not enforced. Phase 2 DGI work will require it.
+4. Legacy operational table branch migration is phased module-by-module.
+5. `staff_members` stays business-scoped. `staff_branch_assignments` is deferred to Module 11 and must not be created in Module 2.
+6. Branch default tax lands in Module 2. Category and product tax overrides are deferred to Module 3.
+7. Printers will be extended with `branch_id`, and `printer_assignments` will be added. Existing printer fields stay in place.
+8. Bluetooth implementation is deferred because it is device-local and belongs with POS-terminal work, but `bluetooth` is included as a valid `connection_type` value in the data model now.
+9. Receipt settings are branch-level, with business logo fallback.
+10. Payment methods are branch-level.
+11. CMI is config-only in Module 2: enable/disable only, with no processing until Module 8.
+12. Module 2 admin-web screens consume `docs/design/mizan-tokens.css`.
