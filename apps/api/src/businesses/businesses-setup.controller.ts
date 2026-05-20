@@ -1,5 +1,11 @@
 import { Body, Controller, Get, Inject, Patch, Req } from "@nestjs/common";
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBody,
+  ApiOperation,
+  ApiPropertyOptional,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import {
   IsIn,
   IsOptional,
@@ -14,45 +20,55 @@ import {
   BusinessesSetupService,
   type BusinessSetup,
 } from "./businesses-setup.service";
+import { BusinessSetupResponseDto } from "./business-setup.dto";
 
 class LegalProfileBody {
+  @ApiPropertyOptional({ type: String })
   @IsOptional()
   @IsString()
   legalName?: string;
 
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: 32 })
   @IsOptional()
   @IsString()
   @MaxLength(32)
   iceNumber?: string | null;
 
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: 32 })
   @IsOptional()
   @IsString()
   @MaxLength(32)
   rcNumber?: string | null;
 
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: 32 })
   @IsOptional()
   @IsString()
   @MaxLength(32)
   ifNumber?: string | null;
 
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: 32 })
   @IsOptional()
   @IsString()
   @MaxLength(32)
   patenteNumber?: string | null;
 
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: 32 })
   @IsOptional()
   @IsString()
   @MaxLength(32)
   cnssNumber?: string | null;
 
+  @ApiPropertyOptional({ type: String, nullable: true })
   @IsOptional()
   @IsString()
   legalAddress?: string | null;
 
+  @ApiPropertyOptional({ type: String, nullable: true })
   @IsOptional()
   @IsString()
   legalCity?: string | null;
 
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: 16 })
   @IsOptional()
   @IsString()
   @MaxLength(16)
@@ -60,34 +76,42 @@ class LegalProfileBody {
 }
 
 class UpdateBusinessSetupBody {
+  @ApiPropertyOptional({ type: String })
   @IsOptional()
   @IsString()
   name?: string;
 
+  @ApiPropertyOptional({ type: String, enum: ["restaurant", "cafe", "autre"] })
   @IsOptional()
   @IsIn(["restaurant", "cafe", "autre"])
   type?: "restaurant" | "cafe" | "autre";
 
+  @ApiPropertyOptional({ type: String })
   @IsOptional()
   @IsString()
   currency?: string;
 
+  @ApiPropertyOptional({ type: String, nullable: true })
   @IsOptional()
   @IsString()
   secondaryCurrency?: string | null;
 
+  @ApiPropertyOptional({ type: String })
   @IsOptional()
   @IsString()
   timezone?: string;
 
+  @ApiPropertyOptional({ type: String })
   @IsOptional()
   @IsString()
   locale?: string;
 
+  @ApiPropertyOptional({ type: String, nullable: true })
   @IsOptional()
   @IsString()
   logo?: string | null;
 
+  @ApiPropertyOptional({ type: () => LegalProfileBody })
   @IsOptional()
   @ValidateNested()
   @Type(() => LegalProfileBody)
@@ -108,8 +132,9 @@ export class BusinessesSetupController {
   @ApiResponse({
     status: 200,
     description: "Business setup profile, legal profile, and default branch.",
+    type: BusinessSetupResponseDto,
   })
-  async get(@Req() request: AuthenticatedRequest) {
+  async get(@Req() request: AuthenticatedRequest): Promise<BusinessSetupResponseDto> {
     return toSetupResponse(
       await this.businessesSetupService.getSetup(request.businessId!),
     );
@@ -118,42 +143,16 @@ export class BusinessesSetupController {
   @Patch()
   @RequirePermission("business.update")
   @ApiOperation({ summary: "Update current business setup profile" })
-  @ApiBody({
-    schema: {
-      type: "object",
-      properties: {
-        name: { type: "string" },
-        type: { type: "string", enum: ["restaurant", "cafe", "autre"] },
-        currency: { type: "string" },
-        secondaryCurrency: { type: "string", nullable: true },
-        timezone: { type: "string" },
-        locale: { type: "string" },
-        logo: { type: "string", nullable: true },
-        legalProfile: {
-          type: "object",
-          properties: {
-            legalName: { type: "string" },
-            iceNumber: { type: "string", nullable: true, maxLength: 32 },
-            rcNumber: { type: "string", nullable: true, maxLength: 32 },
-            ifNumber: { type: "string", nullable: true, maxLength: 32 },
-            patenteNumber: { type: "string", nullable: true, maxLength: 32 },
-            cnssNumber: { type: "string", nullable: true, maxLength: 32 },
-            legalAddress: { type: "string", nullable: true },
-            legalCity: { type: "string", nullable: true },
-            legalPostcode: { type: "string", nullable: true, maxLength: 16 },
-          },
-        },
-      },
-    },
-  })
+  @ApiBody({ type: UpdateBusinessSetupBody })
   @ApiResponse({
     status: 200,
     description: "Updated business setup profile.",
+    type: BusinessSetupResponseDto,
   })
   async update(
     @Req() request: AuthenticatedRequest,
     @Body() body: UpdateBusinessSetupBody,
-  ) {
+  ): Promise<BusinessSetupResponseDto> {
     return toSetupResponse(
       await this.businessesSetupService.updateSetup(request.businessId!, body),
     );

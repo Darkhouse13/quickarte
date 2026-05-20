@@ -8,10 +8,14 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { BranchesPage } from "./pages/BranchesPage";
 import { RestaurantProfilePage } from "./pages/RestaurantProfilePage";
+import { OperatingHoursPage } from "./pages/OperatingHoursPage";
+import { PaymentMethodsPage } from "./pages/PaymentMethodsPage";
 
 const navItems = [
   ["profile", "/settings/profile"],
   ["branches", "/settings/branches"],
+  ["operatingHours", "/settings/operating-hours"],
+  ["paymentMethods", "/settings/payment-methods"],
   ["menu", "/menu"],
   ["orders", "/orders"],
   ["reports", "/reports"],
@@ -42,6 +46,8 @@ export const router = createBrowserRouter([
           { path: "/settings", element: <PlaceholderPage name="settings" /> },
           { path: "/settings/profile", element: <RestaurantProfilePage /> },
           { path: "/settings/branches", element: <BranchesPage /> },
+          { path: "/settings/operating-hours", element: <OperatingHoursPage /> },
+          { path: "/settings/payment-methods", element: <PaymentMethodsPage /> },
         ],
       },
     ],

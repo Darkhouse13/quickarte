@@ -9,6 +9,8 @@ import { BusinessesModule } from "./businesses/businesses.module";
 import { TenantContextMiddleware } from "./common/middleware/tenant-context.middleware";
 import { validateEnv } from "./config/env";
 import { HealthModule } from "./health/health.module";
+import { OperatingHoursModule } from "./operating-hours/operating-hours.module";
+import { PaymentMethodsModule } from "./payment-methods/payment-methods.module";
 import { SyncModule } from "./sync/sync.module";
 
 @Module({
@@ -64,6 +66,8 @@ import { SyncModule } from "./sync/sync.module";
     AuditLogModule,
     BusinessesModule,
     BranchesModule,
+    OperatingHoursModule,
+    PaymentMethodsModule,
     SyncModule,
   ],
 })

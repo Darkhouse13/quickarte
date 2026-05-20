@@ -295,7 +295,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Current business profile for the tenant context."
+            "description": "Current business profile for the tenant context.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessResponseDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "No business exists for the current tenant context."
@@ -313,7 +320,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Business setup profile, legal profile, and default branch."
+            "description": "Business setup profile, legal profile, and default branch.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSetupResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Get current business setup profile",
@@ -329,90 +343,21 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "restaurant",
-                      "cafe",
-                      "autre"
-                    ]
-                  },
-                  "currency": {
-                    "type": "string"
-                  },
-                  "secondaryCurrency": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "timezone": {
-                    "type": "string"
-                  },
-                  "locale": {
-                    "type": "string"
-                  },
-                  "logo": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "legalProfile": {
-                    "type": "object",
-                    "properties": {
-                      "legalName": {
-                        "type": "string"
-                      },
-                      "iceNumber": {
-                        "type": "string",
-                        "nullable": true,
-                        "maxLength": 32
-                      },
-                      "rcNumber": {
-                        "type": "string",
-                        "nullable": true,
-                        "maxLength": 32
-                      },
-                      "ifNumber": {
-                        "type": "string",
-                        "nullable": true,
-                        "maxLength": 32
-                      },
-                      "patenteNumber": {
-                        "type": "string",
-                        "nullable": true,
-                        "maxLength": 32
-                      },
-                      "cnssNumber": {
-                        "type": "string",
-                        "nullable": true,
-                        "maxLength": 32
-                      },
-                      "legalAddress": {
-                        "type": "string",
-                        "nullable": true
-                      },
-                      "legalCity": {
-                        "type": "string",
-                        "nullable": true
-                      },
-                      "legalPostcode": {
-                        "type": "string",
-                        "nullable": true,
-                        "maxLength": 16
-                      }
-                    }
-                  }
-                }
+                "$ref": "#/components/schemas/UpdateBusinessSetupBody"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Updated business setup profile."
+            "description": "Updated business setup profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSetupResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Update current business setup profile",
@@ -427,7 +372,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Tenant branch list."
+            "description": "Tenant branch list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchListResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "List branches for the current business",
@@ -443,118 +395,21 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "name",
-                  "slug"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "maxLength": 120
-                  },
-                  "slug": {
-                    "type": "string",
-                    "maxLength": 80,
-                    "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-                  },
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "active",
-                      "inactive"
-                    ]
-                  },
-                  "addressLine1": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "addressLine2": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "city": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "postcode": {
-                    "type": "string",
-                    "nullable": true,
-                    "maxLength": 16
-                  },
-                  "countryCode": {
-                    "type": "string",
-                    "maxLength": 2,
-                    "default": "MA"
-                  },
-                  "googlePlaceId": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "formattedAddress": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "lat": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "lng": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "phone": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "email": {
-                    "type": "string",
-                    "nullable": true,
-                    "format": "email"
-                  },
-                  "website": {
-                    "type": "string",
-                    "nullable": true,
-                    "format": "uri"
-                  },
-                  "socialLinks": {
-                    "type": "object",
-                    "additionalProperties": true,
-                    "nullable": true
-                  },
-                  "logo": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "cuisineType": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "seatingCapacity": {
-                    "type": "integer",
-                    "nullable": true,
-                    "minimum": 0
-                  },
-                  "currency": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "timezone": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "locale": {
-                    "type": "string",
-                    "nullable": true
-                  }
-                }
+                "$ref": "#/components/schemas/BranchBody"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Created branch."
+            "description": "Created branch.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Create a branch",
@@ -566,10 +421,26 @@
     "/v1/branches/{branchId}": {
       "get": {
         "operationId": "BranchesController_get",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Branch profile."
+            "description": "Branch profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchResponseDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "Branch not found."
@@ -582,119 +453,36 @@
       },
       "patch": {
         "operationId": "BranchesController_update",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "maxLength": 120
-                  },
-                  "slug": {
-                    "type": "string",
-                    "maxLength": 80,
-                    "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-                  },
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "active",
-                      "inactive"
-                    ]
-                  },
-                  "addressLine1": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "addressLine2": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "city": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "postcode": {
-                    "type": "string",
-                    "nullable": true,
-                    "maxLength": 16
-                  },
-                  "countryCode": {
-                    "type": "string",
-                    "maxLength": 2
-                  },
-                  "googlePlaceId": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "formattedAddress": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "lat": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "lng": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "phone": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "email": {
-                    "type": "string",
-                    "nullable": true,
-                    "format": "email"
-                  },
-                  "website": {
-                    "type": "string",
-                    "nullable": true,
-                    "format": "uri"
-                  },
-                  "socialLinks": {
-                    "type": "object",
-                    "additionalProperties": true,
-                    "nullable": true
-                  },
-                  "logo": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "cuisineType": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "seatingCapacity": {
-                    "type": "integer",
-                    "nullable": true,
-                    "minimum": 0
-                  },
-                  "currency": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "timezone": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "locale": {
-                    "type": "string",
-                    "nullable": true
-                  }
-                }
+                "$ref": "#/components/schemas/UpdateBranchBody"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Updated branch."
+            "description": "Updated branch.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Update a branch",
@@ -704,7 +492,16 @@
       },
       "delete": {
         "operationId": "BranchesController_delete",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "204": {
             "description": "Branch deactivated."
@@ -719,15 +516,193 @@
     "/v1/branches/{branchId}/set-default": {
       "post": {
         "operationId": "BranchesController_setDefault",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Default branch updated."
+            "description": "Default branch updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Set branch as default",
         "tags": [
           "Branches"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/operating-hours": {
+      "get": {
+        "operationId": "OperatingHoursController_get",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branch normal and Ramadan schedules plus closed days.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperatingHoursResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get branch operating hours",
+        "tags": [
+          "Operating hours"
+        ]
+      },
+      "put": {
+        "operationId": "OperatingHoursController_replace",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OperatingHoursPutBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated branch schedules.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperatingHoursResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Replace branch operating hours",
+        "tags": [
+          "Operating hours"
+        ]
+      }
+    },
+    "/v1/payment-method-definitions": {
+      "get": {
+        "operationId": "PaymentMethodsController_definitions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Built-in payment method definitions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodDefinitionsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List global payment method definitions",
+        "tags": [
+          "Payment methods"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/payment-methods": {
+      "get": {
+        "operationId": "PaymentMethodsController_getBranchMethods",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branch payment method configuration.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchPaymentMethodsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get branch payment methods",
+        "tags": [
+          "Payment methods"
+        ]
+      },
+      "put": {
+        "operationId": "PaymentMethodsController_replaceBranchMethods",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentMethodsPutBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated branch payment methods.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchPaymentMethodsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Replace branch payment methods",
+        "tags": [
+          "Payment methods"
         ]
       }
     },
@@ -907,6 +882,970 @@
     }
   ],
   "components": {
-    "schemas": {}
+    "schemas": {
+      "BusinessResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "type",
+          "currency",
+          "timezone",
+          "locale"
+        ]
+      },
+      "BusinessSetupBusinessDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "restaurant",
+              "cafe",
+              "autre"
+            ]
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string"
+          },
+          "secondaryCurrency": {
+            "type": "string",
+            "nullable": true
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "type",
+          "currency",
+          "timezone",
+          "locale"
+        ]
+      },
+      "BusinessLegalProfileDto": {
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string"
+          },
+          "iceNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "rcNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "ifNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "patenteNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "cnssNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "legalAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "legalCity": {
+            "type": "string",
+            "nullable": true
+          },
+          "legalPostcode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "legalName"
+        ]
+      },
+      "DefaultBranchSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "isDefault": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "isDefault"
+        ]
+      },
+      "BusinessSetupResponseDto": {
+        "type": "object",
+        "properties": {
+          "business": {
+            "$ref": "#/components/schemas/BusinessSetupBusinessDto"
+          },
+          "legalProfile": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BusinessLegalProfileDto"
+              }
+            ]
+          },
+          "defaultBranch": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DefaultBranchSummaryDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "business"
+        ]
+      },
+      "LegalProfileBody": {
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string"
+          },
+          "iceNumber": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 32
+          },
+          "rcNumber": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 32
+          },
+          "ifNumber": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 32
+          },
+          "patenteNumber": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 32
+          },
+          "cnssNumber": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 32
+          },
+          "legalAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "legalCity": {
+            "type": "string",
+            "nullable": true
+          },
+          "legalPostcode": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 16
+          }
+        }
+      },
+      "UpdateBusinessSetupBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "restaurant",
+              "cafe",
+              "autre"
+            ]
+          },
+          "currency": {
+            "type": "string"
+          },
+          "secondaryCurrency": {
+            "type": "string",
+            "nullable": true
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          },
+          "legalProfile": {
+            "$ref": "#/components/schemas/LegalProfileBody"
+          }
+        }
+      },
+      "BranchResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "businessId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "addressLine1": {
+            "type": "string",
+            "nullable": true
+          },
+          "addressLine2": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "postcode": {
+            "type": "string",
+            "nullable": true
+          },
+          "countryCode": {
+            "type": "string"
+          },
+          "googlePlaceId": {
+            "type": "string",
+            "nullable": true
+          },
+          "formattedAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "lat": {
+            "type": "string",
+            "nullable": true
+          },
+          "lng": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          },
+          "socialLinks": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          },
+          "cuisineType": {
+            "type": "string",
+            "nullable": true
+          },
+          "seatingCapacity": {
+            "type": "number",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "timezone": {
+            "type": "string",
+            "nullable": true
+          },
+          "locale": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "businessId",
+          "name",
+          "slug",
+          "isDefault",
+          "status",
+          "countryCode",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "BranchListResponseDto": {
+        "type": "object",
+        "properties": {
+          "branches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BranchResponseDto"
+            }
+          }
+        },
+        "required": [
+          "branches"
+        ]
+      },
+      "BranchBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "slug": {
+            "type": "string",
+            "maxLength": 80,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          },
+          "addressLine1": {
+            "type": "string",
+            "nullable": true
+          },
+          "addressLine2": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "postcode": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 16
+          },
+          "countryCode": {
+            "type": "string",
+            "maxLength": 2,
+            "default": "MA"
+          },
+          "googlePlaceId": {
+            "type": "string",
+            "nullable": true
+          },
+          "formattedAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "lat": {
+            "type": "string",
+            "nullable": true
+          },
+          "lng": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "website": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "socialLinks": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          },
+          "cuisineType": {
+            "type": "string",
+            "nullable": true
+          },
+          "seatingCapacity": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "timezone": {
+            "type": "string",
+            "nullable": true
+          },
+          "locale": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "slug"
+        ]
+      },
+      "UpdateBranchBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "slug": {
+            "type": "string",
+            "maxLength": 80,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          },
+          "addressLine1": {
+            "type": "string",
+            "nullable": true
+          },
+          "addressLine2": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "postcode": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 16
+          },
+          "countryCode": {
+            "type": "string",
+            "maxLength": 2
+          },
+          "googlePlaceId": {
+            "type": "string",
+            "nullable": true
+          },
+          "formattedAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "lat": {
+            "type": "string",
+            "nullable": true
+          },
+          "lng": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "website": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "socialLinks": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          },
+          "cuisineType": {
+            "type": "string",
+            "nullable": true
+          },
+          "seatingCapacity": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "timezone": {
+            "type": "string",
+            "nullable": true
+          },
+          "locale": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "OperatingHourResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scheduleType": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "ramadan"
+            ]
+          },
+          "dayOfWeek": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 6
+          },
+          "opensAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "closesAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "isClosed": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "scheduleType",
+          "dayOfWeek",
+          "isClosed",
+          "position"
+        ]
+      },
+      "ClosedDayResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "date"
+        ]
+      },
+      "OperatingHoursResponseDto": {
+        "type": "object",
+        "properties": {
+          "branchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ramadanModeEnabled": {
+            "type": "boolean"
+          },
+          "normal": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OperatingHourResponseDto"
+            }
+          },
+          "ramadan": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OperatingHourResponseDto"
+            }
+          },
+          "closedDays": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClosedDayResponseDto"
+            }
+          }
+        },
+        "required": [
+          "branchId",
+          "ramadanModeEnabled",
+          "normal",
+          "ramadan",
+          "closedDays"
+        ]
+      },
+      "OperatingHourInputDto": {
+        "type": "object",
+        "properties": {
+          "dayOfWeek": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 6
+          },
+          "opensAt": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+          },
+          "closesAt": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+          },
+          "isClosed": {
+            "type": "boolean",
+            "default": false
+          },
+          "position": {
+            "type": "number",
+            "default": 0
+          }
+        },
+        "required": [
+          "dayOfWeek",
+          "isClosed",
+          "position"
+        ]
+      },
+      "ClosedDayInputDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "date"
+        ]
+      },
+      "OperatingHoursPutBodyDto": {
+        "type": "object",
+        "properties": {
+          "ramadanModeEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "normal": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OperatingHourInputDto"
+            }
+          },
+          "ramadan": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OperatingHourInputDto"
+            }
+          },
+          "closedDays": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClosedDayInputDto"
+            }
+          }
+        },
+        "required": [
+          "ramadanModeEnabled",
+          "normal",
+          "ramadan",
+          "closedDays"
+        ]
+      },
+      "PaymentMethodDefinitionResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "isBuiltin": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "category",
+          "isBuiltin",
+          "sortOrder"
+        ]
+      },
+      "PaymentMethodDefinitionsResponseDto": {
+        "type": "object",
+        "properties": {
+          "definitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentMethodDefinitionResponseDto"
+            }
+          }
+        },
+        "required": [
+          "definitions"
+        ]
+      },
+      "BranchPaymentMethodResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "branchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "methodCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "customName": {
+            "type": "string",
+            "nullable": true
+          },
+          "label": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "cashDrawerAutoOpen": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "metadata": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "id",
+          "branchId",
+          "label",
+          "category",
+          "enabled",
+          "cashDrawerAutoOpen",
+          "sortOrder"
+        ]
+      },
+      "BranchPaymentMethodsResponseDto": {
+        "type": "object",
+        "properties": {
+          "branchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "methods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BranchPaymentMethodResponseDto"
+            }
+          }
+        },
+        "required": [
+          "branchId",
+          "methods"
+        ]
+      },
+      "PaymentMethodInputDto": {
+        "type": "object",
+        "properties": {
+          "methodCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "customName": {
+            "type": "string",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "cashDrawerAutoOpen": {
+            "type": "boolean",
+            "default": false
+          },
+          "sortOrder": {
+            "type": "number",
+            "default": 0
+          },
+          "metadata": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "enabled",
+          "cashDrawerAutoOpen",
+          "sortOrder"
+        ]
+      },
+      "PaymentMethodsPutBodyDto": {
+        "type": "object",
+        "properties": {
+          "methods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentMethodInputDto"
+            }
+          }
+        },
+        "required": [
+          "methods"
+        ]
+      }
+    }
   }
 }

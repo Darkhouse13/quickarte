@@ -31,6 +31,10 @@ export function readProblem(error: unknown): ProblemDetails {
   return {};
 }
 
+export function readResponseProblem(response: { error?: unknown }): ProblemDetails {
+  return readProblem(response.error);
+}
+
 async function fetchWithAuthRefresh(input: Request): Promise<Response> {
   const retryTemplate = input.clone();
   let response = await fetch(withAuthorization(input));

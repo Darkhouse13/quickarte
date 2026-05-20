@@ -200,7 +200,10 @@ a {
 .topbar-actions,
 .locale-switcher,
 .row-actions,
-.form-actions {
+.form-actions,
+.form-toolbar,
+.section-heading-row,
+.inline-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -271,6 +274,14 @@ a {
   align-self: start;
 }
 
+.form-toolbar {
+  justify-content: space-between;
+}
+
+.form-toolbar label {
+  min-width: min(320px, 100%);
+}
+
 .settings-form fieldset {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -295,16 +306,27 @@ a {
   gap: var(--s-3);
 }
 
-.branch-row {
+.settings-list {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.branch-row,
+.method-row,
+.day-editor {
   min-height: var(--density-list-row);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-4);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   padding: var(--density-row-padding);
   background: var(--surface);
+}
+
+.branch-row,
+.method-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
 }
 
 .branch-row h3,
@@ -315,6 +337,46 @@ a {
 .branch-row p {
   color: var(--fg-2);
   font-size: var(--t-body-sm);
+}
+
+.day-editor {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.day-editor h3,
+.section-heading-row h2 {
+  margin: 0;
+}
+
+.section-heading-row {
+  justify-content: space-between;
+}
+
+.inline-row input[type="date"],
+.inline-row input[type="time"] {
+  width: 150px;
+}
+
+.toggle-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--density-tap-target-sm);
+  color: var(--fg-2);
+  font-weight: var(--fw-semibold);
+}
+
+.toggle-row input {
+  min-height: auto;
+}
+
+.method-row {
+  flex-wrap: wrap;
+}
+
+.method-row > input {
+  min-width: min(260px, 100%);
 }
 
 .status-pill {

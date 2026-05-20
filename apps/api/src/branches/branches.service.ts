@@ -78,7 +78,13 @@ export class BranchesService {
       const [existing] = await tx
         .select({ id: branches.id })
         .from(branches)
-        .where(and(eq(branches.businessId, businessId), eq(branches.slug, input.slug)))
+        .where(
+          and(
+            eq(branches.businessId, businessId),
+            eq(branches.slug, input.slug),
+            isNull(branches.deletedAt),
+          ),
+        )
         .limit(1);
 
       if (existing) {
@@ -122,7 +128,13 @@ export class BranchesService {
         const [slugConflict] = await tx
           .select({ id: branches.id })
           .from(branches)
-          .where(and(eq(branches.businessId, businessId), eq(branches.slug, input.slug)))
+          .where(
+            and(
+              eq(branches.businessId, businessId),
+              eq(branches.slug, input.slug),
+              isNull(branches.deletedAt),
+            ),
+          )
           .limit(1);
         if (slugConflict && slugConflict.id !== branchId) {
           throw new ConflictException({

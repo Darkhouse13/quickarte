@@ -1,19 +1,36 @@
 import { Controller, Get, NotFoundException, Req } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiOperation, ApiProperty, ApiPropertyOptional, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { TenantRequest } from "../common/middleware/tenant-context.middleware";
 import { BusinessesService } from "./businesses.service";
 
-type BusinessResponse = {
-  id: string;
-  name: string;
-  slug: string;
-  type: string;
-  city: string | null;
-  address: string | null;
-  currency: string;
-  timezone: string;
-  locale: string;
-};
+export class BusinessResponseDto {
+  @ApiProperty({ type: String, format: "uuid" })
+  id!: string;
+
+  @ApiProperty({ type: String })
+  name!: string;
+
+  @ApiProperty({ type: String })
+  slug!: string;
+
+  @ApiProperty({ type: String })
+  type!: string;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  city!: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  address!: string | null;
+
+  @ApiProperty({ type: String })
+  currency!: string;
+
+  @ApiProperty({ type: String })
+  timezone!: string;
+
+  @ApiProperty({ type: String })
+  locale!: string;
+}
 
 @ApiTags("Businesses")
 @Controller("businesses")
@@ -25,12 +42,13 @@ export class BusinessesController {
   @ApiResponse({
     status: 200,
     description: "Current business profile for the tenant context.",
+    type: BusinessResponseDto,
   })
   @ApiResponse({
     status: 404,
     description: "No business exists for the current tenant context.",
   })
-  async getCurrentBusiness(@Req() request: TenantRequest): Promise<BusinessResponse> {
+  async getCurrentBusiness(@Req() request: TenantRequest): Promise<BusinessResponseDto> {
     const businessId = request.businessId;
     if (!businessId) {
       throw new NotFoundException("Business not found");

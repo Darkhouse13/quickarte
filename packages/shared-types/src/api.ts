@@ -178,6 +178,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/branches/{branchId}/operating-hours": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get branch operating hours */
+        get: operations["OperatingHoursController_get"];
+        /** Replace branch operating hours */
+        put: operations["OperatingHoursController_replace"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/payment-method-definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List global payment method definitions */
+        get: operations["PaymentMethodsController_definitions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/payment-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get branch payment methods */
+        get: operations["PaymentMethodsController_getBranchMethods"];
+        /** Replace branch payment methods */
+        put: operations["PaymentMethodsController_replaceBranchMethods"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/sync/pull": {
         parameters: {
             query?: never;
@@ -215,7 +268,271 @@ export interface paths {
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        BusinessResponseDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            type: string;
+            city?: string | null;
+            address?: string | null;
+            currency: string;
+            timezone: string;
+            locale: string;
+        };
+        BusinessSetupBusinessDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            /** @enum {string} */
+            type: "restaurant" | "cafe" | "autre";
+            city?: string | null;
+            address?: string | null;
+            logo?: string | null;
+            currency: string;
+            secondaryCurrency?: string | null;
+            timezone: string;
+            locale: string;
+        };
+        BusinessLegalProfileDto: {
+            legalName: string;
+            iceNumber?: string | null;
+            rcNumber?: string | null;
+            ifNumber?: string | null;
+            patenteNumber?: string | null;
+            cnssNumber?: string | null;
+            legalAddress?: string | null;
+            legalCity?: string | null;
+            legalPostcode?: string | null;
+        };
+        DefaultBranchSummaryDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            isDefault: boolean;
+        };
+        BusinessSetupResponseDto: {
+            business: components["schemas"]["BusinessSetupBusinessDto"];
+            legalProfile?: components["schemas"]["BusinessLegalProfileDto"] | null;
+            defaultBranch?: components["schemas"]["DefaultBranchSummaryDto"] | null;
+        };
+        LegalProfileBody: {
+            legalName?: string;
+            iceNumber?: string | null;
+            rcNumber?: string | null;
+            ifNumber?: string | null;
+            patenteNumber?: string | null;
+            cnssNumber?: string | null;
+            legalAddress?: string | null;
+            legalCity?: string | null;
+            legalPostcode?: string | null;
+        };
+        UpdateBusinessSetupBody: {
+            name?: string;
+            /** @enum {string} */
+            type?: "restaurant" | "cafe" | "autre";
+            currency?: string;
+            secondaryCurrency?: string | null;
+            timezone?: string;
+            locale?: string;
+            logo?: string | null;
+            legalProfile?: components["schemas"]["LegalProfileBody"];
+        };
+        BranchResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            businessId: string;
+            name: string;
+            slug: string;
+            isDefault: boolean;
+            status: string;
+            addressLine1?: string | null;
+            addressLine2?: string | null;
+            city?: string | null;
+            postcode?: string | null;
+            countryCode: string;
+            googlePlaceId?: string | null;
+            formattedAddress?: string | null;
+            lat?: string | null;
+            lng?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            website?: string | null;
+            socialLinks?: {
+                [key: string]: unknown;
+            } | null;
+            logo?: string | null;
+            cuisineType?: string | null;
+            seatingCapacity?: number | null;
+            currency?: string | null;
+            timezone?: string | null;
+            locale?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        BranchListResponseDto: {
+            branches: components["schemas"]["BranchResponseDto"][];
+        };
+        BranchBody: {
+            name: string;
+            slug: string;
+            /** @enum {string} */
+            status?: "active" | "inactive";
+            addressLine1?: string | null;
+            addressLine2?: string | null;
+            city?: string | null;
+            postcode?: string | null;
+            /** @default MA */
+            countryCode: string;
+            googlePlaceId?: string | null;
+            formattedAddress?: string | null;
+            lat?: string | null;
+            lng?: string | null;
+            phone?: string | null;
+            /** Format: email */
+            email?: string | null;
+            /** Format: uri */
+            website?: string | null;
+            socialLinks?: {
+                [key: string]: unknown;
+            } | null;
+            logo?: string | null;
+            cuisineType?: string | null;
+            seatingCapacity?: number | null;
+            currency?: string | null;
+            timezone?: string | null;
+            locale?: string | null;
+        };
+        UpdateBranchBody: {
+            name?: string;
+            slug?: string;
+            /** @enum {string} */
+            status?: "active" | "inactive";
+            addressLine1?: string | null;
+            addressLine2?: string | null;
+            city?: string | null;
+            postcode?: string | null;
+            countryCode?: string;
+            googlePlaceId?: string | null;
+            formattedAddress?: string | null;
+            lat?: string | null;
+            lng?: string | null;
+            phone?: string | null;
+            /** Format: email */
+            email?: string | null;
+            /** Format: uri */
+            website?: string | null;
+            socialLinks?: {
+                [key: string]: unknown;
+            } | null;
+            logo?: string | null;
+            cuisineType?: string | null;
+            seatingCapacity?: number | null;
+            currency?: string | null;
+            timezone?: string | null;
+            locale?: string | null;
+        };
+        OperatingHourResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            scheduleType: "normal" | "ramadan";
+            dayOfWeek: number;
+            opensAt?: string | null;
+            closesAt?: string | null;
+            isClosed: boolean;
+            position: number;
+        };
+        ClosedDayResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            date: string;
+            reason?: string | null;
+        };
+        OperatingHoursResponseDto: {
+            /** Format: uuid */
+            branchId: string;
+            ramadanModeEnabled: boolean;
+            normal: components["schemas"]["OperatingHourResponseDto"][];
+            ramadan: components["schemas"]["OperatingHourResponseDto"][];
+            closedDays: components["schemas"]["ClosedDayResponseDto"][];
+        };
+        OperatingHourInputDto: {
+            dayOfWeek: number;
+            opensAt?: string | null;
+            closesAt?: string | null;
+            /** @default false */
+            isClosed: boolean;
+            /** @default 0 */
+            position: number;
+        };
+        ClosedDayInputDto: {
+            /** Format: date */
+            date: string;
+            reason?: string | null;
+        };
+        OperatingHoursPutBodyDto: {
+            /** @default false */
+            ramadanModeEnabled: boolean;
+            normal: components["schemas"]["OperatingHourInputDto"][];
+            ramadan: components["schemas"]["OperatingHourInputDto"][];
+            closedDays: components["schemas"]["ClosedDayInputDto"][];
+        };
+        PaymentMethodDefinitionResponseDto: {
+            code: string;
+            label: string;
+            category: string;
+            isBuiltin: boolean;
+            sortOrder: number;
+        };
+        PaymentMethodDefinitionsResponseDto: {
+            definitions: components["schemas"]["PaymentMethodDefinitionResponseDto"][];
+        };
+        BranchPaymentMethodResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            branchId: string;
+            methodCode?: string | null;
+            customName?: string | null;
+            label: string;
+            category: string;
+            enabled: boolean;
+            cashDrawerAutoOpen: boolean;
+            sortOrder: number;
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        BranchPaymentMethodsResponseDto: {
+            /** Format: uuid */
+            branchId: string;
+            methods: components["schemas"]["BranchPaymentMethodResponseDto"][];
+        };
+        PaymentMethodInputDto: {
+            methodCode?: string | null;
+            customName?: string | null;
+            /** @default true */
+            enabled: boolean;
+            /** @default false */
+            cashDrawerAutoOpen: boolean;
+            /** @default 0 */
+            sortOrder: number;
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        PaymentMethodsPutBodyDto: {
+            methods: components["schemas"]["PaymentMethodInputDto"][];
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;
@@ -433,7 +750,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BusinessResponseDto"];
+                };
             };
             /** @description No business exists for the current tenant context. */
             404: {
@@ -458,7 +777,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BusinessSetupResponseDto"];
+                };
             };
         };
     };
@@ -471,27 +792,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    name?: string;
-                    /** @enum {string} */
-                    type?: "restaurant" | "cafe" | "autre";
-                    currency?: string;
-                    secondaryCurrency?: string | null;
-                    timezone?: string;
-                    locale?: string;
-                    logo?: string | null;
-                    legalProfile?: {
-                        legalName?: string;
-                        iceNumber?: string | null;
-                        rcNumber?: string | null;
-                        ifNumber?: string | null;
-                        patenteNumber?: string | null;
-                        cnssNumber?: string | null;
-                        legalAddress?: string | null;
-                        legalCity?: string | null;
-                        legalPostcode?: string | null;
-                    };
-                };
+                "application/json": components["schemas"]["UpdateBusinessSetupBody"];
             };
         };
         responses: {
@@ -500,7 +801,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BusinessSetupResponseDto"];
+                };
             };
         };
     };
@@ -518,7 +821,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BranchListResponseDto"];
+                };
             };
         };
     };
@@ -531,36 +836,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    name: string;
-                    slug: string;
-                    /** @enum {string} */
-                    status?: "active" | "inactive";
-                    addressLine1?: string | null;
-                    addressLine2?: string | null;
-                    city?: string | null;
-                    postcode?: string | null;
-                    /** @default MA */
-                    countryCode?: string;
-                    googlePlaceId?: string | null;
-                    formattedAddress?: string | null;
-                    lat?: string | null;
-                    lng?: string | null;
-                    phone?: string | null;
-                    /** Format: email */
-                    email?: string | null;
-                    /** Format: uri */
-                    website?: string | null;
-                    socialLinks?: {
-                        [key: string]: unknown;
-                    } | null;
-                    logo?: string | null;
-                    cuisineType?: string | null;
-                    seatingCapacity?: number | null;
-                    currency?: string | null;
-                    timezone?: string | null;
-                    locale?: string | null;
-                };
+                "application/json": components["schemas"]["BranchBody"];
             };
         };
         responses: {
@@ -569,7 +845,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BranchResponseDto"];
+                };
             };
         };
     };
@@ -577,7 +855,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                branchId: unknown;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -587,7 +867,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BranchResponseDto"];
+                };
             };
             /** @description Branch not found. */
             404: {
@@ -602,7 +884,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                branchId: unknown;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -620,40 +904,14 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                branchId: unknown;
+            };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": {
-                    name?: string;
-                    slug?: string;
-                    /** @enum {string} */
-                    status?: "active" | "inactive";
-                    addressLine1?: string | null;
-                    addressLine2?: string | null;
-                    city?: string | null;
-                    postcode?: string | null;
-                    countryCode?: string;
-                    googlePlaceId?: string | null;
-                    formattedAddress?: string | null;
-                    lat?: string | null;
-                    lng?: string | null;
-                    phone?: string | null;
-                    /** Format: email */
-                    email?: string | null;
-                    /** Format: uri */
-                    website?: string | null;
-                    socialLinks?: {
-                        [key: string]: unknown;
-                    } | null;
-                    logo?: string | null;
-                    cuisineType?: string | null;
-                    seatingCapacity?: number | null;
-                    currency?: string | null;
-                    timezone?: string | null;
-                    locale?: string | null;
-                };
+                "application/json": components["schemas"]["UpdateBranchBody"];
             };
         };
         responses: {
@@ -662,7 +920,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BranchResponseDto"];
+                };
             };
         };
     };
@@ -670,7 +930,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                branchId: unknown;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -680,7 +942,125 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BranchResponseDto"];
+                };
+            };
+        };
+    };
+    OperatingHoursController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Branch normal and Ramadan schedules plus closed days. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperatingHoursResponseDto"];
+                };
+            };
+        };
+    };
+    OperatingHoursController_replace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperatingHoursPutBodyDto"];
+            };
+        };
+        responses: {
+            /** @description Updated branch schedules. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperatingHoursResponseDto"];
+                };
+            };
+        };
+    };
+    PaymentMethodsController_definitions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Built-in payment method definitions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentMethodDefinitionsResponseDto"];
+                };
+            };
+        };
+    };
+    PaymentMethodsController_getBranchMethods: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Branch payment method configuration. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchPaymentMethodsResponseDto"];
+                };
+            };
+        };
+    };
+    PaymentMethodsController_replaceBranchMethods: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentMethodsPutBodyDto"];
+            };
+        };
+        responses: {
+            /** @description Updated branch payment methods. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchPaymentMethodsResponseDto"];
+                };
             };
         };
     };

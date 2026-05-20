@@ -36,6 +36,10 @@ const STARTER_PERMISSIONS = [
   ["branch.create", "Create branches", "branch"],
   ["branch.update", "Update branches", "branch"],
   ["branch.delete", "Delete branches", "branch"],
+  ["settings.view", "View branch settings", "settings"],
+  ["settings.update", "Update branch settings", "settings"],
+  ["payment_methods.view", "View payment methods", "payment_methods"],
+  ["payment_methods.update", "Update payment methods", "payment_methods"],
   ["staff.view", "View staff", "staff"],
   ["staff.create", "Create staff", "staff"],
   ["staff.update", "Update staff", "staff"],
@@ -60,6 +64,8 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   Cashier: [
     "business.view",
     "branch.view",
+    "settings.view",
+    "payment_methods.view",
     "order.view",
     "order.create",
     "order.update",
@@ -68,12 +74,14 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   Waiter: [
     "business.view",
     "branch.view",
+    "settings.view",
+    "payment_methods.view",
     "order.view",
     "order.create",
     "order.update",
     "menu.view",
   ],
-  Kitchen: ["branch.view", "order.view", "menu.view"],
+  Kitchen: ["branch.view", "settings.view", "payment_methods.view", "order.view", "menu.view"],
 };
 
 async function main(): Promise<void> {
@@ -142,7 +150,7 @@ async function main(): Promise<void> {
 
         await tx
           .update(permissionVersions)
-          .set({ version: sql`greatest(${permissionVersions.version}, 2)` })
+          .set({ version: sql`greatest(${permissionVersions.version}, 3)` })
           .where(sql`${permissionVersions.businessId} = ${business.id}`);
       });
 

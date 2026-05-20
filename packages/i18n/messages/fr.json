@@ -109,7 +109,9 @@
       "staff": "Equipe",
       "settings": "Parametres",
       "profile": "Profil restaurant",
-      "branches": "Branches"
+      "branches": "Branches",
+      "operatingHours": "Horaires",
+      "paymentMethods": "Paiements"
     },
     "dashboard": {
       "eyebrow": "Admin",
@@ -168,7 +170,48 @@
         "save": "Enregistrer",
         "loadError": "Impossible de charger les branches",
         "saveError": "Impossible d'enregistrer la branche",
-        "saved": "Branches mises a jour"
+        "saved": "Branches mises a jour",
+        "deactivateConfirm": "Desactiver cette branche ?"
+      },
+      "operatingHours": {
+        "title": "Horaires d'ouverture",
+        "normal": "Horaires normaux",
+        "ramadan": "Horaires Ramadan",
+        "ramadanMode": "Mode Ramadan actif",
+        "closedDays": "Jours fermes",
+        "closedDate": "Date de fermeture",
+        "closedReason": "Motif",
+        "addClosedDay": "Ajouter un jour ferme",
+        "addInterval": "Ajouter une plage",
+        "closed": "Ferme",
+        "opensAt": "Ouverture",
+        "closesAt": "Fermeture",
+        "loadError": "Impossible de charger les horaires",
+        "saveError": "Impossible d'enregistrer les horaires",
+        "saved": "Horaires enregistres",
+        "days": {
+          "0": "Dimanche",
+          "1": "Lundi",
+          "2": "Mardi",
+          "3": "Mercredi",
+          "4": "Jeudi",
+          "5": "Vendredi",
+          "6": "Samedi"
+        }
+      },
+      "paymentMethods": {
+        "title": "Methodes de paiement",
+        "configured": "Configuration de la branche",
+        "addCustom": "Ajouter une methode",
+        "customMethod": "Methode personnalisee",
+        "customName": "Nom de la methode",
+        "enabled": "Active",
+        "cashDrawer": "Ouvrir le tiroir-caisse",
+        "moveUp": "Monter",
+        "moveDown": "Descendre",
+        "loadError": "Impossible de charger les moyens de paiement",
+        "saveError": "Impossible d'enregistrer les moyens de paiement",
+        "saved": "Moyens de paiement enregistres"
       }
     }
   },
