@@ -109,7 +109,9 @@
       "orders": "Commandes",
       "reports": "Rapports",
       "staff": "Equipe",
-      "settings": "Parametres"
+      "settings": "Parametres",
+      "profile": "Profil restaurant",
+      "branches": "Branches"
     },
     "dashboard": {
       "eyebrow": "Admin",
@@ -125,6 +127,51 @@
     },
     "settings": {
       "language": "Langue"
+    },
+    "module2": {
+      "eyebrow": "Configuration",
+      "saving": "Enregistrement",
+      "profile": {
+        "title": "Profil restaurant",
+        "businessSection": "Informations business",
+        "legalSection": "Informations legales",
+        "name": "Nom commercial",
+        "type": "Type",
+        "currency": "Devise",
+        "secondaryCurrency": "Devise secondaire",
+        "timezone": "Fuseau horaire",
+        "locale": "Langue par defaut",
+        "logo": "Logo",
+        "legalName": "Nom legal",
+        "iceNumber": "ICE",
+        "rcNumber": "RC",
+        "ifNumber": "IF",
+        "patenteNumber": "Patente",
+        "cnssNumber": "CNSS",
+        "loadError": "Impossible de charger le profil",
+        "saveError": "Impossible d'enregistrer le profil",
+        "saved": "Profil enregistre"
+      },
+      "branches": {
+        "title": "Branches",
+        "listTitle": "Branches actives",
+        "createTitle": "Nouvelle branche",
+        "editTitle": "Modifier la branche",
+        "slug": "Slug",
+        "city": "Ville",
+        "address": "Adresse",
+        "phone": "Telephone",
+        "seatingCapacity": "Capacite",
+        "default": "Par defaut",
+        "setDefault": "Definir par defaut",
+        "edit": "Modifier",
+        "deactivate": "Desactiver",
+        "create": "Creer la branche",
+        "save": "Enregistrer",
+        "loadError": "Impossible de charger les branches",
+        "saveError": "Impossible d'enregistrer la branche",
+        "saved": "Branches mises a jour"
+      }
     }
   },
   "pos": {

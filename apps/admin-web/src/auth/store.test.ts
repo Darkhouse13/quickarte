@@ -10,7 +10,7 @@ describe("useAuthStore", () => {
 
   it("stores tokens and derives authenticated state", () => {
     useAuthStore.getState().setTokens({
-      accessToken: tokenExpiringAt(Date.now() + 60_000),
+      accessToken: tokenExpiringAt(Date.now() + 10 * 60_000),
       refreshToken: "refresh-token",
     });
 
@@ -20,7 +20,7 @@ describe("useAuthStore", () => {
 
   it("clears persisted tokens", () => {
     useAuthStore.getState().setTokens({
-      accessToken: tokenExpiringAt(Date.now() + 60_000),
+      accessToken: tokenExpiringAt(Date.now() + 10 * 60_000),
       refreshToken: "refresh-token",
     });
 

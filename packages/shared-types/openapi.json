@@ -307,6 +307,430 @@
         ]
       }
     },
+    "/v1/businesses/me/setup": {
+      "get": {
+        "operationId": "BusinessesSetupController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Business setup profile, legal profile, and default branch."
+          }
+        },
+        "summary": "Get current business setup profile",
+        "tags": [
+          "Businesses"
+        ]
+      },
+      "patch": {
+        "operationId": "BusinessesSetupController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "restaurant",
+                      "cafe",
+                      "autre"
+                    ]
+                  },
+                  "currency": {
+                    "type": "string"
+                  },
+                  "secondaryCurrency": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "timezone": {
+                    "type": "string"
+                  },
+                  "locale": {
+                    "type": "string"
+                  },
+                  "logo": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "legalProfile": {
+                    "type": "object",
+                    "properties": {
+                      "legalName": {
+                        "type": "string"
+                      },
+                      "iceNumber": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 32
+                      },
+                      "rcNumber": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 32
+                      },
+                      "ifNumber": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 32
+                      },
+                      "patenteNumber": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 32
+                      },
+                      "cnssNumber": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 32
+                      },
+                      "legalAddress": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "legalCity": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "legalPostcode": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 16
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated business setup profile."
+          }
+        },
+        "summary": "Update current business setup profile",
+        "tags": [
+          "Businesses"
+        ]
+      }
+    },
+    "/v1/branches": {
+      "get": {
+        "operationId": "BranchesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Tenant branch list."
+          }
+        },
+        "summary": "List branches for the current business",
+        "tags": [
+          "Branches"
+        ]
+      },
+      "post": {
+        "operationId": "BranchesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "slug"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "slug": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "inactive"
+                    ]
+                  },
+                  "addressLine1": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "addressLine2": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "city": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "postcode": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 16
+                  },
+                  "countryCode": {
+                    "type": "string",
+                    "maxLength": 2,
+                    "default": "MA"
+                  },
+                  "googlePlaceId": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "formattedAddress": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "lat": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "lng": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "phone": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true,
+                    "format": "email"
+                  },
+                  "website": {
+                    "type": "string",
+                    "nullable": true,
+                    "format": "uri"
+                  },
+                  "socialLinks": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "nullable": true
+                  },
+                  "logo": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "cuisineType": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "seatingCapacity": {
+                    "type": "integer",
+                    "nullable": true,
+                    "minimum": 0
+                  },
+                  "currency": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "locale": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created branch."
+          }
+        },
+        "summary": "Create a branch",
+        "tags": [
+          "Branches"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}": {
+      "get": {
+        "operationId": "BranchesController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Branch profile."
+          },
+          "404": {
+            "description": "Branch not found."
+          }
+        },
+        "summary": "Get a branch",
+        "tags": [
+          "Branches"
+        ]
+      },
+      "patch": {
+        "operationId": "BranchesController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "slug": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "inactive"
+                    ]
+                  },
+                  "addressLine1": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "addressLine2": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "city": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "postcode": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 16
+                  },
+                  "countryCode": {
+                    "type": "string",
+                    "maxLength": 2
+                  },
+                  "googlePlaceId": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "formattedAddress": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "lat": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "lng": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "phone": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true,
+                    "format": "email"
+                  },
+                  "website": {
+                    "type": "string",
+                    "nullable": true,
+                    "format": "uri"
+                  },
+                  "socialLinks": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "nullable": true
+                  },
+                  "logo": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "cuisineType": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "seatingCapacity": {
+                    "type": "integer",
+                    "nullable": true,
+                    "minimum": 0
+                  },
+                  "currency": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "locale": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated branch."
+          }
+        },
+        "summary": "Update a branch",
+        "tags": [
+          "Branches"
+        ]
+      },
+      "delete": {
+        "operationId": "BranchesController_delete",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Branch deactivated."
+          }
+        },
+        "summary": "Deactivate a branch",
+        "tags": [
+          "Branches"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/set-default": {
+      "post": {
+        "operationId": "BranchesController_setDefault",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Default branch updated."
+          }
+        },
+        "summary": "Set branch as default",
+        "tags": [
+          "Branches"
+        ]
+      }
+    },
     "/v1/sync/pull": {
       "get": {
         "operationId": "SyncController_pull",

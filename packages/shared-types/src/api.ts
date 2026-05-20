@@ -106,6 +106,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/me/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get current business setup profile */
+        get: operations["BusinessesSetupController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update current business setup profile */
+        patch: operations["BusinessesSetupController_update"];
+        trace?: never;
+    };
+    "/v1/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List branches for the current business */
+        get: operations["BranchesController_list"];
+        put?: never;
+        /** Create a branch */
+        post: operations["BranchesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/branches/{branchId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a branch */
+        get: operations["BranchesController_get"];
+        put?: never;
+        post?: never;
+        /** Deactivate a branch */
+        delete: operations["BranchesController_delete"];
+        options?: never;
+        head?: never;
+        /** Update a branch */
+        patch: operations["BranchesController_update"];
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/set-default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set branch as default */
+        post: operations["BranchesController_setDefault"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/sync/pull": {
         parameters: {
             query?: never;
@@ -365,6 +437,246 @@ export interface operations {
             };
             /** @description No business exists for the current tenant context. */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BusinessesSetupController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Business setup profile, legal profile, and default branch. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BusinessesSetupController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    /** @enum {string} */
+                    type?: "restaurant" | "cafe" | "autre";
+                    currency?: string;
+                    secondaryCurrency?: string | null;
+                    timezone?: string;
+                    locale?: string;
+                    logo?: string | null;
+                    legalProfile?: {
+                        legalName?: string;
+                        iceNumber?: string | null;
+                        rcNumber?: string | null;
+                        ifNumber?: string | null;
+                        patenteNumber?: string | null;
+                        cnssNumber?: string | null;
+                        legalAddress?: string | null;
+                        legalCity?: string | null;
+                        legalPostcode?: string | null;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Updated business setup profile. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BranchesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tenant branch list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BranchesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    slug: string;
+                    /** @enum {string} */
+                    status?: "active" | "inactive";
+                    addressLine1?: string | null;
+                    addressLine2?: string | null;
+                    city?: string | null;
+                    postcode?: string | null;
+                    /** @default MA */
+                    countryCode?: string;
+                    googlePlaceId?: string | null;
+                    formattedAddress?: string | null;
+                    lat?: string | null;
+                    lng?: string | null;
+                    phone?: string | null;
+                    /** Format: email */
+                    email?: string | null;
+                    /** Format: uri */
+                    website?: string | null;
+                    socialLinks?: {
+                        [key: string]: unknown;
+                    } | null;
+                    logo?: string | null;
+                    cuisineType?: string | null;
+                    seatingCapacity?: number | null;
+                    currency?: string | null;
+                    timezone?: string | null;
+                    locale?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Created branch. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BranchesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Branch profile. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Branch not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BranchesController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Branch deactivated. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BranchesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    slug?: string;
+                    /** @enum {string} */
+                    status?: "active" | "inactive";
+                    addressLine1?: string | null;
+                    addressLine2?: string | null;
+                    city?: string | null;
+                    postcode?: string | null;
+                    countryCode?: string;
+                    googlePlaceId?: string | null;
+                    formattedAddress?: string | null;
+                    lat?: string | null;
+                    lng?: string | null;
+                    phone?: string | null;
+                    /** Format: email */
+                    email?: string | null;
+                    /** Format: uri */
+                    website?: string | null;
+                    socialLinks?: {
+                        [key: string]: unknown;
+                    } | null;
+                    logo?: string | null;
+                    cuisineType?: string | null;
+                    seatingCapacity?: number | null;
+                    currency?: string | null;
+                    timezone?: string | null;
+                    locale?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated branch. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BranchesController_setDefault: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default branch updated. */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

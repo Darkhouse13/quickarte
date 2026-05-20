@@ -203,6 +203,9 @@ function scheduleSilentRefresh(
   }
 
   const refreshInMs = Math.max(payload.exp * 1000 - Date.now() - 2 * 60_000, 0);
+  if (refreshInMs === 0) {
+    return;
+  }
   silentRefreshTimer = setTimeout(refresh, refreshInMs);
 }
 

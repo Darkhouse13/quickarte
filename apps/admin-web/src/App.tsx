@@ -6,8 +6,12 @@ import { useAuthStore } from "./auth/store";
 import { useTenantStore } from "./tenant/store";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
+import { BranchesPage } from "./pages/BranchesPage";
+import { RestaurantProfilePage } from "./pages/RestaurantProfilePage";
 
 const navItems = [
+  ["profile", "/settings/profile"],
+  ["branches", "/settings/branches"],
   ["menu", "/menu"],
   ["orders", "/orders"],
   ["reports", "/reports"],
@@ -36,6 +40,8 @@ export const router = createBrowserRouter([
           { path: "/reports", element: <PlaceholderPage name="reports" /> },
           { path: "/staff", element: <PlaceholderPage name="staff" /> },
           { path: "/settings", element: <PlaceholderPage name="settings" /> },
+          { path: "/settings/profile", element: <RestaurantProfilePage /> },
+          { path: "/settings/branches", element: <BranchesPage /> },
         ],
       },
     ],
