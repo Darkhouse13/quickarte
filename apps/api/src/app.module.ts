@@ -4,6 +4,7 @@ import { LoggerModule } from "nestjs-pino";
 import { randomUUID } from "node:crypto";
 import { AuditLogModule } from "./audit-log/audit-log.module";
 import { AuthModule } from "./auth/auth.module";
+import { BranchesModule } from "./branches/branches.module";
 import { BusinessesModule } from "./businesses/businesses.module";
 import { TenantContextMiddleware } from "./common/middleware/tenant-context.middleware";
 import { validateEnv } from "./config/env";
@@ -62,6 +63,7 @@ import { SyncModule } from "./sync/sync.module";
     AuthModule,
     AuditLogModule,
     BusinessesModule,
+    BranchesModule,
     SyncModule,
   ],
 })

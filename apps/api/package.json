@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "pretest": "pnpm --filter @quickarte/db-schema build",
-    "test": "tsx --tsconfig tsconfig.json --test src/**/*.test.ts test/**/*.test.ts",
+    "test": "tsx --tsconfig tsconfig.json --test --test-concurrency=1 src/**/*.test.ts test/**/*.test.ts",
     "openapi:generate": "tsx --tsconfig tsconfig.json scripts/generate-openapi.ts"
   },
   "dependencies": {

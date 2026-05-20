@@ -32,6 +32,10 @@ if (!DATABASE_URL) {
 const STARTER_PERMISSIONS = [
   ["business.view", "View business profile and settings", "business"],
   ["business.update", "Update business profile and settings", "business"],
+  ["branch.view", "View branches", "branch"],
+  ["branch.create", "Create branches", "branch"],
+  ["branch.update", "Update branches", "branch"],
+  ["branch.delete", "Delete branches", "branch"],
   ["staff.view", "View staff", "staff"],
   ["staff.create", "Create staff", "staff"],
   ["staff.update", "Update staff", "staff"],
@@ -55,13 +59,21 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   ),
   Cashier: [
     "business.view",
+    "branch.view",
     "order.view",
     "order.create",
     "order.update",
     "menu.view",
   ],
-  Waiter: ["business.view", "order.view", "order.create", "order.update", "menu.view"],
-  Kitchen: ["order.view", "menu.view"],
+  Waiter: [
+    "business.view",
+    "branch.view",
+    "order.view",
+    "order.create",
+    "order.update",
+    "menu.view",
+  ],
+  Kitchen: ["branch.view", "order.view", "menu.view"],
 };
 
 async function main(): Promise<void> {
@@ -127,6 +139,11 @@ async function main(): Promise<void> {
             )
             .onConflictDoNothing();
         }
+
+        await tx
+          .update(permissionVersions)
+          .set({ version: sql`greatest(${permissionVersions.version}, 2)` })
+          .where(sql`${permissionVersions.businessId} = ${business.id}`);
       });
 
       console.log(`Seeded permissions for ${business.name} (${business.id})`);

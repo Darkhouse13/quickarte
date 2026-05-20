@@ -169,6 +169,13 @@
       "when": 1778968496015,
       "tag": "0023_auth_rbac",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1779043200000,
+      "tag": "0024_branch_foundation",
+      "breakpoints": true
     }
   ]
 }
