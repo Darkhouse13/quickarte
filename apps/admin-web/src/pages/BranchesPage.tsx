@@ -1,18 +1,13 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { apiClient, readProblem } from "../auth/api";
+import type { paths } from "@quickarte/shared-types";
+import { apiClient, readResponseProblem } from "../auth/api";
 
-type Branch = {
-  id: string;
-  name: string;
-  slug: string;
-  isDefault: boolean;
-  status: string;
-  city: string | null;
-  addressLine1?: string | null;
-  phone?: string | null;
-  seatingCapacity?: number | null;
-};
+type BranchListResponse =
+  paths["/v1/branches"]["get"]["responses"][200]["content"]["application/json"];
+type Branch = BranchListResponse["branches"][number];
+type CreateBranchBody =
+  paths["/v1/branches"]["post"]["requestBody"]["content"]["application/json"];
 
 type BranchForm = {
   id: string | null;
@@ -22,12 +17,6 @@ type BranchForm = {
   addressLine1: string;
   phone: string;
   seatingCapacity: string;
-};
-
-type ApiWriteClient = {
-  POST: (path: string, options: unknown) => Promise<{ error?: unknown; data?: unknown }>;
-  PATCH: (path: string, options: unknown) => Promise<{ error?: unknown; data?: unknown }>;
-  DELETE: (path: string, options: unknown) => Promise<{ error?: unknown; data?: unknown }>;
 };
 
 const emptyForm: BranchForm = {
@@ -57,7 +46,7 @@ export function BranchesPage() {
       setError(t("admin.module2.branches.loadError"));
       return;
     }
-    setBranches((response.data as unknown as { branches: Branch[] }).branches);
+    setBranches(response.data.branches);
   }, [t]);
 
   useEffect(() => {
@@ -70,26 +59,26 @@ export function BranchesPage() {
     setError(null);
     setMessage(null);
 
-    const body = {
+    const body: CreateBranchBody = {
       name: form.name,
       slug: form.slug,
+      countryCode: "MA",
       city: emptyToNull(form.city),
       addressLine1: emptyToNull(form.addressLine1),
       phone: emptyToNull(form.phone),
       seatingCapacity: form.seatingCapacity ? Number(form.seatingCapacity) : null,
     };
 
-    const client = apiClient() as unknown as ApiWriteClient;
     const response = form.id
-      ? await client.PATCH("/v1/branches/{branchId}", {
+      ? await apiClient().PATCH("/v1/branches/{branchId}", {
           params: { path: { branchId: form.id } },
           body,
         })
-      : await client.POST("/v1/branches", { body });
+      : await apiClient().POST("/v1/branches", { body });
 
     setSaving(false);
-    if (response.error) {
-      setError(readProblem(response.error).detail ?? t("admin.module2.branches.saveError"));
+    if (!response.data) {
+      setError(readResponseProblem(response).detail ?? t("admin.module2.branches.saveError"));
       return;
     }
     setForm(emptyForm);
@@ -98,24 +87,25 @@ export function BranchesPage() {
   }
 
   async function setDefault(branchId: string) {
-    const client = apiClient() as unknown as ApiWriteClient;
-    const response = await client.POST("/v1/branches/{branchId}/set-default", {
+    const response = await apiClient().POST("/v1/branches/{branchId}/set-default", {
       params: { path: { branchId } },
     });
-    if (response.error) {
-      setError(readProblem(response.error).detail ?? t("admin.module2.branches.saveError"));
+    if (!response.data) {
+      setError(readResponseProblem(response).detail ?? t("admin.module2.branches.saveError"));
       return;
     }
     await loadBranches();
   }
 
   async function deactivate(branchId: string) {
-    const client = apiClient() as unknown as ApiWriteClient;
-    const response = await client.DELETE("/v1/branches/{branchId}", {
+    if (!window.confirm(t("admin.module2.branches.deactivateConfirm"))) {
+      return;
+    }
+    const response = await apiClient().DELETE("/v1/branches/{branchId}", {
       params: { path: { branchId } },
     });
-    if (response.error) {
-      setError(readProblem(response.error).detail ?? t("admin.module2.branches.saveError"));
+    if (!response.data) {
+      setError(readResponseProblem(response).detail ?? t("admin.module2.branches.saveError"));
       return;
     }
     await loadBranches();

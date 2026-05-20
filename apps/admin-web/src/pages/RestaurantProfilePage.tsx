@@ -1,29 +1,12 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { apiClient, readProblem } from "../auth/api";
+import type { paths } from "@quickarte/shared-types";
+import { apiClient, readResponseProblem } from "../auth/api";
 
-type SetupResponse = {
-  business: {
-    name: string;
-    type: "restaurant" | "cafe" | "autre";
-    currency: string;
-    secondaryCurrency: string | null;
-    timezone: string;
-    locale: string;
-    logo: string | null;
-  };
-  legalProfile: {
-    legalName: string;
-    iceNumber: string | null;
-    rcNumber: string | null;
-    ifNumber: string | null;
-    patenteNumber: string | null;
-    cnssNumber: string | null;
-    legalAddress?: string | null;
-    legalCity?: string | null;
-    legalPostcode?: string | null;
-  } | null;
-};
+type SetupResponse =
+  paths["/v1/businesses/me/setup"]["get"]["responses"][200]["content"]["application/json"];
+type UpdateSetupBody =
+  paths["/v1/businesses/me/setup"]["patch"]["requestBody"]["content"]["application/json"];
 
 type ProfileForm = {
   name: string;
@@ -39,10 +22,6 @@ type ProfileForm = {
   ifNumber: string;
   patenteNumber: string;
   cnssNumber: string;
-};
-
-type ApiWriteClient = {
-  PATCH: (path: string, options: unknown) => Promise<{ error?: unknown; data?: unknown }>;
 };
 
 const initialForm: ProfileForm = {
@@ -84,7 +63,7 @@ export function RestaurantProfilePage() {
         setError(t("admin.module2.profile.loadError"));
         return;
       }
-      const setup = response.data as unknown as SetupResponse;
+      const setup: SetupResponse = response.data;
       setForm({
         name: setup.business.name,
         type: setup.business.type,
@@ -113,30 +92,28 @@ export function RestaurantProfilePage() {
     setError(null);
     setMessage(null);
 
-    const client = apiClient() as unknown as ApiWriteClient;
-    const response = await client.PATCH("/v1/businesses/me/setup", {
-      body: {
-        name: form.name,
-        type: form.type,
-        currency: form.currency,
-        secondaryCurrency: emptyToNull(form.secondaryCurrency),
-        timezone: form.timezone,
-        locale: form.locale,
-        logo: emptyToNull(form.logo),
-        legalProfile: {
-          legalName: form.legalName,
-          iceNumber: emptyToNull(form.iceNumber),
-          rcNumber: emptyToNull(form.rcNumber),
-          ifNumber: emptyToNull(form.ifNumber),
-          patenteNumber: emptyToNull(form.patenteNumber),
-          cnssNumber: emptyToNull(form.cnssNumber),
-        },
+    const body: UpdateSetupBody = {
+      name: form.name,
+      type: form.type,
+      currency: form.currency,
+      secondaryCurrency: emptyToNull(form.secondaryCurrency),
+      timezone: form.timezone,
+      locale: form.locale,
+      logo: emptyToNull(form.logo),
+      legalProfile: {
+        legalName: form.legalName,
+        iceNumber: emptyToNull(form.iceNumber),
+        rcNumber: emptyToNull(form.rcNumber),
+        ifNumber: emptyToNull(form.ifNumber),
+        patenteNumber: emptyToNull(form.patenteNumber),
+        cnssNumber: emptyToNull(form.cnssNumber),
       },
-    });
+    };
+    const response = await apiClient().PATCH("/v1/businesses/me/setup", { body });
 
     setSaving(false);
-    if (response.error) {
-      setError(readProblem(response.error).detail ?? t("admin.module2.profile.saveError"));
+    if (!response.data) {
+      setError(readResponseProblem(response).detail ?? t("admin.module2.profile.saveError"));
       return;
     }
     setMessage(t("admin.module2.profile.saved"));

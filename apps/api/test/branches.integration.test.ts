@@ -153,7 +153,13 @@ before(async () => {
           AND existing."is_default" = true
           AND existing."deleted_at" IS NULL
       )
-    ON CONFLICT ("business_id", "slug") DO NOTHING
+      AND NOT EXISTS (
+        SELECT 1
+        FROM "branches" existing_slug
+        WHERE existing_slug."business_id" = b."id"
+          AND existing_slug."slug" = 'main'
+          AND existing_slug."deleted_at" IS NULL
+      )
   `);
 
   await seedRolesAndPermissions(businessAId);

@@ -1,19 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { paths } from "@quickarte/shared-types";
 import { apiClient } from "../auth/api";
 import { useAuthStore } from "../auth/store";
 
-type BusinessProfile = {
-  id: string;
-  name: string;
-  slug: string;
-  type: string;
-  city: string | null;
-  address: string | null;
-  currency: string;
-  timezone: string;
-  locale: string;
-};
+type BusinessProfile =
+  paths["/v1/businesses/me"]["get"]["responses"][200]["content"]["application/json"];
 
 export function DashboardPage() {
   const { t } = useTranslation();
@@ -35,7 +27,7 @@ export function DashboardPage() {
           setError(true);
           return;
         }
-        setBusiness(response.data as unknown as BusinessProfile);
+        setBusiness(response.data);
       });
     return () => {
       cancelled = true;
