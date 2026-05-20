@@ -10,6 +10,7 @@ import { BranchesPage } from "./pages/BranchesPage";
 import { RestaurantProfilePage } from "./pages/RestaurantProfilePage";
 import { OperatingHoursPage } from "./pages/OperatingHoursPage";
 import { PaymentMethodsPage } from "./pages/PaymentMethodsPage";
+import { ReceiptSettingsPage } from "./pages/ReceiptSettingsPage";
 import { TaxConfigurationPage } from "./pages/TaxConfigurationPage";
 
 const navItems = [
@@ -18,6 +19,7 @@ const navItems = [
   ["operatingHours", "/settings/operating-hours"],
   ["paymentMethods", "/settings/payment-methods"],
   ["tax", "/settings/tax"],
+  ["receipts", "/settings/receipts"],
   ["menu", "/menu"],
   ["orders", "/orders"],
   ["reports", "/reports"],
@@ -51,6 +53,7 @@ export const router = createBrowserRouter([
           { path: "/settings/operating-hours", element: <OperatingHoursPage /> },
           { path: "/settings/payment-methods", element: <PaymentMethodsPage /> },
           { path: "/settings/tax", element: <TaxConfigurationPage /> },
+          { path: "/settings/receipts", element: <ReceiptSettingsPage /> },
         ],
       },
     ],

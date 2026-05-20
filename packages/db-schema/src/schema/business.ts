@@ -358,6 +358,60 @@ export const branchTaxSettings = pgTable(
   }),
 );
 
+export const branchReceiptSettings = pgTable(
+  "branch_receipt_settings",
+  {
+    branchId: uuid("branch_id")
+      .primaryKey()
+      .references(() => branches.id, { onDelete: "cascade" }),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    logoUrl: text("logo_url"),
+    headerLines: jsonb("header_lines").notNull().default(sql`'[]'::jsonb`),
+    footerLines: jsonb("footer_lines").notNull().default(sql`'[]'::jsonb`),
+    showItemCodes: boolean("show_item_codes").notNull().default(false),
+    showTaxBreakdown: boolean("show_tax_breakdown").notNull().default(true),
+    showServerName: boolean("show_server_name").notNull().default(true),
+    showTableNumber: boolean("show_table_number").notNull().default(true),
+    bilingualMode: varchar("bilingual_mode", { length: 24 })
+      .notNull()
+      .default("fr_only"),
+    paperWidth: varchar("paper_width", { length: 8 }).notNull().default("80mm"),
+    qrCodeMode: varchar("qr_code_mode", { length: 32 })
+      .notNull()
+      .default("none"),
+    qrCodeUrl: text("qr_code_url"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    businessIdx: index("branch_receipt_settings_business_idx").on(
+      table.businessId,
+    ),
+    bilingualModeCheck: check(
+      "branch_receipt_settings_bilingual_mode_check",
+      sql`${table.bilingualMode} in ('fr_only', 'ar_only', 'stacked', 'side_by_side')`,
+    ),
+    paperWidthCheck: check(
+      "branch_receipt_settings_paper_width_check",
+      sql`${table.paperWidth} in ('58mm', '80mm')`,
+    ),
+    qrCodeModeCheck: check(
+      "branch_receipt_settings_qr_code_mode_check",
+      sql`${table.qrCodeMode} in ('none', 'fidelity_signup', 'social_link', 'custom_url')`,
+    ),
+    qrCodeCustomUrlCheck: check(
+      "branch_receipt_settings_custom_url_check",
+      sql`${table.qrCodeMode} <> 'custom_url' or ${table.qrCodeUrl} is not null`,
+    ),
+  }),
+);
+
 export const businessSettings = pgTable("business_settings", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   businessId: uuid("business_id")
@@ -510,6 +564,20 @@ export const branchTaxSettingsRelations = relations(
   }),
 );
 
+export const branchReceiptSettingsRelations = relations(
+  branchReceiptSettings,
+  ({ one }) => ({
+    branch: one(branches, {
+      fields: [branchReceiptSettings.branchId],
+      references: [branches.id],
+    }),
+    business: one(businesses, {
+      fields: [branchReceiptSettings.businessId],
+      references: [businesses.id],
+    }),
+  }),
+);
+
 export const businessLegalProfilesRelations = relations(
   businessLegalProfiles,
   ({ one }) => ({
@@ -540,4 +608,6 @@ export type TaxRate = typeof taxRates.$inferSelect;
 export type NewTaxRate = typeof taxRates.$inferInsert;
 export type BranchTaxSetting = typeof branchTaxSettings.$inferSelect;
 export type NewBranchTaxSetting = typeof branchTaxSettings.$inferInsert;
+export type BranchReceiptSetting = typeof branchReceiptSettings.$inferSelect;
+export type NewBranchReceiptSetting = typeof branchReceiptSettings.$inferInsert;
 export type BusinessSettings = typeof businessSettings.$inferSelect;
