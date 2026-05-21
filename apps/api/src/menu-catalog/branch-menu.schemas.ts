@@ -2,6 +2,8 @@ import { createZodDto } from "nestjs-zod";
 import { z } from "zod";
 import {
   decimalStringSchema,
+  availabilityWindowSchema,
+  dietaryTagSchema,
   localizedTextSchema,
   modifierGroupSchema,
   pricingModeSchema,
@@ -79,6 +81,10 @@ export const effectiveMenuProductSchema = z
     taxSource: taxSourceSchema,
     printStations: z.array(z.string()),
     printRouteSource: printRouteSourceSchema,
+    tags: z.array(dietaryTagSchema),
+    spiceLevel: z.number().int().min(0).max(3).nullable(),
+    availabilityWindows: z.array(availabilityWindowSchema),
+    availableNow: z.boolean(),
     variants: z.array(effectiveMenuVariantSchema),
     modifiers: z.array(modifierGroupSchema),
   })

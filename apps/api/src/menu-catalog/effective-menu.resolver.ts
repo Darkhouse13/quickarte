@@ -1,5 +1,7 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { DateTime } from "luxon";
 import {
+  businesses,
   branchCategoryOverrides,
   branchCategoryPrintRoutes,
   branchCategoryTaxOverrides,
@@ -13,10 +15,13 @@ import {
   categories,
   categoryModifierGroups,
   categoryPrintRoutes,
+  dietaryTags,
   modifierGroupTemplates,
   modifierValueTemplates,
   optionValues,
+  productAvailabilityWindows,
   productOptions,
+  productTags,
   products,
   productVariants,
   taxRates,
@@ -36,7 +41,7 @@ import type {
   ReplaceMenuTaxOverridesInput,
   UpdateProductAvailabilityInput,
 } from "./branch-menu.schemas";
-import type { ModifierGroupResponse } from "./menu-catalog.schemas";
+import type { AvailabilityWindowResponse, DietaryTagResponse, ModifierGroupResponse } from "./menu-catalog.schemas";
 
 const DEFAULT_TAX_RATE_ID = "ma_tva_10";
 const ALL_PRINT_STATIONS = ["bar", "counter", "kitchen"] as const;
@@ -51,9 +56,10 @@ export class EffectiveMenuResolver {
     businessId: string,
     branchId: string,
     channel: MenuChannel,
+    evaluationDate: Date = new Date(),
   ): Promise<EffectiveMenuResponse> {
     return this.databaseService.withTenant(businessId, async (tx) => {
-      await this.assertBranch(tx, businessId, branchId);
+      const branchContext = await this.assertBranch(tx, businessId, branchId);
       const defaultTaxRate = await this.getDefaultTaxRateId(tx, businessId, branchId);
       const categoryRows = await tx
         .select()
@@ -96,6 +102,10 @@ export class EffectiveMenuResolver {
         productOverrideRows.map((row) => [row.productId, row]),
       );
       const productIds = productRows.map((row) => row.id);
+      const [tagsByProduct, windowsByProduct] = await Promise.all([
+        this.loadProductTags(tx, businessId, productIds),
+        this.loadAvailabilityWindows(tx, businessId, productIds),
+      ]);
       const variantRows =
         productIds.length > 0
           ? await tx
@@ -189,6 +199,7 @@ export class EffectiveMenuResolver {
           branchCategoryRoutesById,
           legacyRoutesByCategoryId,
         );
+        const availabilityWindows = windowsByProduct.get(product.id) ?? [];
         const effectiveProduct = {
           id: product.id,
           categoryId: product.categoryId,
@@ -222,6 +233,14 @@ export class EffectiveMenuResolver {
           taxSource: taxResolution.source,
           printStations: routingResolution.stations,
           printRouteSource: routingResolution.source,
+          tags: tagsByProduct.get(product.id) ?? [],
+          spiceLevel: product.spiceLevel,
+          availabilityWindows,
+          availableNow: this.isAvailableAt(
+            availabilityWindows,
+            branchContext.timezone,
+            evaluationDate,
+          ),
           variants: this.resolveVariants(
             product,
             variantsByProduct.get(product.id) ?? [],
@@ -857,6 +876,103 @@ export class EffectiveMenuResolver {
     return result;
   }
 
+  private async loadProductTags(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    productIds: string[],
+  ): Promise<Map<string, DietaryTagResponse[]>> {
+    if (productIds.length === 0) return new Map();
+    const rows = await tx
+      .select({
+        productId: productTags.productId,
+        tag: dietaryTags,
+      })
+      .from(productTags)
+      .innerJoin(dietaryTags, eq(productTags.tagId, dietaryTags.id))
+      .where(
+        and(
+          eq(productTags.businessId, businessId),
+          eq(dietaryTags.businessId, businessId),
+          inArray(productTags.productId, productIds),
+          isNull(dietaryTags.deletedAt),
+        ),
+      )
+      .orderBy(asc(dietaryTags.kind), asc(dietaryTags.position), asc(dietaryTags.code));
+    const tagsByProduct = new Map<string, DietaryTagResponse[]>();
+    for (const row of rows) {
+      const bucket = tagsByProduct.get(row.productId) ?? [];
+      bucket.push({
+        id: row.tag.id,
+        kind: row.tag.kind,
+        code: row.tag.code,
+        localizedLabels: row.tag.localizedLabels,
+        position: row.tag.position,
+        isSystem: row.tag.isSystem,
+      });
+      tagsByProduct.set(row.productId, bucket);
+    }
+    return tagsByProduct;
+  }
+
+  private async loadAvailabilityWindows(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    productIds: string[],
+  ): Promise<Map<string, AvailabilityWindowResponse[]>> {
+    if (productIds.length === 0) return new Map();
+    const rows = await tx
+      .select()
+      .from(productAvailabilityWindows)
+      .where(
+        and(
+          eq(productAvailabilityWindows.businessId, businessId),
+          inArray(productAvailabilityWindows.productId, productIds),
+        ),
+      )
+      .orderBy(
+        asc(productAvailabilityWindows.productId),
+        asc(productAvailabilityWindows.dayOfWeek),
+        asc(productAvailabilityWindows.startMinute),
+      );
+    const windowsByProduct = new Map<string, AvailabilityWindowResponse[]>();
+    for (const row of rows) {
+      const bucket = windowsByProduct.get(row.productId) ?? [];
+      bucket.push({
+        id: row.id,
+        dayOfWeek: row.dayOfWeek,
+        startMinute: row.startMinute,
+        endMinute: row.endMinute,
+      });
+      windowsByProduct.set(row.productId, bucket);
+    }
+    return windowsByProduct;
+  }
+
+  private isAvailableAt(
+    windows: AvailabilityWindowResponse[],
+    timezone: string,
+    evaluationDate: Date,
+  ): boolean {
+    if (windows.length === 0) return true;
+    const local = DateTime.fromJSDate(evaluationDate, { zone: "utc" }).setZone(timezone);
+    const dayOfWeek = local.weekday % 7;
+    const minute = local.hour * 60 + local.minute;
+    return windows.some((window) => {
+      if (window.startMinute <= window.endMinute) {
+        return (
+          window.dayOfWeek === dayOfWeek &&
+          minute >= window.startMinute &&
+          minute < window.endMinute
+        );
+      }
+      const nextDay = (window.dayOfWeek + 1) % 7;
+      return (
+        (window.dayOfWeek === dayOfWeek && minute >= window.startMinute) ||
+        (nextDay === dayOfWeek && minute < window.endMinute)
+      );
+    });
+  }
+
   private resolveVariants(
     product: typeof products.$inferSelect,
     variants: Array<typeof productVariants.$inferSelect>,
@@ -1004,10 +1120,15 @@ export class EffectiveMenuResolver {
     tx: TenantedDrizzleClient,
     businessId: string,
     branchId: string,
-  ): Promise<void> {
+  ): Promise<{ timezone: string }> {
     const [branch] = await tx
-      .select({ id: branches.id })
+      .select({
+        id: branches.id,
+        branchTimezone: branches.timezone,
+        businessTimezone: businesses.timezone,
+      })
       .from(branches)
+      .innerJoin(businesses, eq(branches.businessId, businesses.id))
       .where(
         and(
           eq(branches.businessId, businessId),
@@ -1017,6 +1138,7 @@ export class EffectiveMenuResolver {
       )
       .limit(1);
     if (!branch) throw new NotFoundException("Branch not found");
+    return { timezone: branch.branchTimezone ?? branch.businessTimezone ?? "Africa/Casablanca" };
   }
 
   private async assertProduct(

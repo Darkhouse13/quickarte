@@ -503,6 +503,39 @@ export interface paths {
         patch: operations["MenuCatalogController_updateModifierGroup"];
         trace?: never;
     };
+    "/v1/menu/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List business dietary and allergen tags. */
+        get: operations["MenuCatalogController_listTags"];
+        put?: never;
+        post: operations["MenuCatalogController_createTag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/tags/{tagId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["MenuCatalogController_deleteTag"];
+        options?: never;
+        head?: never;
+        patch: operations["MenuCatalogController_updateTag"];
+        trace?: never;
+    };
     "/v1/menu/products": {
         parameters: {
             query?: never;
@@ -593,6 +626,38 @@ export interface paths {
         };
         get?: never;
         put: operations["MenuCatalogController_replaceImages"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/products/{productId}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["MenuCatalogController_replaceProductTags"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/products/{productId}/availability-windows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["MenuCatalogController_replaceProductAvailabilityWindows"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1442,6 +1507,43 @@ export interface components {
                 recipeHookKey?: string | null;
             }[];
         };
+        DietaryTag_Output: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "dietary" | "allergen";
+            code: string;
+            localizedLabels: {
+                [key: string]: string;
+            };
+            position: number;
+            isSystem: boolean;
+        };
+        MenuTagsResponseDto_Output: {
+            tags: components["schemas"]["DietaryTag_Output"][];
+        };
+        CreateDietaryTagDto: {
+            /** @enum {string} */
+            kind: "dietary" | "allergen";
+            code: string;
+            localizedLabels: {
+                [key: string]: string;
+            };
+            /** @default 0 */
+            position: number;
+        };
+        MenuTagResponseDto_Output: {
+            tag: components["schemas"]["DietaryTag_Output"];
+        };
+        UpdateDietaryTagDto: {
+            /** @enum {string} */
+            kind?: "dietary" | "allergen";
+            code?: string;
+            localizedLabels?: {
+                [key: string]: string;
+            };
+            position?: number;
+        };
         MenuProduct_Output: {
             /** Format: uuid */
             id: string;
@@ -1470,10 +1572,13 @@ export interface components {
             localizedDescriptions: {
                 [key: string]: string;
             };
+            spiceLevel: number | null;
             position: number;
             variants: components["schemas"]["MenuVariant_Output"][];
             images: components["schemas"]["MenuProductImage_Output"][];
             modifiers: components["schemas"]["MenuModifierGroup_Output"][];
+            tags: components["schemas"]["DietaryTag_Output"][];
+            availabilityWindows: components["schemas"]["ProductAvailabilityWindow_Output"][];
         };
         MenuVariant_Output: {
             id: string | null;
@@ -1499,6 +1604,13 @@ export interface components {
             position: number;
             isPrimary: boolean;
         };
+        ProductAvailabilityWindow_Output: {
+            /** Format: uuid */
+            id: string;
+            dayOfWeek: number;
+            startMinute: number;
+            endMinute: number;
+        };
         MenuProductsResponseDto_Output: {
             products: components["schemas"]["MenuProduct_Output"][];
         };
@@ -1521,6 +1633,7 @@ export interface components {
             hidden: boolean;
             /** @default true */
             available: boolean;
+            spiceLevel?: number | null;
             channels: {
                 /** @default true */
                 dineIn: boolean;
@@ -1594,6 +1707,7 @@ export interface components {
             hidden: boolean;
             /** @default true */
             available: boolean;
+            spiceLevel?: number | null;
             channels?: {
                 /** @default true */
                 dineIn: boolean;
@@ -1697,6 +1811,21 @@ export interface components {
         MenuImagesResponseDto_Output: {
             images: components["schemas"]["MenuProductImage_Output"][];
         };
+        ReplaceProductTagsDto: {
+            tagIds: string[];
+        };
+        ReplaceProductAvailabilityWindowsDto: {
+            windows: {
+                /** Format: uuid */
+                id?: string;
+                dayOfWeek: number;
+                startMinute: number;
+                endMinute: number;
+            }[];
+        };
+        MenuAvailabilityWindowsResponseDto_Output: {
+            windows: components["schemas"]["ProductAvailabilityWindow_Output"][];
+        };
         MenuLocaleSettingsResponseDto_Output: {
             activeLocales: string[];
             defaultLocale: string;
@@ -1773,6 +1902,10 @@ export interface components {
             printStations: string[];
             /** @enum {string} */
             printRouteSource: "product" | "category" | "legacy" | "all";
+            tags: components["schemas"]["DietaryTag_Output"][];
+            spiceLevel: number | null;
+            availabilityWindows: components["schemas"]["ProductAvailabilityWindow_Output"][];
+            availableNow: boolean;
             variants: components["schemas"]["EffectiveMenuVariant_Output"][];
             modifiers: components["schemas"]["MenuModifierGroup_Output"][];
         };
@@ -3154,6 +3287,94 @@ export interface operations {
             };
         };
     };
+    MenuCatalogController_listTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuTagsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_createTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDietaryTagDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuTagResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_deleteTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tagId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuDeleteResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_updateTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tagId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDietaryTagDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuTagResponseDto_Output"];
+                };
+            };
+        };
+    };
     MenuCatalogController_listProducts: {
         parameters: {
             query?: {
@@ -3361,6 +3582,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MenuImagesResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_replaceProductTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceProductTagsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuTagsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_replaceProductAvailabilityWindows: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceProductAvailabilityWindowsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuAvailabilityWindowsResponseDto_Output"];
                 };
             };
         };

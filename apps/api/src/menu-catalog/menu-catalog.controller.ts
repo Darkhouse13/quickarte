@@ -24,6 +24,7 @@ import type { AuthenticatedRequest } from "../common/middleware/tenant-context.m
 import { MenuCatalogService } from "./menu-catalog.service";
 import {
   AttachModifierGroupsDto,
+  CreateDietaryTagDto,
   CreateModifierGroupDto,
   CreateMenuCategoryDto,
   CreateMenuProductDto,
@@ -31,6 +32,7 @@ import {
   MenuCategoriesResponseDto,
   MenuCategoryResponseDto,
   MenuDeleteResponseDto,
+  MenuAvailabilityWindowsResponseDto,
   MenuEffectiveModifierGroupsResponseDto,
   MenuImagesResponseDto,
   MenuLocaleSettingsResponseDto,
@@ -38,15 +40,20 @@ import {
   MenuModifierGroupsResponseDto,
   MenuProductResponseDto,
   MenuProductsResponseDto,
+  MenuTagResponseDto,
+  MenuTagsResponseDto,
   MenuVariantsResponseDto,
   ReorderMenuCategoriesDto,
   ReorderMenuProductsDto,
   ReplaceMenuVariantsDto,
   ReplaceProductImagesDto,
+  ReplaceProductAvailabilityWindowsDto,
+  ReplaceProductTagsDto,
   UpdateMenuCategoryDto,
   UpdateMenuLocaleSettingsDto,
   UpdateModifierGroupDto,
   UpdateMenuProductDto,
+  UpdateDietaryTagDto,
 } from "./menu-catalog.schemas";
 
 @ApiTags("menu")
@@ -194,6 +201,50 @@ export class MenuCatalogController {
     return { deleted: true as const };
   }
 
+  @Get("tags")
+  @RequirePermission("menu.view")
+  @ApiOperation({ summary: "List business dietary and allergen tags." })
+  @ZodResponse({ status: 200, type: MenuTagsResponseDto })
+  async listTags(@Req() request: AuthenticatedRequest) {
+    return { tags: await this.menuCatalogService.listTags(request.businessId!) };
+  }
+
+  @Post("tags")
+  @RequirePermission("menu.manage")
+  @ApiBody({ type: CreateDietaryTagDto })
+  @ZodResponse({ status: 201, type: MenuTagResponseDto })
+  async createTag(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: CreateDietaryTagDto,
+  ) {
+    return { tag: await this.menuCatalogService.createTag(request.businessId!, body) };
+  }
+
+  @Patch("tags/:tagId")
+  @RequirePermission("menu.manage")
+  @ApiParam({ name: "tagId" })
+  @ApiBody({ type: UpdateDietaryTagDto })
+  @ZodResponse({ status: 200, type: MenuTagResponseDto })
+  async updateTag(
+    @Req() request: AuthenticatedRequest,
+    @Param("tagId") tagId: string,
+    @Body() body: UpdateDietaryTagDto,
+  ) {
+    return { tag: await this.menuCatalogService.updateTag(request.businessId!, tagId, body) };
+  }
+
+  @Delete("tags/:tagId")
+  @RequirePermission("menu.manage")
+  @ApiParam({ name: "tagId" })
+  @ZodResponse({ status: 200, type: MenuDeleteResponseDto })
+  async deleteTag(
+    @Req() request: AuthenticatedRequest,
+    @Param("tagId") tagId: string,
+  ) {
+    await this.menuCatalogService.deleteTag(request.businessId!, tagId);
+    return { deleted: true as const };
+  }
+
   @Get("products")
   @RequirePermission("menu.view")
   @ApiOperation({ summary: "List shared menu products with first-class variants." })
@@ -330,6 +381,44 @@ export class MenuCatalogController {
   ) {
     return {
       images: await this.menuCatalogService.replaceImages(
+        request.businessId!,
+        productId,
+        body,
+      ),
+    };
+  }
+
+  @Put("products/:productId/tags")
+  @RequirePermission("menu.manage")
+  @ApiParam({ name: "productId" })
+  @ApiBody({ type: ReplaceProductTagsDto })
+  @ZodResponse({ status: 200, type: MenuTagsResponseDto })
+  async replaceProductTags(
+    @Req() request: AuthenticatedRequest,
+    @Param("productId") productId: string,
+    @Body() body: ReplaceProductTagsDto,
+  ) {
+    return {
+      tags: await this.menuCatalogService.replaceProductTags(
+        request.businessId!,
+        productId,
+        body,
+      ),
+    };
+  }
+
+  @Put("products/:productId/availability-windows")
+  @RequirePermission("menu.manage")
+  @ApiParam({ name: "productId" })
+  @ApiBody({ type: ReplaceProductAvailabilityWindowsDto })
+  @ZodResponse({ status: 200, type: MenuAvailabilityWindowsResponseDto })
+  async replaceProductAvailabilityWindows(
+    @Req() request: AuthenticatedRequest,
+    @Param("productId") productId: string,
+    @Body() body: ReplaceProductAvailabilityWindowsDto,
+  ) {
+    return {
+      windows: await this.menuCatalogService.replaceAvailabilityWindows(
         request.businessId!,
         productId,
         body,

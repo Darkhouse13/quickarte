@@ -8,6 +8,7 @@ import {
   pgEnum,
   pgTable,
   primaryKey,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
@@ -39,6 +40,11 @@ export const productVariantPricingModeEnum = pgEnum(
 export const modifierAttachScopeEnum = pgEnum("modifier_attach_scope", [
   "product",
   "category",
+]);
+
+export const dietaryTagKindEnum = pgEnum("dietary_tag_kind", [
+  "dietary",
+  "allergen",
 ]);
 
 export const categories = pgTable(
@@ -111,6 +117,7 @@ export const products = pgTable(
     availableDelivery: boolean("available_delivery").notNull().default(true),
     availableQr: boolean("available_qr").notNull().default(true),
     availableOnline: boolean("available_online").notNull().default(true),
+    spiceLevel: smallint("spice_level"),
     localizedNames: jsonb("localized_names")
       .$type<Record<string, string>>()
       .notNull()
@@ -233,6 +240,107 @@ export const productImages = pgTable(
       .where(sql`${table.isPrimary} = true`),
     businessIdx: index("product_images_business_idx").on(table.businessId),
     productIdx: index("product_images_product_idx").on(table.productId),
+  }),
+);
+
+export const dietaryTags = pgTable(
+  "dietary_tags",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    kind: dietaryTagKindEnum("kind").notNull(),
+    code: varchar("code", { length: 96 }).notNull(),
+    localizedLabels: jsonb("localized_labels")
+      .$type<Record<string, string>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    position: integer("position").notNull().default(0),
+    isSystem: boolean("is_system").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (table) => ({
+    businessCodeUnique: uniqueIndex("dietary_tags_business_code_unique")
+      .on(table.businessId, table.code)
+      .where(sql`${table.deletedAt} is null`),
+    businessPositionIdx: index("dietary_tags_business_position_idx")
+      .on(table.businessId, table.kind, table.position)
+      .where(sql`${table.deletedAt} is null`),
+    codeFormatCheck: check(
+      "dietary_tags_code_format_check",
+      sql`${table.code} ~ '^[a-z0-9]+(?:_[a-z0-9]+)*$'`,
+    ),
+  }),
+);
+
+export const productTags = pgTable(
+  "product_tags",
+  {
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    tagId: uuid("tag_id")
+      .notNull()
+      .references(() => dietaryTags.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.productId, table.tagId] }),
+    businessIdx: index("product_tags_business_idx").on(table.businessId),
+    tagIdx: index("product_tags_tag_idx").on(table.tagId),
+  }),
+);
+
+export const productAvailabilityWindows = pgTable(
+  "product_availability_windows",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    dayOfWeek: smallint("day_of_week").notNull(),
+    startMinute: smallint("start_minute").notNull(),
+    endMinute: smallint("end_minute").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    businessIdx: index("product_availability_windows_business_idx").on(table.businessId),
+    productIdx: index("product_availability_windows_product_idx").on(
+      table.productId,
+      table.dayOfWeek,
+    ),
+    dayCheck: check(
+      "product_availability_windows_day_check",
+      sql`${table.dayOfWeek} >= 0 and ${table.dayOfWeek} <= 6`,
+    ),
+    startMinuteCheck: check(
+      "product_availability_windows_start_minute_check",
+      sql`${table.startMinute} >= 0 and ${table.startMinute} <= 1439`,
+    ),
+    endMinuteCheck: check(
+      "product_availability_windows_end_minute_check",
+      sql`${table.endMinute} >= 0 and ${table.endMinute} <= 1439`,
+    ),
   }),
 );
 
@@ -447,6 +555,8 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   }),
   variants: many(productVariants),
   images: many(productImages),
+  tags: many(productTags),
+  availabilityWindows: many(productAvailabilityWindows),
   options: many(productOptions),
   orderItems: many(orderItems),
 }));
@@ -471,6 +581,39 @@ export const productImagesRelations = relations(productImages, ({ one }) => ({
     references: [businesses.id],
   }),
 }));
+
+export const dietaryTagsRelations = relations(dietaryTags, ({ one, many }) => ({
+  business: one(businesses, {
+    fields: [dietaryTags.businessId],
+    references: [businesses.id],
+  }),
+  productTags: many(productTags),
+}));
+
+export const productTagsRelations = relations(productTags, ({ one }) => ({
+  product: one(products, {
+    fields: [productTags.productId],
+    references: [products.id],
+  }),
+  tag: one(dietaryTags, {
+    fields: [productTags.tagId],
+    references: [dietaryTags.id],
+  }),
+}));
+
+export const productAvailabilityWindowsRelations = relations(
+  productAvailabilityWindows,
+  ({ one }) => ({
+    product: one(products, {
+      fields: [productAvailabilityWindows.productId],
+      references: [products.id],
+    }),
+    business: one(businesses, {
+      fields: [productAvailabilityWindows.businessId],
+      references: [businesses.id],
+    }),
+  }),
+);
 
 export const modifierGroupTemplatesRelations = relations(
   modifierGroupTemplates,
@@ -539,6 +682,9 @@ export type Product = typeof products.$inferSelect;
 export type ProductVariant = typeof productVariants.$inferSelect;
 export type ProductImage = typeof productImages.$inferSelect;
 export type MenuLocaleSettings = typeof menuLocaleSettings.$inferSelect;
+export type DietaryTag = typeof dietaryTags.$inferSelect;
+export type ProductTag = typeof productTags.$inferSelect;
+export type ProductAvailabilityWindow = typeof productAvailabilityWindows.$inferSelect;
 export type ModifierGroupTemplate = typeof modifierGroupTemplates.$inferSelect;
 export type ModifierValueTemplate = typeof modifierValueTemplates.$inferSelect;
 export type CategoryModifierGroup = typeof categoryModifierGroups.$inferSelect;
@@ -546,6 +692,9 @@ export type NewCategory = typeof categories.$inferInsert;
 export type NewProduct = typeof products.$inferInsert;
 export type NewProductVariant = typeof productVariants.$inferInsert;
 export type NewProductImage = typeof productImages.$inferInsert;
+export type NewDietaryTag = typeof dietaryTags.$inferInsert;
+export type NewProductTag = typeof productTags.$inferInsert;
+export type NewProductAvailabilityWindow = typeof productAvailabilityWindows.$inferInsert;
 export type NewModifierGroupTemplate = typeof modifierGroupTemplates.$inferInsert;
 export type NewModifierValueTemplate = typeof modifierValueTemplates.$inferInsert;
 export type ProductOption = typeof productOptions.$inferSelect;
