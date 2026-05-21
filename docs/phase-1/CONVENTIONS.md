@@ -11,6 +11,28 @@ Every new API endpoint ships with both sides of the contract typed:
 
 Admin web and POS terminal must consume the generated SDK directly. Do not add `as unknown as` casts for API calls in client apps. If a cast seems necessary, the OpenAPI schema is incomplete; fix the DTOs and controller decorators instead of weakening the call site.
 
+## Zod DTOs For Module 3+
+
+Phase 0 and Module 2 endpoints keep the existing class-validator request DTO and `@ApiProperty` response DTO pattern. Do not retrofit those endpoints just to use Zod.
+
+For new Module 3+ endpoints, Zod DTOs are permitted when they follow this pattern:
+
+- Define reusable Zod schemas next to the feature module.
+- Create Nest DTO classes with `createZodDto`.
+- Wire request DTOs through Nest route parameters such as `@Body()`, `@Query()`, or `@Param()` with `ZodValidationPipe`.
+- Wire response DTOs with `ZodResponse({ type: ResponseDto })` or an equivalent `nestjs-zod` decorator that produces precise OpenAPI response schemas.
+- Run `cleanupOpenApiDoc(..., { version: "3.1" })` when generating Swagger/OpenAPI.
+- Regenerate and commit the SDK in the same milestone.
+- Prove nested response types in `packages/shared-types` are precise; no `any` and no `as unknown as` client casts.
+
+Money fields in Zod schemas must be decimal strings:
+
+```ts
+const decimalStringSchema = z.string().regex(/^-?\d+(\.\d{1,2})?$/);
+```
+
+Do not use `z.number()` for prices, totals, subtotals, tax amounts, discounts, tips, service-charge amounts, or any other currency-denominated value. `drizzle-zod` numeric output must be checked and overridden where needed so generated OpenAPI and SDK types stay `string`.
+
 ## Tenant And Branch Scope
 
 `business_id` remains the RLS tenant key. `branch_id` is a filtering and authorization dimension, never a tenant key. New tenant-scoped tables must include strict RLS in the same migration that creates them.
