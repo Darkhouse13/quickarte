@@ -121,6 +121,8 @@ export class TenantContextMiddleware implements NestMiddleware {
       path === "/v1/docs" ||
       path === "/docs-json" ||
       path === "/v1/docs-json" ||
+      path === "/_samples/effective-menu" ||
+      path === "/v1/_samples/effective-menu" ||
       path.startsWith("/docs/") ||
       path.startsWith("/v1/docs/")
     );

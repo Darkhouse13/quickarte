@@ -1,5 +1,6 @@
 import { INestApplication } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { cleanupOpenApiDoc } from "nestjs-zod";
 
 export function createOpenApiDocument(app: INestApplication) {
   const config = new DocumentBuilder()
@@ -9,7 +10,9 @@ export function createOpenApiDocument(app: INestApplication) {
     .addServer("http://localhost:3001/v1")
     .build();
 
-  return SwaggerModule.createDocument(app, config);
+  return cleanupOpenApiDoc(SwaggerModule.createDocument(app, config), {
+    version: "3.1",
+  });
 }
 
 export function setupOpenApi(app: INestApplication): void {
