@@ -386,6 +386,26 @@
         "addOption": "Ajouter une option",
         "freeThen": "offertes puis",
         "inheritedFrom": "herite de"
+      },
+      "overrides": {
+        "title": "Overrides par branche",
+        "warning": "Les modificateurs a paliers restent affiches avec un avertissement: le QR historique ne calcule pas encore ces regles. Le serveur re-resoudra le menu a la commande.",
+        "branch": "Branche",
+        "inherited": "Herite",
+        "overridden": "Override",
+        "eightySix": "Marquer 86",
+        "restore": "Restaurer",
+        "reasonPrompt": "Raison du 86",
+        "noReason": "Non precise",
+        "savePrices": "Enregistrer prix",
+        "channel": {
+          "pos": "POS",
+          "qr": "QR",
+          "dine_in": "Sur place",
+          "takeaway": "A emporter",
+          "delivery": "Livraison",
+          "online": "En ligne"
+        }
       }
     }
   },

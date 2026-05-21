@@ -14,7 +14,10 @@ import {
 import { and, eq, inArray } from "drizzle-orm";
 import type { AuthenticatedRequest } from "../middleware/tenant-context.middleware";
 import { DatabaseService } from "../../database/database.service";
-import { REQUIRED_PERMISSIONS_KEY } from "../decorators/require-permission.decorator";
+import {
+  REQUIRED_ANY_PERMISSIONS_KEY,
+  REQUIRED_PERMISSIONS_KEY,
+} from "../decorators/require-permission.decorator";
 
 const PROBLEM_BASE_URL = "https://api.quickarte.ma/problems";
 
@@ -30,8 +33,12 @@ export class PermissionsGuard implements CanActivate {
       REQUIRED_PERMISSIONS_KEY,
       [context.getHandler(), context.getClass()],
     );
+    const requiredAny = this.reflector.getAllAndOverride<string[]>(
+      REQUIRED_ANY_PERMISSIONS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
-    if (!required || required.length === 0) {
+    if ((!required || required.length === 0) && (!requiredAny || requiredAny.length === 0)) {
       return true;
     }
 
@@ -65,7 +72,10 @@ export class PermissionsGuard implements CanActivate {
           .where(
             and(
               eq(rolePermissions.roleId, request.roleId!),
-              inArray(rolePermissions.permissionId, required),
+                inArray(rolePermissions.permissionId, [
+                  ...(required ?? []),
+                  ...(requiredAny ?? []),
+                ]),
             ),
           );
 
@@ -83,11 +93,15 @@ export class PermissionsGuard implements CanActivate {
       });
     }
 
-    const hasAll = required.every((permission) =>
+    const hasAll = (required ?? []).every((permission) =>
       result.permissions.includes(permission),
     );
+    const hasAny =
+      !requiredAny ||
+      requiredAny.length === 0 ||
+      requiredAny.some((permission) => result.permissions.includes(permission));
 
-    if (!hasAll) {
+    if (!hasAll || !hasAny) {
       throw new ForbiddenException({
         type: `${PROBLEM_BASE_URL}/permission-denied`,
         message: "You do not have permission to perform this action.",

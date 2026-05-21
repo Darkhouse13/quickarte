@@ -10,6 +10,102 @@ const patchMock = vi.fn();
 const deleteMock = vi.fn();
 const putMock = vi.fn();
 
+const branchResponse = {
+  data: {
+    branches: [
+      {
+        id: "branch-1",
+        businessId: "business-1",
+        name: "Medina",
+        slug: "medina",
+        isDefault: true,
+        status: "active",
+        city: null,
+        currency: null,
+        timezone: null,
+        locale: null,
+      },
+    ],
+  },
+};
+
+const effectiveMenuResponse = {
+  data: {
+    branchId: "branch-1",
+    channel: "pos",
+    generatedAt: "2026-05-21T00:00:00.000Z",
+    defaultTaxRateId: "ma_tva_10",
+    categories: [
+      {
+        id: "cat-1",
+        parentId: null,
+        name: "Grillades",
+        localizedNames: { fr: "Grillades" },
+        description: null,
+        localizedDescriptions: {},
+        colorTag: null,
+        visible: true,
+        visibleSource: "inherited",
+        position: 0,
+        positionSource: "inherited",
+        products: [
+          {
+            id: "prod-1",
+            categoryId: "cat-1",
+            name: "Poulet",
+            localizedNames: { fr: "Poulet" },
+            description: null,
+            localizedDescriptions: {},
+            image: null,
+            sku: "PLT",
+            itemCode: null,
+            colorTag: null,
+            featured: false,
+            featuredSource: "inherited",
+            hidden: false,
+            hiddenSource: "inherited",
+            available: true,
+            availableSource: "inherited",
+            is86d: false,
+            eightySixedAt: null,
+            eightySixedReason: null,
+            position: 0,
+            positionSource: "inherited",
+            channels: {
+              dineIn: true,
+              takeaway: true,
+              delivery: true,
+              qr: true,
+              online: true,
+            },
+            effectiveTaxRateId: "ma_tva_10",
+            variants: [
+              {
+                id: null,
+                name: "Default",
+                price: "75.00",
+                priceSource: "inherited",
+                isDefault: true,
+                available: true,
+                position: 0,
+                variantKind: "custom",
+                pricingMode: "fixed",
+                displayPriceLabel: null,
+                displayPriceMin: null,
+                displayPriceMax: null,
+                unitLabel: null,
+                synthetic: true,
+              },
+            ],
+            modifiers: [],
+          },
+        ],
+        children: [],
+      },
+    ],
+  },
+};
+
 vi.mock("../auth/api", () => ({
   apiClient: () => ({
     GET: getMock,
@@ -112,12 +208,14 @@ describe("MenuCatalogPage", () => {
             },
           ],
         },
-      });
+      })
+      .mockResolvedValueOnce(branchResponse)
+      .mockResolvedValueOnce(effectiveMenuResponse);
 
     render(<MenuCatalogPage />);
 
     expect((await screen.findAllByText("Grillades")).length).toBeGreaterThan(0);
-    expect(screen.getByText("Poulet")).toBeInTheDocument();
+    expect(screen.getAllByText("Poulet").length).toBeGreaterThan(0);
     expect(
       screen.getAllByText((_, element) => element?.textContent === "Default: 75.00")
         .length,
@@ -147,6 +245,8 @@ describe("MenuCatalogPage", () => {
       })
       .mockResolvedValueOnce({ data: { products: [] } })
       .mockResolvedValueOnce({ data: { groups: [] } })
+      .mockResolvedValueOnce(branchResponse)
+      .mockResolvedValueOnce({ data: { ...effectiveMenuResponse.data, categories: [] } })
       .mockResolvedValueOnce({
         data: {
           categories: [
@@ -167,7 +267,9 @@ describe("MenuCatalogPage", () => {
         },
       })
       .mockResolvedValueOnce({ data: { products: [] } })
-      .mockResolvedValueOnce({ data: { groups: [] } });
+      .mockResolvedValueOnce({ data: { groups: [] } })
+      .mockResolvedValueOnce(branchResponse)
+      .mockResolvedValueOnce({ data: { ...effectiveMenuResponse.data, categories: [] } });
     postMock.mockResolvedValueOnce({ data: { product: { id: "prod-1" } } });
     putMock.mockResolvedValueOnce({ data: { groups: [] } });
 

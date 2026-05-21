@@ -1971,6 +1971,203 @@
         ]
       }
     },
+    "/v1/branches/{branchId}/menu/effective": {
+      "get": {
+        "operationId": "BranchMenuController_getEffectiveMenu",
+        "parameters": [
+          {
+            "name": "channel",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "pos",
+                "dine_in",
+                "takeaway",
+                "delivery",
+                "qr",
+                "online"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EffectiveMenuResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Resolve the effective menu for one branch and channel.",
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/menu-overrides": {
+      "get": {
+        "operationId": "BranchMenuController_getOverrides",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchMenuOverridesResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      },
+      "put": {
+        "operationId": "BranchMenuController_replaceOverrides",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceBranchMenuOverridesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchMenuOverridesResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/products/{productId}/availability": {
+      "patch": {
+        "operationId": "BranchMenuController_updateProductAvailability",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          },
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductAvailabilityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchMenuOverridesResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/products/{productId}/prices": {
+      "put": {
+        "operationId": "BranchMenuController_replaceProductPrices",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          },
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceBranchProductPricesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchMenuOverridesResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
     "/v1/_samples/effective-menu": {
       "post": {
         "operationId": "ZodSampleController_getEffectiveMenuSample",
@@ -5963,6 +6160,1341 @@
         "required": [
           "activeLocales",
           "defaultLocale"
+        ]
+      },
+      "EffectiveMenuCategory_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "parentId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "localizedDescriptions": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "colorTag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "visibleSource": {
+            "type": "string",
+            "enum": [
+              "inherited",
+              "overridden"
+            ]
+          },
+          "position": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "positionSource": {
+            "type": "string",
+            "enum": [
+              "inherited",
+              "overridden"
+            ]
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EffectiveMenuProduct_Output"
+            }
+          },
+          "children": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EffectiveMenuCategoryBase_Output"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "parentId",
+          "name",
+          "localizedNames",
+          "description",
+          "localizedDescriptions",
+          "colorTag",
+          "visible",
+          "visibleSource",
+          "position",
+          "positionSource",
+          "products",
+          "children"
+        ],
+        "additionalProperties": false,
+        "id": "EffectiveMenuCategory_Output"
+      },
+      "EffectiveMenuProduct_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "categoryId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "localizedDescriptions": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sku": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "itemCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "colorTag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "featuredSource": {
+            "type": "string",
+            "enum": [
+              "inherited",
+              "overridden"
+            ]
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "hiddenSource": {
+            "type": "string",
+            "enum": [
+              "inherited",
+              "overridden"
+            ]
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "availableSource": {
+            "type": "string",
+            "enum": [
+              "inherited",
+              "overridden"
+            ]
+          },
+          "is86d": {
+            "type": "boolean"
+          },
+          "eightySixedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "eightySixedReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "positionSource": {
+            "type": "string",
+            "enum": [
+              "inherited",
+              "overridden"
+            ]
+          },
+          "channels": {
+            "type": "object",
+            "properties": {
+              "dineIn": {
+                "type": "boolean"
+              },
+              "takeaway": {
+                "type": "boolean"
+              },
+              "delivery": {
+                "type": "boolean"
+              },
+              "qr": {
+                "type": "boolean"
+              },
+              "online": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "dineIn",
+              "takeaway",
+              "delivery",
+              "qr",
+              "online"
+            ],
+            "additionalProperties": false
+          },
+          "effectiveTaxRateId": {
+            "type": "string"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EffectiveMenuVariant_Output"
+            }
+          },
+          "modifiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuModifierGroup_Output"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "categoryId",
+          "name",
+          "localizedNames",
+          "description",
+          "localizedDescriptions",
+          "image",
+          "sku",
+          "itemCode",
+          "colorTag",
+          "featured",
+          "featuredSource",
+          "hidden",
+          "hiddenSource",
+          "available",
+          "availableSource",
+          "is86d",
+          "eightySixedAt",
+          "eightySixedReason",
+          "position",
+          "positionSource",
+          "channels",
+          "effectiveTaxRateId",
+          "variants",
+          "modifiers"
+        ],
+        "additionalProperties": false,
+        "id": "EffectiveMenuProduct_Output"
+      },
+      "EffectiveMenuVariant_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+(\\.\\d{1,2})?$",
+                "description": "Decimal string money value, never a JS number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "priceSource": {
+            "type": "string",
+            "enum": [
+              "inherited",
+              "overridden"
+            ]
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "variantKind": {
+            "type": "string",
+            "enum": [
+              "size",
+              "protein",
+              "topping",
+              "market",
+              "custom"
+            ]
+          },
+          "pricingMode": {
+            "type": "string",
+            "enum": [
+              "fixed",
+              "variable_pos"
+            ]
+          },
+          "displayPriceLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "displayPriceMin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+(\\.\\d{1,2})?$",
+                "description": "Decimal string money value, never a JS number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "displayPriceMax": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+(\\.\\d{1,2})?$",
+                "description": "Decimal string money value, never a JS number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unitLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "synthetic": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "price",
+          "priceSource",
+          "isDefault",
+          "available",
+          "position",
+          "variantKind",
+          "pricingMode",
+          "displayPriceLabel",
+          "displayPriceMin",
+          "displayPriceMax",
+          "unitLabel",
+          "synthetic"
+        ],
+        "additionalProperties": false,
+        "id": "EffectiveMenuVariant_Output"
+      },
+      "EffectiveMenuCategoryBase_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "parentId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "localizedDescriptions": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "colorTag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "visibleSource": {
+            "type": "string",
+            "enum": [
+              "inherited",
+              "overridden"
+            ]
+          },
+          "position": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "positionSource": {
+            "type": "string",
+            "enum": [
+              "inherited",
+              "overridden"
+            ]
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EffectiveMenuProduct_Output"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "parentId",
+          "name",
+          "localizedNames",
+          "description",
+          "localizedDescriptions",
+          "colorTag",
+          "visible",
+          "visibleSource",
+          "position",
+          "positionSource",
+          "products"
+        ],
+        "additionalProperties": false,
+        "id": "EffectiveMenuCategoryBase_Output"
+      },
+      "EffectiveMenuResponse_Output": {
+        "type": "object",
+        "properties": {
+          "branchId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "pos",
+              "dine_in",
+              "takeaway",
+              "delivery",
+              "qr",
+              "online"
+            ]
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "defaultTaxRateId": {
+            "type": "string"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EffectiveMenuCategory_Output"
+            }
+          }
+        },
+        "required": [
+          "branchId",
+          "channel",
+          "generatedAt",
+          "defaultTaxRateId",
+          "categories"
+        ],
+        "id": "EffectiveMenuResponse_Output",
+        "additionalProperties": false
+      },
+      "BranchMenuOverridesResponse_Output": {
+        "type": "object",
+        "properties": {
+          "categoryOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "categoryId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "visible": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "position": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "categoryId",
+                "visible",
+                "position"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "productOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "available": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "is86d": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "eightySixedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "eightySixedByUserId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "eightySixedReason": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "featured": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "hidden": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "channels": {
+                  "type": "object",
+                  "properties": {
+                    "dineIn": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "takeaway": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "delivery": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "qr": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "online": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "dineIn",
+                    "takeaway",
+                    "delivery",
+                    "qr",
+                    "online"
+                  ],
+                  "additionalProperties": false
+                },
+                "position": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "productId",
+                "available",
+                "is86d",
+                "eightySixedAt",
+                "eightySixedByUserId",
+                "eightySixedReason",
+                "featured",
+                "hidden",
+                "channels",
+                "position"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "priceOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "variantId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "price": {
+                  "type": "string",
+                  "pattern": "^\\d+(\\.\\d{1,2})?$",
+                  "description": "Decimal string money value, never a JS number"
+                }
+              },
+              "required": [
+                "productId",
+                "variantId",
+                "price"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "optionValueOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "optionValueId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "available": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "priceAddition": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d{1,2})?$",
+                      "description": "Decimal string money value, never a JS number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "optionValueId",
+                "available",
+                "priceAddition"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "categoryOverrides",
+          "productOverrides",
+          "priceOverrides",
+          "optionValueOverrides"
+        ],
+        "id": "BranchMenuOverridesResponse_Output",
+        "additionalProperties": false
+      },
+      "ReplaceBranchMenuOverridesDto": {
+        "type": "object",
+        "properties": {
+          "categoryOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "categoryId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "visible": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "position": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "categoryId",
+                "visible",
+                "position"
+              ]
+            }
+          },
+          "productOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "available": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "is86d": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "eightySixedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "eightySixedByUserId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "eightySixedReason": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "featured": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "hidden": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "channels": {
+                  "type": "object",
+                  "properties": {
+                    "dineIn": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "takeaway": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "delivery": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "qr": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "online": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "dineIn",
+                    "takeaway",
+                    "delivery",
+                    "qr",
+                    "online"
+                  ]
+                },
+                "position": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "productId",
+                "available",
+                "eightySixedAt",
+                "eightySixedByUserId",
+                "eightySixedReason",
+                "featured",
+                "hidden",
+                "channels",
+                "position"
+              ]
+            }
+          },
+          "priceOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "variantId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "price": {
+                  "type": "string",
+                  "pattern": "^\\d+(\\.\\d{1,2})?$",
+                  "description": "Decimal string money value, never a JS number"
+                }
+              },
+              "required": [
+                "productId",
+                "variantId",
+                "price"
+              ]
+            }
+          },
+          "optionValueOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "optionValueId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "available": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "priceAddition": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d{1,2})?$",
+                      "description": "Decimal string money value, never a JS number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "optionValueId",
+                "available",
+                "priceAddition"
+              ]
+            }
+          }
+        },
+        "required": [
+          "categoryOverrides",
+          "productOverrides",
+          "priceOverrides",
+          "optionValueOverrides"
+        ]
+      },
+      "UpdateProductAvailabilityDto": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is86d": {
+            "type": "boolean"
+          },
+          "eightySixedReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hidden": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "channels": {
+            "type": "object",
+            "properties": {
+              "dineIn": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "takeaway": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "delivery": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "qr": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "online": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "ReplaceBranchProductPricesDto": {
+        "type": "object",
+        "properties": {
+          "prices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "variantId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "price": {
+                  "type": "string",
+                  "pattern": "^\\d+(\\.\\d{1,2})?$",
+                  "description": "Decimal string money value, never a JS number"
+                }
+              },
+              "required": [
+                "variantId",
+                "price"
+              ]
+            }
+          }
+        },
+        "required": [
+          "prices"
         ]
       },
       "SampleEffectiveMenuRequestDto": {
