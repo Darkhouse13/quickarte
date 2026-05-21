@@ -706,6 +706,242 @@
         ]
       }
     },
+    "/v1/branches/{branchId}/printers": {
+      "get": {
+        "operationId": "PrintersController_listBranchPrinters",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchPrintersResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List printers and assignments for a branch",
+        "tags": [
+          "Printers"
+        ]
+      },
+      "post": {
+        "operationId": "PrintersController_createPrinter",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePrinterBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrinterResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Manually add a branch printer",
+        "tags": [
+          "Printers"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/printers/{printerId}": {
+      "patch": {
+        "operationId": "PrintersController_updatePrinter",
+        "parameters": [
+          {
+            "name": "printerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePrinterBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrinterResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update branch printer metadata",
+        "tags": [
+          "Printers"
+        ]
+      },
+      "delete": {
+        "operationId": "PrintersController_deletePrinter",
+        "parameters": [
+          {
+            "name": "printerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletePrinterResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Soft-delete a branch printer",
+        "tags": [
+          "Printers"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/printers/{printerId}/test-print": {
+      "post": {
+        "operationId": "PrintersController_enqueueTestPrint",
+        "parameters": [
+          {
+            "name": "printerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestPrintResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Queue a printer test job through the print pipeline",
+        "tags": [
+          "Printers"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/printer-assignments": {
+      "put": {
+        "operationId": "PrintersController_replaceAssignments",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplacePrinterAssignmentsBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchPrintersResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Replace branch printer assignments atomically",
+        "tags": [
+          "Printers"
+        ]
+      }
+    },
     "/v1/branches/{branchId}/receipt-settings": {
       "get": {
         "operationId": "ReceiptSettingsController_getSettings",
@@ -2047,6 +2283,301 @@
         },
         "required": [
           "methods"
+        ]
+      },
+      "PrinterResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "businessId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "branchId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "connectionType": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "escpos_lan",
+              "escpos_usb",
+              "webprint",
+              "bluetooth"
+            ]
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "model": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastTestPrintAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "businessId",
+          "name",
+          "connectionType",
+          "enabled",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PrinterAssignmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "branchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "printerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "receipt",
+              "kitchen",
+              "bar",
+              "customer_copy"
+            ]
+          },
+          "priority": {
+            "type": "number"
+          },
+          "fallbackPrinterId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "branchId",
+          "printerId",
+          "role",
+          "priority",
+          "enabled"
+        ]
+      },
+      "BranchPrintersResponseDto": {
+        "type": "object",
+        "properties": {
+          "printers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrinterResponseDto"
+            }
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrinterAssignmentResponseDto"
+            }
+          }
+        },
+        "required": [
+          "printers",
+          "assignments"
+        ]
+      },
+      "CreatePrinterBodyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "connectionType": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "escpos_lan",
+              "escpos_usb",
+              "webprint",
+              "bluetooth"
+            ]
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "model": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "connectionType",
+          "enabled"
+        ]
+      },
+      "UpdatePrinterBodyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "connectionType": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "escpos_lan",
+              "escpos_usb",
+              "webprint",
+              "bluetooth"
+            ]
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "model": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "DeletePrinterResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "TestPrintResponseDto": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "queued": {
+            "type": "boolean"
+          },
+          "lastTestPrintAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "jobId",
+          "queued",
+          "lastTestPrintAt"
+        ]
+      },
+      "PrinterAssignmentInputDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "receipt",
+              "kitchen",
+              "bar",
+              "customer_copy"
+            ]
+          },
+          "printerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fallbackPrinterId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "priority": {
+            "type": "number",
+            "default": 0
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "role",
+          "printerId",
+          "priority",
+          "enabled"
+        ]
+      },
+      "ReplacePrinterAssignmentsBodyDto": {
+        "type": "object",
+        "properties": {
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrinterAssignmentInputDto"
+            }
+          }
+        },
+        "required": [
+          "assignments"
         ]
       },
       "ReceiptLineDto": {

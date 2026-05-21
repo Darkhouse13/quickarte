@@ -11,6 +11,7 @@ import { validateEnv } from "./config/env";
 import { HealthModule } from "./health/health.module";
 import { OperatingHoursModule } from "./operating-hours/operating-hours.module";
 import { PaymentMethodsModule } from "./payment-methods/payment-methods.module";
+import { PrintersModule } from "./printers/printers.module";
 import { ReceiptSettingsModule } from "./receipt-settings/receipt-settings.module";
 import { SyncModule } from "./sync/sync.module";
 import { TaxConfigModule } from "./tax-config/tax-config.module";
@@ -70,6 +71,7 @@ import { TaxConfigModule } from "./tax-config/tax-config.module";
     BranchesModule,
     OperatingHoursModule,
     PaymentMethodsModule,
+    PrintersModule,
     ReceiptSettingsModule,
     TaxConfigModule,
     SyncModule,

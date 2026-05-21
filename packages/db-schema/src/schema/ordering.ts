@@ -4,6 +4,7 @@ import {
   integer,
   jsonb,
   boolean,
+  check,
   numeric,
   pgEnum,
   pgTable,
@@ -13,9 +14,10 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
-import { businesses } from "./business";
+import { branches, businesses } from "./business";
 import { categories, products } from "./catalog";
 
 export const orderTypeEnum = pgEnum("order_type", [
@@ -60,6 +62,7 @@ export const printerConnectionTypeEnum = pgEnum("printer_connection_type", [
   "escpos_lan",
   "escpos_usb",
   "webprint",
+  "bluetooth",
 ]);
 
 export const printJobStatusEnum = pgEnum("print_job_status", [
@@ -168,12 +171,18 @@ export const printers = pgTable(
     businessId: uuid("business_id")
       .notNull()
       .references(() => businesses.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id").references(() => branches.id, {
+      onDelete: "set null",
+    }),
     name: text("name").notNull(),
     station: printerStationEnum("station").notNull(),
     connectionType: printerConnectionTypeEnum("connection_type").notNull(),
     address: text("address"),
+    model: text("model"),
+    notes: text("notes"),
     webprintToken: text("webprint_token"),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
+    lastTestPrintAt: timestamp("last_test_print_at", { withTimezone: true }),
     enabled: boolean("enabled").notNull().default(true),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -185,8 +194,54 @@ export const printers = pgTable(
   },
   (table) => ({
     businessIdx: index("printers_business_id_idx").on(table.businessId),
+    branchIdx: index("printers_branch_id_idx").on(table.branchId),
     webprintTokenIdx: uniqueIndex("printers_webprint_token_idx").on(
       table.webprintToken,
+    ),
+  }),
+);
+
+export const printerAssignments = pgTable(
+  "printer_assignments",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id")
+      .notNull()
+      .references(() => branches.id, { onDelete: "cascade" }),
+    printerId: uuid("printer_id")
+      .notNull()
+      .references(() => printers.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 32 }).notNull(),
+    priority: integer("priority").notNull().default(0),
+    fallbackPrinterId: uuid("fallback_printer_id").references(
+      () => printers.id,
+      { onDelete: "set null" },
+    ),
+    enabled: boolean("enabled").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    branchRolePrinterUnique: uniqueIndex(
+      "printer_assignments_branch_role_printer_unique",
+    ).on(table.branchId, table.role, table.printerId),
+    businessIdx: index("printer_assignments_business_idx").on(table.businessId),
+    branchIdx: index("printer_assignments_branch_idx").on(table.branchId),
+    printerIdx: index("printer_assignments_printer_idx").on(table.printerId),
+    roleCheck: check(
+      "printer_assignments_role_check",
+      sql`${table.role} in ('receipt', 'kitchen', 'bar', 'customer_copy')`,
+    ),
+    fallbackDifferentCheck: check(
+      "printer_assignments_fallback_different_check",
+      sql`${table.fallbackPrinterId} is null or ${table.fallbackPrinterId} <> ${table.printerId}`,
     ),
   }),
 );
@@ -316,8 +371,35 @@ export const printersRelations = relations(printers, ({ one, many }) => ({
     fields: [printers.businessId],
     references: [businesses.id],
   }),
+  branch: one(branches, {
+    fields: [printers.branchId],
+    references: [branches.id],
+  }),
   printJobs: many(printJobs),
+  assignments: many(printerAssignments),
 }));
+
+export const printerAssignmentsRelations = relations(
+  printerAssignments,
+  ({ one }) => ({
+    business: one(businesses, {
+      fields: [printerAssignments.businessId],
+      references: [businesses.id],
+    }),
+    branch: one(branches, {
+      fields: [printerAssignments.branchId],
+      references: [branches.id],
+    }),
+    printer: one(printers, {
+      fields: [printerAssignments.printerId],
+      references: [printers.id],
+    }),
+    fallbackPrinter: one(printers, {
+      fields: [printerAssignments.fallbackPrinterId],
+      references: [printers.id],
+    }),
+  }),
+);
 
 export const printJobsRelations = relations(printJobs, ({ one }) => ({
   order: one(orders, {
@@ -343,5 +425,6 @@ export type Reservation = typeof reservations.$inferSelect;
 export type StripeEvent = typeof stripeEvents.$inferSelect;
 export type OrderEvent = typeof orderEvents.$inferSelect;
 export type Printer = typeof printers.$inferSelect;
+export type PrinterAssignment = typeof printerAssignments.$inferSelect;
 export type PrintJob = typeof printJobs.$inferSelect;
 export type CategoryPrintRoute = typeof categoryPrintRoutes.$inferSelect;
