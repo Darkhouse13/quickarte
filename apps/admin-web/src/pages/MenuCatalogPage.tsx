@@ -21,6 +21,9 @@ type MenuOverridesResponse =
 type TaxRatesResponse =
   paths["/v1/tax-rates"]["get"]["responses"][200]["content"]["application/json"];
 type TaxRate = TaxRatesResponse["rates"][number];
+type TagsResponse =
+  paths["/v1/menu/tags"]["get"]["responses"][200]["content"]["application/json"];
+type DietaryTag = TagsResponse["tags"][number];
 type ModifierGroupsResponse =
   paths["/v1/menu/modifier-groups"]["get"]["responses"][200]["content"]["application/json"];
 type ModifierTemplate = ModifierGroupsResponse["groups"][number];
@@ -37,6 +40,9 @@ type MenuTaxOverridesBody =
   paths["/v1/branches/{branchId}/menu-tax-overrides"]["put"]["requestBody"]["content"]["application/json"];
 type MenuPrintRoutesBody =
   paths["/v1/branches/{branchId}/menu-print-routes"]["put"]["requestBody"]["content"]["application/json"];
+type AvailabilityWindowsBody =
+  paths["/v1/menu/products/{productId}/availability-windows"]["put"]["requestBody"]["content"]["application/json"];
+type AvailabilityWindowBody = AvailabilityWindowsBody["windows"][number];
 type ChannelKey = keyof ProductBody["channels"];
 type EffectiveChannelKey = keyof EffectiveProduct["channels"];
 type LocaleCode = "fr" | "ar" | "es" | "en";
@@ -68,10 +74,13 @@ type ProductForm = {
   featured: boolean;
   hidden: boolean;
   available: boolean;
+  spiceLevel: number | null;
   channels: ProductBody["channels"];
   variants: VariantBody[];
   imageUrl: string;
   modifierGroupIds: string[];
+  tagIds: string[];
+  availabilityWindows: AvailabilityWindowBody[];
 };
 
 const emptyForm: ProductForm = {
@@ -86,6 +95,7 @@ const emptyForm: ProductForm = {
   featured: false,
   hidden: false,
   available: true,
+  spiceLevel: null,
   channels: {
     dineIn: true,
     takeaway: true,
@@ -96,6 +106,8 @@ const emptyForm: ProductForm = {
   variants: [emptyVariant(0)],
   imageUrl: "",
   modifierGroupIds: [],
+  tagIds: [],
+  availabilityWindows: [],
 };
 
 export function MenuCatalogPage() {
@@ -109,6 +121,7 @@ export function MenuCatalogPage() {
   const [effectiveChannel, setEffectiveChannel] = useState<EffectiveMenuResponse["channel"]>("pos");
   const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
   const [taxRates, setTaxRates] = useState<TaxRate[]>([]);
+  const [tagCatalog, setTagCatalog] = useState<DietaryTag[]>([]);
   const [taxDrafts, setTaxDrafts] = useState<Record<string, string>>({});
   const [printDrafts, setPrintDrafts] = useState<Record<string, string[]>>({});
   const [modifierGroups, setModifierGroups] = useState<ModifierTemplate[]>([]);
@@ -171,12 +184,13 @@ export function MenuCatalogPage() {
   const loadCatalog = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [categoryResponse, productResponse, modifierResponse, branchResponse, taxResponse] = await Promise.all([
+    const [categoryResponse, productResponse, modifierResponse, branchResponse, taxResponse, tagResponse] = await Promise.all([
       apiClient().GET("/v1/menu/categories"),
       apiClient().GET("/v1/menu/products"),
       apiClient().GET("/v1/menu/modifier-groups"),
       apiClient().GET("/v1/branches"),
       apiClient().GET("/v1/tax-rates"),
+      apiClient().GET("/v1/menu/tags"),
     ]);
     setLoading(false);
     if (categoryResponse.error || !categoryResponse.data) {
@@ -199,11 +213,16 @@ export function MenuCatalogPage() {
       setError(t("admin.module3.catalog.loadError"));
       return;
     }
+    if (tagResponse.error || !tagResponse.data) {
+      setError(t("admin.module3.catalog.loadError"));
+      return;
+    }
     setCategories(categoryResponse.data.categories);
     setProducts(productResponse.data.products);
     setModifierGroups(modifierResponse.data.groups);
     setBranches(branchResponse.data.branches);
     setTaxRates(taxResponse.data.rates);
+    setTagCatalog(tagResponse.data.tags);
     setSelectedBranchId(
       (current) =>
         current ||
@@ -318,6 +337,7 @@ export function MenuCatalogPage() {
       featured: form.featured,
       hidden: form.hidden,
       available: form.available,
+      spiceLevel: form.spiceLevel,
       channels: form.channels,
       position: form.id ? selectedProductPosition(form.id) : products.length,
       variants,
@@ -339,15 +359,24 @@ export function MenuCatalogPage() {
       return;
     }
     const productId = response.data.product.id;
-    const modifierResponse = await apiClient().PUT(
-      "/v1/menu/products/{productId}/modifier-groups",
-      {
+    const [modifierResponse, tagResponse, windowResponse] = await Promise.all([
+      apiClient().PUT("/v1/menu/products/{productId}/modifier-groups", {
         params: { path: { productId } },
         body: { groupTemplateIds: form.modifierGroupIds },
-      },
-    );
-    if (!modifierResponse.data) {
-      setError(readResponseProblem(modifierResponse).detail ?? t("admin.module3.catalog.saveError"));
+      }),
+      apiClient().PUT("/v1/menu/products/{productId}/tags", {
+        params: { path: { productId } },
+        body: { tagIds: form.tagIds },
+      }),
+      apiClient().PUT("/v1/menu/products/{productId}/availability-windows", {
+        params: { path: { productId } },
+        body: { windows: normalizeWindows(form.availabilityWindows) },
+      }),
+    ]);
+    const saveProblem =
+      !modifierResponse.data ? modifierResponse : !tagResponse.data ? tagResponse : !windowResponse.data ? windowResponse : null;
+    if (saveProblem) {
+      setError(readResponseProblem(saveProblem).detail ?? t("admin.module3.catalog.saveError"));
       return;
     }
     setMessage(t("admin.module3.catalog.saved"));
@@ -558,6 +587,7 @@ export function MenuCatalogPage() {
       featured: product.featured,
       hidden: product.hidden,
       available: product.available,
+      spiceLevel: product.spiceLevel,
       channels: product.channels,
       variants: product.variants.map((variant, position) => ({
         id: variant.id ?? undefined,
@@ -577,6 +607,12 @@ export function MenuCatalogPage() {
       modifierGroupIds: product.modifiers
         .filter((group) => group.source === "product" && group.templateId)
         .map((group) => group.templateId!),
+      tagIds: product.tags.map((tag) => tag.id),
+      availabilityWindows: product.availabilityWindows.map((window) => ({
+        dayOfWeek: window.dayOfWeek,
+        startMinute: window.startMinute,
+        endMinute: window.endMinute,
+      })),
     });
   }
 
@@ -631,6 +667,39 @@ export function MenuCatalogPage() {
     setForm((current) => ({
       ...current,
       modifierGroupIds: toggleId(current.modifierGroupIds, groupId),
+    }));
+  }
+
+  function toggleProductTag(tagId: string) {
+    setForm((current) => ({
+      ...current,
+      tagIds: toggleId(current.tagIds, tagId),
+    }));
+  }
+
+  function addAvailabilityWindow() {
+    setForm((current) => ({
+      ...current,
+      availabilityWindows: [
+        ...current.availabilityWindows,
+        { dayOfWeek: 5, startMinute: 12 * 60, endMinute: 14 * 60 },
+      ],
+    }));
+  }
+
+  function updateAvailabilityWindow(index: number, patch: Partial<AvailabilityWindowBody>) {
+    setForm((current) => ({
+      ...current,
+      availabilityWindows: current.availabilityWindows.map((window, currentIndex) =>
+        currentIndex === index ? { ...window, ...patch } : window,
+      ),
+    }));
+  }
+
+  function removeAvailabilityWindow(index: number) {
+    setForm((current) => ({
+      ...current,
+      availabilityWindows: current.availabilityWindows.filter((_, currentIndex) => currentIndex !== index),
     }));
   }
 
@@ -904,6 +973,105 @@ export function MenuCatalogPage() {
               </label>
             ))}
           </fieldset>
+
+          <section className="menu-tags-panel">
+            <div className="section-heading-row">
+              <h3>{t("admin.module3.catalog.tagsAndAvailability")}</h3>
+              <span className="status-pill">{t("admin.module3.catalog.productScope")}</span>
+            </div>
+            <div className="editor-fields two">
+              <label>
+                <span>{t("admin.module3.catalog.spiceLevel")}</span>
+                <select
+                  value={form.spiceLevel ?? ""}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      spiceLevel: event.target.value === "" ? null : Number(event.target.value),
+                    }))
+                  }
+                >
+                  <option value="">{t("admin.module3.catalog.noSpiceLevel")}</option>
+                  {[0, 1, 2, 3].map((level) => (
+                    <option key={level} value={level}>
+                      {t(`admin.module3.catalog.spice.${level}`)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="tag-picker-grid">
+              {tagCatalog.map((tag) => (
+                <label className="toggle-row modifier-choice" key={tag.id}>
+                  <input
+                    checked={form.tagIds.includes(tag.id)}
+                    type="checkbox"
+                    onChange={() => toggleProductTag(tag.id)}
+                  />
+                  <span>
+                    {tag.localizedLabels.fr ?? tag.code}
+                    <small>{t(`admin.module3.catalog.tagKind.${tag.kind}`)}</small>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div className="section-heading-row">
+              <h4>{t("admin.module3.catalog.availabilityWindows")}</h4>
+              <button className="button-secondary" type="button" onClick={addAvailabilityWindow}>
+                {t("admin.module3.catalog.addWindow")}
+              </button>
+            </div>
+            <div className="availability-window-grid">
+              {form.availabilityWindows.map((window, index) => (
+                <div className="availability-window-row" key={index}>
+                  <select
+                    value={window.dayOfWeek}
+                    onChange={(event) =>
+                      updateAvailabilityWindow(index, {
+                        dayOfWeek: Number.parseInt(event.target.value, 10),
+                      })
+                    }
+                  >
+                    {[0, 1, 2, 3, 4, 5, 6].map((day) => (
+                      <option key={day} value={day}>
+                        {t(`admin.module3.catalog.day.${day}`)}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    aria-label={t("admin.module3.catalog.windowStart")}
+                    type="time"
+                    value={minuteToTime(window.startMinute)}
+                    onChange={(event) =>
+                      updateAvailabilityWindow(index, {
+                        startMinute: timeToMinute(event.target.value),
+                      })
+                    }
+                  />
+                  <input
+                    aria-label={t("admin.module3.catalog.windowEnd")}
+                    type="time"
+                    value={minuteToTime(window.endMinute)}
+                    onChange={(event) =>
+                      updateAvailabilityWindow(index, {
+                        endMinute: timeToMinute(event.target.value),
+                      })
+                    }
+                  />
+                  <button
+                    className="button-secondary"
+                    type="button"
+                    onClick={() => removeAvailabilityWindow(index)}
+                  >
+                    {t("admin.module3.catalog.remove")}
+                  </button>
+                </div>
+              ))}
+              {form.availabilityWindows.length === 0 ? (
+                <p className="helper-copy">{t("admin.module3.catalog.alwaysAvailable")}</p>
+              ) : null}
+            </div>
+          </section>
 
           <section className="variant-grid-panel">
             <div className="section-heading-row">
@@ -1187,6 +1355,31 @@ function normalizeVariants(variants: VariantBody[]): VariantBody[] {
     ...variant,
     isDefault: defaultIndex === -1 ? index === 0 : index === defaultIndex,
   }));
+}
+
+function normalizeWindows(windows: AvailabilityWindowBody[]): AvailabilityWindowBody[] {
+  return windows.map((window) => ({
+    dayOfWeek: window.dayOfWeek,
+    startMinute: clampMinute(window.startMinute),
+    endMinute: clampMinute(window.endMinute),
+  }));
+}
+
+function minuteToTime(minute: number): string {
+  const clamped = clampMinute(minute);
+  const hours = Math.floor(clamped / 60);
+  const minutes = clamped % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+function timeToMinute(value: string): number {
+  const [hours = "0", minutes = "0"] = value.split(":");
+  return clampMinute(Number.parseInt(hours, 10) * 60 + Number.parseInt(minutes, 10));
+}
+
+function clampMinute(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(1439, Math.trunc(value)));
 }
 
 function compactLocaleMap(values: Record<string, string>): Record<string, string> {

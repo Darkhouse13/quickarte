@@ -18,6 +18,27 @@ export const variantKindSchema = z.enum([
 export const pricingModeSchema = z.enum(["fixed", "variable_pos"]);
 export const modifierSourceSchema = z.enum(["product", "category"]);
 export const modifierAttachScopeSchema = z.enum(["product", "category"]);
+export const dietaryTagKindSchema = z.enum(["dietary", "allergen"]);
+
+export const dietaryTagSchema = z
+  .object({
+    id: z.uuid(),
+    kind: dietaryTagKindSchema,
+    code: z.string(),
+    localizedLabels: localizedTextSchema,
+    position: z.number().int(),
+    isSystem: z.boolean(),
+  })
+  .meta({ id: "DietaryTag" });
+
+export const availabilityWindowSchema = z
+  .object({
+    id: z.uuid(),
+    dayOfWeek: z.number().int().min(0).max(6),
+    startMinute: z.number().int().min(0).max(1439),
+    endMinute: z.number().int().min(0).max(1439),
+  })
+  .meta({ id: "ProductAvailabilityWindow" });
 
 export const menuVariantSchema = z
   .object({
@@ -139,10 +160,13 @@ export const productSchema = z
     }),
     localizedNames: localizedTextSchema,
     localizedDescriptions: localizedTextSchema,
+    spiceLevel: z.number().int().min(0).max(3).nullable(),
     position: z.number().int(),
     variants: z.array(menuVariantSchema),
     images: z.array(productImageSchema),
     modifiers: z.array(modifierGroupSchema),
+    tags: z.array(dietaryTagSchema),
+    availabilityWindows: z.array(availabilityWindowSchema),
   })
   .meta({ id: "MenuProduct" });
 
@@ -170,6 +194,15 @@ export const modifierGroupResponseSchema = z.object({
 });
 export const effectiveModifierGroupsResponseSchema = z.object({
   groups: z.array(modifierGroupSchema),
+});
+export const tagsResponseSchema = z.object({
+  tags: z.array(dietaryTagSchema),
+});
+export const tagResponseSchema = z.object({
+  tag: dietaryTagSchema,
+});
+export const availabilityWindowsResponseSchema = z.object({
+  windows: z.array(availabilityWindowSchema),
 });
 
 export const localeSettingsResponseSchema = z.object({
@@ -262,6 +295,7 @@ export const createProductBodySchema = z.object({
   featured: z.boolean().default(false),
   hidden: z.boolean().default(false),
   available: z.boolean().default(true),
+  spiceLevel: z.number().int().min(0).max(3).nullable().optional(),
   channels: z.object({
     dineIn: z.boolean().default(true),
     takeaway: z.boolean().default(true),
@@ -303,6 +337,30 @@ export const attachModifierGroupsBodySchema = z.object({
   groupTemplateIds: z.array(z.uuid()),
 });
 export const updateModifierGroupBodySchema = modifierGroupWriteSchema.partial();
+export const createTagBodySchema = z.object({
+  kind: dietaryTagKindSchema,
+  code: z.string().regex(/^[a-z0-9]+(?:_[a-z0-9]+)*$/),
+  localizedLabels: localizedTextSchema,
+  position: z.number().int().min(0).default(0),
+});
+export const updateTagBodySchema = z.object({
+  kind: dietaryTagKindSchema.optional(),
+  code: z.string().regex(/^[a-z0-9]+(?:_[a-z0-9]+)*$/).optional(),
+  localizedLabels: localizedTextSchema.optional(),
+  position: z.number().int().min(0).optional(),
+});
+export const replaceProductTagsBodySchema = z.object({
+  tagIds: z.array(z.uuid()),
+});
+const availabilityWindowWriteSchema = z.object({
+  id: z.uuid().optional(),
+  dayOfWeek: z.number().int().min(0).max(6),
+  startMinute: z.number().int().min(0).max(1439),
+  endMinute: z.number().int().min(0).max(1439),
+});
+export const replaceAvailabilityWindowsBodySchema = z.object({
+  windows: z.array(availabilityWindowWriteSchema),
+});
 
 export class MenuCategoryResponseDto extends createZodDto(categorySchema) {}
 export class MenuCategoriesResponseDto extends createZodDto(categoriesResponseSchema) {}
@@ -315,6 +373,9 @@ export class MenuLocaleSettingsResponseDto extends createZodDto(localeSettingsRe
 export class MenuModifierGroupsResponseDto extends createZodDto(modifierGroupsResponseSchema) {}
 export class MenuModifierGroupResponseDto extends createZodDto(modifierGroupResponseSchema) {}
 export class MenuEffectiveModifierGroupsResponseDto extends createZodDto(effectiveModifierGroupsResponseSchema) {}
+export class MenuTagsResponseDto extends createZodDto(tagsResponseSchema) {}
+export class MenuTagResponseDto extends createZodDto(tagResponseSchema) {}
+export class MenuAvailabilityWindowsResponseDto extends createZodDto(availabilityWindowsResponseSchema) {}
 
 export class CreateMenuCategoryDto extends createZodDto(createCategoryBodySchema) {}
 export class UpdateMenuCategoryDto extends createZodDto(updateCategoryBodySchema) {}
@@ -329,6 +390,10 @@ export class UpdateMenuLocaleSettingsDto extends createZodDto(updateLocaleSettin
 export class CreateModifierGroupDto extends createZodDto(modifierGroupWriteSchema) {}
 export class UpdateModifierGroupDto extends createZodDto(updateModifierGroupBodySchema) {}
 export class AttachModifierGroupsDto extends createZodDto(attachModifierGroupsBodySchema) {}
+export class CreateDietaryTagDto extends createZodDto(createTagBodySchema) {}
+export class UpdateDietaryTagDto extends createZodDto(updateTagBodySchema) {}
+export class ReplaceProductTagsDto extends createZodDto(replaceProductTagsBodySchema) {}
+export class ReplaceProductAvailabilityWindowsDto extends createZodDto(replaceAvailabilityWindowsBodySchema) {}
 
 export type CategoryResponse = z.infer<typeof categorySchema>;
 export type ProductResponse = z.infer<typeof productSchema>;
@@ -336,6 +401,8 @@ export type VariantResponse = z.infer<typeof menuVariantSchema>;
 export type ImageResponse = z.infer<typeof productImageSchema>;
 export type ModifierGroupResponse = z.infer<typeof modifierGroupSchema>;
 export type ModifierGroupTemplateResponse = z.infer<typeof modifierGroupTemplateSchema>;
+export type DietaryTagResponse = z.infer<typeof dietaryTagSchema>;
+export type AvailabilityWindowResponse = z.infer<typeof availabilityWindowSchema>;
 export type CreateProductInput = z.infer<typeof createProductBodySchema>;
 export type UpdateProductInput = z.infer<typeof updateProductBodySchema>;
 export type ListProductsQueryInput = z.infer<typeof listProductsQuerySchema>;
@@ -347,3 +414,7 @@ export type UpdateLocaleSettingsInput = z.infer<typeof updateLocaleSettingsBodyS
 export type ModifierGroupInput = z.infer<typeof modifierGroupWriteSchema>;
 export type UpdateModifierGroupInput = z.infer<typeof updateModifierGroupBodySchema>;
 export type AttachModifierGroupsInput = z.infer<typeof attachModifierGroupsBodySchema>;
+export type CreateTagInput = z.infer<typeof createTagBodySchema>;
+export type UpdateTagInput = z.infer<typeof updateTagBodySchema>;
+export type ReplaceProductTagsInput = z.infer<typeof replaceProductTagsBodySchema>;
+export type ReplaceAvailabilityWindowsInput = z.infer<typeof replaceAvailabilityWindowsBodySchema>;

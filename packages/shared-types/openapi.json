@@ -1606,6 +1606,121 @@
         ]
       }
     },
+    "/v1/menu/tags": {
+      "get": {
+        "operationId": "MenuCatalogController_listTags",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuTagsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List business dietary and allergen tags.",
+        "tags": [
+          "menu"
+        ]
+      },
+      "post": {
+        "operationId": "MenuCatalogController_createTag",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDietaryTagDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuTagResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/menu/tags/{tagId}": {
+      "patch": {
+        "operationId": "MenuCatalogController_updateTag",
+        "parameters": [
+          {
+            "name": "tagId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDietaryTagDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuTagResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      },
+      "delete": {
+        "operationId": "MenuCatalogController_deleteTag",
+        "parameters": [
+          {
+            "name": "tagId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuDeleteResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
     "/v1/menu/products": {
       "get": {
         "operationId": "MenuCatalogController_listProducts",
@@ -1911,6 +2026,82 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MenuImagesResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/menu/products/{productId}/tags": {
+      "put": {
+        "operationId": "MenuCatalogController_replaceProductTags",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceProductTagsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuTagsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/menu/products/{productId}/availability-windows": {
+      "put": {
+        "operationId": "MenuCatalogController_replaceProductAvailabilityWindows",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceProductAvailabilityWindowsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuAvailabilityWindowsResponseDto_Output"
                 }
               }
             }
@@ -5024,6 +5215,152 @@
           }
         }
       },
+      "DietaryTag_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "dietary",
+              "allergen"
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "localizedLabels": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "position": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "isSystem": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "code",
+          "localizedLabels",
+          "position",
+          "isSystem"
+        ],
+        "additionalProperties": false,
+        "id": "DietaryTag_Output"
+      },
+      "MenuTagsResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DietaryTag_Output"
+            }
+          }
+        },
+        "required": [
+          "tags"
+        ],
+        "additionalProperties": false
+      },
+      "CreateDietaryTagDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "dietary",
+              "allergen"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$"
+          },
+          "localizedLabels": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "position": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "kind",
+          "code",
+          "localizedLabels"
+        ]
+      },
+      "MenuTagResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "$ref": "#/components/schemas/DietaryTag_Output"
+          }
+        },
+        "required": [
+          "tag"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateDietaryTagDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "dietary",
+              "allergen"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$"
+          },
+          "localizedLabels": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      },
       "MenuProduct_Output": {
         "type": "object",
         "properties": {
@@ -5161,6 +5498,18 @@
               "minLength": 1
             }
           },
+          "spiceLevel": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "position": {
             "type": "integer",
             "minimum": -9007199254740991,
@@ -5183,6 +5532,18 @@
             "items": {
               "$ref": "#/components/schemas/MenuModifierGroup_Output"
             }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DietaryTag_Output"
+            }
+          },
+          "availabilityWindows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAvailabilityWindow_Output"
+            }
           }
         },
         "required": [
@@ -5201,10 +5562,13 @@
           "channels",
           "localizedNames",
           "localizedDescriptions",
+          "spiceLevel",
           "position",
           "variants",
           "images",
-          "modifiers"
+          "modifiers",
+          "tags",
+          "availabilityWindows"
         ],
         "additionalProperties": false,
         "id": "MenuProduct_Output"
@@ -5382,6 +5746,39 @@
         "additionalProperties": false,
         "id": "MenuProductImage_Output"
       },
+      "ProductAvailabilityWindow_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "dayOfWeek": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6
+          },
+          "startMinute": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1439
+          },
+          "endMinute": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1439
+          }
+        },
+        "required": [
+          "id",
+          "dayOfWeek",
+          "startMinute",
+          "endMinute"
+        ],
+        "additionalProperties": false,
+        "id": "ProductAvailabilityWindow_Output"
+      },
       "MenuProductsResponseDto_Output": {
         "type": "object",
         "properties": {
@@ -5480,6 +5877,18 @@
           "available": {
             "default": true,
             "type": "boolean"
+          },
+          "spiceLevel": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "channels": {
             "type": "object",
@@ -5766,6 +6175,18 @@
           "available": {
             "default": true,
             "type": "boolean"
+          },
+          "spiceLevel": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "channels": {
             "type": "object",
@@ -6191,6 +6612,78 @@
         ],
         "additionalProperties": false
       },
+      "ReplaceProductTagsDto": {
+        "type": "object",
+        "properties": {
+          "tagIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        },
+        "required": [
+          "tagIds"
+        ]
+      },
+      "ReplaceProductAvailabilityWindowsDto": {
+        "type": "object",
+        "properties": {
+          "windows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "dayOfWeek": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 6
+                },
+                "startMinute": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1439
+                },
+                "endMinute": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1439
+                }
+              },
+              "required": [
+                "dayOfWeek",
+                "startMinute",
+                "endMinute"
+              ]
+            }
+          }
+        },
+        "required": [
+          "windows"
+        ]
+      },
+      "MenuAvailabilityWindowsResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "windows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAvailabilityWindow_Output"
+            }
+          }
+        },
+        "required": [
+          "windows"
+        ],
+        "additionalProperties": false
+      },
       "MenuLocaleSettingsResponseDto_Output": {
         "type": "object",
         "properties": {
@@ -6572,6 +7065,33 @@
               "all"
             ]
           },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DietaryTag_Output"
+            }
+          },
+          "spiceLevel": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "availabilityWindows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAvailabilityWindow_Output"
+            }
+          },
+          "availableNow": {
+            "type": "boolean"
+          },
           "variants": {
             "type": "array",
             "items": {
@@ -6612,6 +7132,10 @@
           "taxSource",
           "printStations",
           "printRouteSource",
+          "tags",
+          "spiceLevel",
+          "availabilityWindows",
+          "availableNow",
           "variants",
           "modifiers"
         ],

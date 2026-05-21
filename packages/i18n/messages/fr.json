@@ -383,7 +383,34 @@
         "recipeHook": "Cle recette",
         "addOption": "Ajouter une option",
         "freeThen": "offertes puis",
-        "inheritedFrom": "herite de"
+        "inheritedFrom": "herite de",
+        "tagsAndAvailability": "Tags et disponibilite",
+        "spiceLevel": "Niveau epice",
+        "noSpiceLevel": "Non renseigne",
+        "availabilityWindows": "Plages de disponibilite",
+        "addWindow": "Ajouter une plage",
+        "windowStart": "Debut",
+        "windowEnd": "Fin",
+        "alwaysAvailable": "Aucune plage: article disponible tout le temps.",
+        "tagKind": {
+          "dietary": "Dietaire",
+          "allergen": "Allergene"
+        },
+        "spice": {
+          "0": "Doux",
+          "1": "Leger",
+          "2": "Epice",
+          "3": "Tres epice"
+        },
+        "day": {
+          "0": "Dimanche",
+          "1": "Lundi",
+          "2": "Mardi",
+          "3": "Mercredi",
+          "4": "Jeudi",
+          "5": "Vendredi",
+          "6": "Samedi"
+        }
       },
       "overrides": {
         "title": "Overrides par branche",

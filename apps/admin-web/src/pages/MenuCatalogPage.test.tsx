@@ -82,6 +82,10 @@ const effectiveMenuResponse = {
             taxSource: "fallback",
             printStations: ["bar", "counter", "kitchen"],
             printRouteSource: "all",
+            tags: [],
+            spiceLevel: null,
+            availabilityWindows: [],
+            availableNow: true,
             variants: [
               {
                 id: null,
@@ -118,6 +122,21 @@ const taxRatesResponse = {
         label: "TVA 10%",
         rate: 10,
         isActive: true,
+      },
+    ],
+  },
+};
+
+const tagsResponse = {
+  data: {
+    tags: [
+      {
+        id: "tag-1",
+        kind: "dietary",
+        code: "vegetarian",
+        localizedLabels: { fr: "Végétarien" },
+        position: 0,
+        isSystem: true,
       },
     ],
   },
@@ -194,6 +213,7 @@ describe("MenuCatalogPage", () => {
               },
               localizedNames: { fr: "Poulet" },
               localizedDescriptions: {},
+              spiceLevel: null,
               position: 0,
               variants: [
                 {
@@ -214,6 +234,8 @@ describe("MenuCatalogPage", () => {
               ],
               images: [],
               modifiers: [],
+              tags: [],
+              availabilityWindows: [],
             },
           ],
         },
@@ -241,6 +263,7 @@ describe("MenuCatalogPage", () => {
       })
       .mockResolvedValueOnce(branchResponse)
       .mockResolvedValueOnce(taxRatesResponse)
+      .mockResolvedValueOnce(tagsResponse)
       .mockResolvedValueOnce(effectiveMenuResponse)
       .mockResolvedValueOnce(menuOverridesResponse);
 
@@ -279,6 +302,7 @@ describe("MenuCatalogPage", () => {
       .mockResolvedValueOnce({ data: { groups: [] } })
       .mockResolvedValueOnce(branchResponse)
       .mockResolvedValueOnce(taxRatesResponse)
+      .mockResolvedValueOnce(tagsResponse)
       .mockResolvedValueOnce({ data: { ...effectiveMenuResponse.data, categories: [] } })
       .mockResolvedValueOnce(menuOverridesResponse)
       .mockResolvedValueOnce({
@@ -304,10 +328,11 @@ describe("MenuCatalogPage", () => {
       .mockResolvedValueOnce({ data: { groups: [] } })
       .mockResolvedValueOnce(branchResponse)
       .mockResolvedValueOnce(taxRatesResponse)
+      .mockResolvedValueOnce(tagsResponse)
       .mockResolvedValueOnce({ data: { ...effectiveMenuResponse.data, categories: [] } })
       .mockResolvedValueOnce(menuOverridesResponse);
     postMock.mockResolvedValueOnce({ data: { product: { id: "prod-1" } } });
-    putMock.mockResolvedValueOnce({ data: { groups: [] } });
+    putMock.mockResolvedValue({ data: {} });
 
     render(<MenuCatalogPage />);
 

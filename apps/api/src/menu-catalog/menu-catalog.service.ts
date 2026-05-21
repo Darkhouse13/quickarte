@@ -8,12 +8,15 @@ import {
 import {
   categories,
   categoryModifierGroups,
+  dietaryTags,
   menuLocaleSettings,
   modifierGroupTemplates,
   modifierValueTemplates,
   optionValues,
+  productAvailabilityWindows,
   productImages,
   productOptions,
+  productTags,
   products,
   productVariants,
 } from "@quickarte/db-schema";
@@ -25,30 +28,228 @@ import {
 import type {
   CategoryResponse,
   AttachModifierGroupsInput,
+  AvailabilityWindowResponse,
   CreateCategoryInput,
   CreateProductInput,
+  CreateTagInput,
+  DietaryTagResponse,
   ImageResponse,
   ModifierGroupInput,
   ModifierGroupResponse,
   ModifierGroupTemplateResponse,
   ProductResponse,
   UpdateModifierGroupInput,
+  ReplaceAvailabilityWindowsInput,
   ReplaceImagesInput,
+  ReplaceProductTagsInput,
   ReplaceVariantsInput,
   UpdateCategoryInput,
   UpdateLocaleSettingsInput,
   UpdateProductInput,
+  UpdateTagInput,
   VariantResponse,
 } from "./menu-catalog.schemas";
 
 const PROBLEM_BASE_URL = "https://api.quickarte.ma/problems";
 const AVAILABLE_MENU_LOCALES = ["fr", "ar", "en", "es"];
+const SYSTEM_TAGS: Array<{
+  kind: "dietary" | "allergen";
+  code: string;
+  localizedLabels: Record<string, string>;
+  position: number;
+}> = [
+  {
+    kind: "dietary",
+    code: "vegetarian",
+    localizedLabels: { fr: "Végétarien", ar: "نباتي", en: "Vegetarian", es: "Vegetariano" },
+    position: 0,
+  },
+  {
+    kind: "dietary",
+    code: "vegan",
+    localizedLabels: { fr: "Vegan", ar: "نباتي صرف", en: "Vegan", es: "Vegano" },
+    position: 1,
+  },
+  {
+    kind: "dietary",
+    code: "halal",
+    localizedLabels: { fr: "Halal", ar: "حلال", en: "Halal", es: "Halal" },
+    position: 2,
+  },
+  {
+    kind: "dietary",
+    code: "gluten_free",
+    localizedLabels: { fr: "Sans gluten", ar: "خال من الغلوتين", en: "Gluten free", es: "Sin gluten" },
+    position: 3,
+  },
+  {
+    kind: "allergen",
+    code: "contains_nuts",
+    localizedLabels: { fr: "Contient fruits à coque", ar: "يحتوي على مكسرات", en: "Contains nuts", es: "Contiene frutos secos" },
+    position: 100,
+  },
+  {
+    kind: "allergen",
+    code: "contains_dairy",
+    localizedLabels: { fr: "Contient lait", ar: "يحتوي على الحليب", en: "Contains dairy", es: "Contiene lácteos" },
+    position: 101,
+  },
+  {
+    kind: "allergen",
+    code: "contains_gluten",
+    localizedLabels: { fr: "Contient gluten", ar: "يحتوي على الغلوتين", en: "Contains gluten", es: "Contiene gluten" },
+    position: 102,
+  },
+];
 
 @Injectable()
 export class MenuCatalogService {
   constructor(
     @Inject(DatabaseService) private readonly databaseService: DatabaseService,
   ) {}
+
+  async listTags(businessId: string): Promise<DietaryTagResponse[]> {
+    return this.databaseService.withTenant(businessId, async (tx) => {
+      await this.ensureSystemTags(tx, businessId);
+      const rows = await tx
+        .select()
+        .from(dietaryTags)
+        .where(and(eq(dietaryTags.businessId, businessId), isNull(dietaryTags.deletedAt)))
+        .orderBy(asc(dietaryTags.kind), asc(dietaryTags.position), asc(dietaryTags.code));
+      return rows.map((row) => this.toDietaryTagResponse(row));
+    });
+  }
+
+  async createTag(
+    businessId: string,
+    input: CreateTagInput,
+  ): Promise<DietaryTagResponse> {
+    return this.databaseService.withTenant(businessId, async (tx) => {
+      await this.ensureSystemTags(tx, businessId);
+      const [created] = await tx
+        .insert(dietaryTags)
+        .values({
+          businessId,
+          kind: input.kind,
+          code: input.code,
+          localizedLabels: input.localizedLabels,
+          position: input.position,
+          isSystem: false,
+        })
+        .returning();
+      if (!created) throw new Error("Dietary tag creation failed");
+      return this.toDietaryTagResponse(created);
+    });
+  }
+
+  async updateTag(
+    businessId: string,
+    tagId: string,
+    input: UpdateTagInput,
+  ): Promise<DietaryTagResponse> {
+    return this.databaseService.withTenant(businessId, async (tx) => {
+      const existing = await this.findTagRow(tx, businessId, tagId);
+      if (existing.isSystem) {
+        throw new BadRequestException({
+          type: `${PROBLEM_BASE_URL}/system-tag-locked`,
+          message: "System tags cannot be edited.",
+        });
+      }
+      const [updated] = await tx
+        .update(dietaryTags)
+        .set({
+          kind: input.kind ?? existing.kind,
+          code: input.code ?? existing.code,
+          localizedLabels: input.localizedLabels ?? existing.localizedLabels,
+          position: input.position ?? existing.position,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(dietaryTags.businessId, businessId), eq(dietaryTags.id, tagId)))
+        .returning();
+      if (!updated) throw new Error("Dietary tag update failed");
+      return this.toDietaryTagResponse(updated);
+    });
+  }
+
+  async deleteTag(businessId: string, tagId: string): Promise<void> {
+    await this.databaseService.withTenant(businessId, async (tx) => {
+      const existing = await this.findTagRow(tx, businessId, tagId);
+      if (existing.isSystem) {
+        throw new BadRequestException({
+          type: `${PROBLEM_BASE_URL}/system-tag-locked`,
+          message: "System tags cannot be deleted.",
+        });
+      }
+      await tx
+        .update(dietaryTags)
+        .set({ deletedAt: new Date(), updatedAt: new Date() })
+        .where(and(eq(dietaryTags.businessId, businessId), eq(dietaryTags.id, tagId)));
+    });
+  }
+
+  async replaceProductTags(
+    businessId: string,
+    productId: string,
+    input: ReplaceProductTagsInput,
+  ): Promise<DietaryTagResponse[]> {
+    return this.databaseService.withTenant(businessId, async (tx) => {
+      await this.findProductRow(tx, businessId, productId);
+      await this.ensureSystemTags(tx, businessId);
+      const uniqueTagIds = Array.from(new Set(input.tagIds));
+      if (uniqueTagIds.length > 0) {
+        const tagRows = await tx
+          .select()
+          .from(dietaryTags)
+          .where(
+            and(
+              eq(dietaryTags.businessId, businessId),
+              inArray(dietaryTags.id, uniqueTagIds),
+              isNull(dietaryTags.deletedAt),
+            ),
+          );
+        if (tagRows.length !== uniqueTagIds.length) throw new NotFoundException("Tag not found");
+      }
+      await tx.delete(productTags).where(eq(productTags.productId, productId));
+      if (uniqueTagIds.length > 0) {
+        await tx.insert(productTags).values(
+          uniqueTagIds.map((tagId) => ({
+            businessId,
+            productId,
+            tagId,
+          })),
+        );
+      }
+      return this.listProductTags(tx, businessId, [productId]).then(
+        (tagsByProduct) => tagsByProduct.get(productId) ?? [],
+      );
+    });
+  }
+
+  async replaceAvailabilityWindows(
+    businessId: string,
+    productId: string,
+    input: ReplaceAvailabilityWindowsInput,
+  ): Promise<AvailabilityWindowResponse[]> {
+    return this.databaseService.withTenant(businessId, async (tx) => {
+      await this.findProductRow(tx, businessId, productId);
+      await tx
+        .delete(productAvailabilityWindows)
+        .where(eq(productAvailabilityWindows.productId, productId));
+      if (input.windows.length > 0) {
+        await tx.insert(productAvailabilityWindows).values(
+          input.windows.map((window) => ({
+            businessId,
+            productId,
+            dayOfWeek: window.dayOfWeek,
+            startMinute: window.startMinute,
+            endMinute: window.endMinute,
+          })),
+        );
+      }
+      const windows = await this.listProductAvailabilityWindows(tx, businessId, [productId]);
+      return windows.get(productId) ?? [];
+    });
+  }
 
   async listModifierGroups(businessId: string): Promise<ModifierGroupTemplateResponse[]> {
     return this.databaseService.withTenant(businessId, (tx) =>
@@ -421,6 +622,7 @@ export class MenuCatalogService {
           featured: input.featured,
           hidden: input.hidden,
           available: input.available,
+          spiceLevel: input.spiceLevel ?? null,
           availableDineIn: input.channels.dineIn,
           availableTakeaway: input.channels.takeaway,
           availableDelivery: input.channels.delivery,
@@ -482,6 +684,7 @@ export class MenuCatalogService {
           featured: input.featured ?? existing.featured,
           hidden: input.hidden ?? existing.hidden,
           available: input.available ?? existing.available,
+          spiceLevel: input.spiceLevel === undefined ? existing.spiceLevel : input.spiceLevel,
           availableDineIn: input.channels?.dineIn ?? existing.availableDineIn,
           availableTakeaway: input.channels?.takeaway ?? existing.availableTakeaway,
           availableDelivery: input.channels?.delivery ?? existing.availableDelivery,
@@ -633,6 +836,8 @@ export class MenuCatalogService {
       .where(and(eq(productImages.businessId, businessId), inArray(productImages.productId, productIds)))
       .orderBy(asc(productImages.position));
     const modifiersByProduct = await this.hydrateProductModifiers(tx, businessId, rows);
+    const tagsByProduct = await this.listProductTags(tx, businessId, productIds);
+    const windowsByProduct = await this.listProductAvailabilityWindows(tx, businessId, productIds);
 
     return rows.map((row) =>
       this.toProductResponse(
@@ -642,6 +847,8 @@ export class MenuCatalogService {
           .map((variantRow) => variantRow.variant),
         imageRows.filter((image) => image.productId === row.id),
         modifiersByProduct.get(row.id) ?? [],
+        tagsByProduct.get(row.id) ?? [],
+        windowsByProduct.get(row.id) ?? [],
       ),
     );
   }
@@ -669,6 +876,105 @@ export class MenuCatalogService {
     return rows.map((row) =>
       this.toModifierGroupTemplateResponse(row, valuesByGroup.get(row.id) ?? []),
     );
+  }
+
+  private async ensureSystemTags(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+  ): Promise<void> {
+    await tx
+      .insert(dietaryTags)
+      .values(
+        SYSTEM_TAGS.map((tag) => ({
+          businessId,
+          kind: tag.kind,
+          code: tag.code,
+          localizedLabels: tag.localizedLabels,
+          position: tag.position,
+          isSystem: true,
+        })),
+      )
+      .onConflictDoNothing();
+  }
+
+  private async findTagRow(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    tagId: string,
+  ) {
+    const [row] = await tx
+      .select()
+      .from(dietaryTags)
+      .where(
+        and(
+          eq(dietaryTags.businessId, businessId),
+          eq(dietaryTags.id, tagId),
+          isNull(dietaryTags.deletedAt),
+        ),
+      )
+      .limit(1);
+    if (!row) throw new NotFoundException("Tag not found");
+    return row;
+  }
+
+  private async listProductTags(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    productIds: string[],
+  ): Promise<Map<string, DietaryTagResponse[]>> {
+    if (productIds.length === 0) return new Map();
+    const rows = await tx
+      .select({
+        productId: productTags.productId,
+        tag: dietaryTags,
+      })
+      .from(productTags)
+      .innerJoin(dietaryTags, eq(productTags.tagId, dietaryTags.id))
+      .where(
+        and(
+          eq(productTags.businessId, businessId),
+          eq(dietaryTags.businessId, businessId),
+          inArray(productTags.productId, productIds),
+          isNull(dietaryTags.deletedAt),
+        ),
+      )
+      .orderBy(asc(dietaryTags.kind), asc(dietaryTags.position), asc(dietaryTags.code));
+    const tagsByProduct = new Map<string, DietaryTagResponse[]>();
+    for (const row of rows) {
+      const bucket = tagsByProduct.get(row.productId) ?? [];
+      bucket.push(this.toDietaryTagResponse(row.tag));
+      tagsByProduct.set(row.productId, bucket);
+    }
+    return tagsByProduct;
+  }
+
+  private async listProductAvailabilityWindows(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    productIds: string[],
+  ): Promise<Map<string, AvailabilityWindowResponse[]>> {
+    if (productIds.length === 0) return new Map();
+    const rows = await tx
+      .select()
+      .from(productAvailabilityWindows)
+      .where(
+        and(
+          eq(productAvailabilityWindows.businessId, businessId),
+          inArray(productAvailabilityWindows.productId, productIds),
+        ),
+      )
+      .orderBy(
+        asc(productAvailabilityWindows.productId),
+        asc(productAvailabilityWindows.dayOfWeek),
+        asc(productAvailabilityWindows.startMinute),
+      );
+    const windowsByProduct = new Map<string, AvailabilityWindowResponse[]>();
+    for (const row of rows) {
+      const bucket = windowsByProduct.get(row.productId) ?? [];
+      bucket.push(this.toAvailabilityWindowResponse(row));
+      windowsByProduct.set(row.productId, bucket);
+    }
+    return windowsByProduct;
   }
 
   private async getModifierGroupInsideTenant(
@@ -1204,11 +1510,35 @@ export class MenuCatalogService {
     };
   }
 
+  private toDietaryTagResponse(row: typeof dietaryTags.$inferSelect): DietaryTagResponse {
+    return {
+      id: row.id,
+      kind: row.kind,
+      code: row.code,
+      localizedLabels: row.localizedLabels,
+      position: row.position,
+      isSystem: row.isSystem,
+    };
+  }
+
+  private toAvailabilityWindowResponse(
+    row: typeof productAvailabilityWindows.$inferSelect,
+  ): AvailabilityWindowResponse {
+    return {
+      id: row.id,
+      dayOfWeek: row.dayOfWeek,
+      startMinute: row.startMinute,
+      endMinute: row.endMinute,
+    };
+  }
+
   private toProductResponse(
     row: typeof products.$inferSelect,
     variants: Array<typeof productVariants.$inferSelect>,
     images: Array<typeof productImages.$inferSelect>,
     modifiers: ModifierGroupResponse[],
+    tags: DietaryTagResponse[],
+    availabilityWindows: AvailabilityWindowResponse[],
   ): ProductResponse {
     return {
       id: row.id,
@@ -1232,6 +1562,7 @@ export class MenuCatalogService {
       },
       localizedNames: row.localizedNames,
       localizedDescriptions: row.localizedDescriptions,
+      spiceLevel: row.spiceLevel,
       position: row.position,
       variants:
         variants.length > 0
@@ -1245,6 +1576,8 @@ export class MenuCatalogService {
         isPrimary: image.isPrimary,
       })),
       modifiers,
+      tags,
+      availabilityWindows,
     };
   }
 
