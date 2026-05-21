@@ -17,6 +17,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import { businesses } from "./business";
+import { users } from "./identity";
 import { orderItems } from "./ordering";
 
 export const optionTypeEnum = pgEnum("option_type", [
@@ -45,6 +46,12 @@ export const modifierAttachScopeEnum = pgEnum("modifier_attach_scope", [
 export const dietaryTagKindEnum = pgEnum("dietary_tag_kind", [
   "dietary",
   "allergen",
+]);
+
+export const menuImportJobStatusEnum = pgEnum("menu_import_job_status", [
+  "pending_review",
+  "committed",
+  "failed",
 ]);
 
 export const categories = pgTable(
@@ -344,6 +351,54 @@ export const productAvailabilityWindows = pgTable(
   }),
 );
 
+export const menuImportJobs = pgTable(
+  "menu_import_jobs",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    status: menuImportJobStatusEnum("status").notNull().default("pending_review"),
+    originalFilename: text("original_filename").notNull(),
+    fileType: varchar("file_type", { length: 16 }).notNull(),
+    parsedRows: jsonb("parsed_rows")
+      .$type<Array<Record<string, unknown>>>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    previewReport: jsonb("preview_report")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    rowCount: integer("row_count").notNull().default(0),
+    errorCount: integer("error_count").notNull().default(0),
+    warningCount: integer("warning_count").notNull().default(0),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    committedAt: timestamp("committed_at", { withTimezone: true }),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    businessStatusIdx: index("menu_import_jobs_business_status_idx").on(
+      table.businessId,
+      table.status,
+      table.createdAt,
+    ),
+    fileTypeCheck: check(
+      "menu_import_jobs_file_type_check",
+      sql`${table.fileType} in ('csv', 'xlsx')`,
+    ),
+    countsNonnegativeCheck: check(
+      "menu_import_jobs_counts_nonnegative_check",
+      sql`${table.rowCount} >= 0 and ${table.errorCount} >= 0 and ${table.warningCount} >= 0`,
+    ),
+  }),
+);
+
 export const modifierGroupTemplates = pgTable(
   "modifier_group_templates",
   {
@@ -615,6 +670,17 @@ export const productAvailabilityWindowsRelations = relations(
   }),
 );
 
+export const menuImportJobsRelations = relations(menuImportJobs, ({ one }) => ({
+  business: one(businesses, {
+    fields: [menuImportJobs.businessId],
+    references: [businesses.id],
+  }),
+  creator: one(users, {
+    fields: [menuImportJobs.createdBy],
+    references: [users.id],
+  }),
+}));
+
 export const modifierGroupTemplatesRelations = relations(
   modifierGroupTemplates,
   ({ one, many }) => ({
@@ -685,6 +751,7 @@ export type MenuLocaleSettings = typeof menuLocaleSettings.$inferSelect;
 export type DietaryTag = typeof dietaryTags.$inferSelect;
 export type ProductTag = typeof productTags.$inferSelect;
 export type ProductAvailabilityWindow = typeof productAvailabilityWindows.$inferSelect;
+export type MenuImportJob = typeof menuImportJobs.$inferSelect;
 export type ModifierGroupTemplate = typeof modifierGroupTemplates.$inferSelect;
 export type ModifierValueTemplate = typeof modifierValueTemplates.$inferSelect;
 export type CategoryModifierGroup = typeof categoryModifierGroups.$inferSelect;
@@ -695,6 +762,7 @@ export type NewProductImage = typeof productImages.$inferInsert;
 export type NewDietaryTag = typeof dietaryTags.$inferInsert;
 export type NewProductTag = typeof productTags.$inferInsert;
 export type NewProductAvailabilityWindow = typeof productAvailabilityWindows.$inferInsert;
+export type NewMenuImportJob = typeof menuImportJobs.$inferInsert;
 export type NewModifierGroupTemplate = typeof modifierGroupTemplates.$inferInsert;
 export type NewModifierValueTemplate = typeof modifierValueTemplates.$inferInsert;
 export type ProductOption = typeof productOptions.$inferSelect;
