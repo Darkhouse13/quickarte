@@ -231,6 +231,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/branches/{branchId}/receipt-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get branch receipt settings */
+        get: operations["ReceiptSettingsController_getSettings"];
+        /** Upsert branch receipt settings */
+        put: operations["ReceiptSettingsController_upsertSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/receipt-settings/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview unsaved branch receipt settings */
+        post: operations["ReceiptSettingsController_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tax-rates": {
         parameters: {
             query?: never;
@@ -566,6 +601,84 @@ export interface components {
         };
         PaymentMethodsPutBodyDto: {
             methods: components["schemas"]["PaymentMethodInputDto"][];
+        };
+        ReceiptLineDto: {
+            /** @enum {string} */
+            locale: "fr" | "ar" | "darija";
+            text: string;
+        };
+        ReceiptSettingsResponseDto: {
+            logoUrl?: string | null;
+            /** @default [] */
+            headerLines: components["schemas"]["ReceiptLineDto"][];
+            /** @default [] */
+            footerLines: components["schemas"]["ReceiptLineDto"][];
+            /** @default false */
+            showItemCodes: boolean;
+            /** @default true */
+            showTaxBreakdown: boolean;
+            /** @default true */
+            showServerName: boolean;
+            /** @default true */
+            showTableNumber: boolean;
+            /**
+             * @default fr_only
+             * @enum {string}
+             */
+            bilingualMode: "fr_only" | "ar_only" | "stacked" | "side_by_side";
+            /**
+             * @default 80mm
+             * @enum {string}
+             */
+            paperWidth: "58mm" | "80mm";
+            /**
+             * @default none
+             * @enum {string}
+             */
+            qrCodeMode: "none" | "fidelity_signup" | "social_link" | "custom_url";
+            qrCodeUrl?: string | null;
+            /** Format: uuid */
+            branchId: string;
+            isDefaultPresentation: boolean;
+        };
+        ReceiptSettingsPutBodyDto: {
+            logoUrl?: string | null;
+            /** @default [] */
+            headerLines: components["schemas"]["ReceiptLineDto"][];
+            /** @default [] */
+            footerLines: components["schemas"]["ReceiptLineDto"][];
+            /** @default false */
+            showItemCodes: boolean;
+            /** @default true */
+            showTaxBreakdown: boolean;
+            /** @default true */
+            showServerName: boolean;
+            /** @default true */
+            showTableNumber: boolean;
+            /**
+             * @default fr_only
+             * @enum {string}
+             */
+            bilingualMode: "fr_only" | "ar_only" | "stacked" | "side_by_side";
+            /**
+             * @default 80mm
+             * @enum {string}
+             */
+            paperWidth: "58mm" | "80mm";
+            /**
+             * @default none
+             * @enum {string}
+             */
+            qrCodeMode: "none" | "fidelity_signup" | "social_link" | "custom_url";
+            qrCodeUrl?: string | null;
+        };
+        ReceiptPreviewResponseDto: {
+            renderedText: string;
+            /** @enum {string} */
+            paperWidth: "58mm" | "80mm";
+            columns: number;
+            /** @example 120.00 */
+            sampleTotal: string;
         };
         TaxRateResponseDto: {
             id: string;
@@ -1139,6 +1252,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BranchPaymentMethodsResponseDto"];
+                };
+            };
+        };
+    };
+    ReceiptSettingsController_getSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Branch receipt settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptSettingsResponseDto"];
+                };
+            };
+        };
+    };
+    ReceiptSettingsController_upsertSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReceiptSettingsPutBodyDto"];
+            };
+        };
+        responses: {
+            /** @description Updated branch receipt settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptSettingsResponseDto"];
+                };
+            };
+        };
+    };
+    ReceiptSettingsController_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReceiptSettingsPutBodyDto"];
+            };
+        };
+        responses: {
+            /** @description Rendered sample receipt preview. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptPreviewResponseDto"];
                 };
             };
         };

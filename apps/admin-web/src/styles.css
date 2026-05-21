@@ -390,6 +390,31 @@ a {
   font-weight: var(--fw-semibold);
 }
 
+.receipt-preview-panel {
+  align-self: start;
+}
+
+.receipt-preview {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: var(--t-body-sm);
+  line-height: 1.5;
+  padding: var(--s-4);
+  white-space: pre;
+}
+
+.receipt-preview-58mm {
+  max-width: 34ch;
+}
+
+.receipt-preview-80mm {
+  max-width: 50ch;
+}
+
 @media (max-width: 760px) {
   .app-shell {
     grid-template-columns: 1fr;

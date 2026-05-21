@@ -706,6 +706,117 @@
         ]
       }
     },
+    "/v1/branches/{branchId}/receipt-settings": {
+      "get": {
+        "operationId": "ReceiptSettingsController_getSettings",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branch receipt settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptSettingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get branch receipt settings",
+        "tags": [
+          "Receipt settings"
+        ]
+      },
+      "put": {
+        "operationId": "ReceiptSettingsController_upsertSettings",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiptSettingsPutBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated branch receipt settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptSettingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Upsert branch receipt settings",
+        "tags": [
+          "Receipt settings"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/receipt-settings/preview": {
+      "post": {
+        "operationId": "ReceiptSettingsController_preview",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiptSettingsPutBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rendered sample receipt preview.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptPreviewResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Preview unsaved branch receipt settings",
+        "tags": [
+          "Receipt settings"
+        ]
+      }
+    },
     "/v1/tax-rates": {
       "get": {
         "operationId": "TaxConfigController_listRates",
@@ -1936,6 +2047,227 @@
         },
         "required": [
           "methods"
+        ]
+      },
+      "ReceiptLineDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "enum": [
+              "fr",
+              "ar",
+              "darija"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "locale",
+          "text"
+        ]
+      },
+      "ReceiptSettingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "headerLines": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptLineDto"
+            }
+          },
+          "footerLines": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptLineDto"
+            }
+          },
+          "showItemCodes": {
+            "type": "boolean",
+            "default": false
+          },
+          "showTaxBreakdown": {
+            "type": "boolean",
+            "default": true
+          },
+          "showServerName": {
+            "type": "boolean",
+            "default": true
+          },
+          "showTableNumber": {
+            "type": "boolean",
+            "default": true
+          },
+          "bilingualMode": {
+            "type": "string",
+            "enum": [
+              "fr_only",
+              "ar_only",
+              "stacked",
+              "side_by_side"
+            ],
+            "default": "fr_only"
+          },
+          "paperWidth": {
+            "type": "string",
+            "enum": [
+              "58mm",
+              "80mm"
+            ],
+            "default": "80mm"
+          },
+          "qrCodeMode": {
+            "type": "string",
+            "enum": [
+              "none",
+              "fidelity_signup",
+              "social_link",
+              "custom_url"
+            ],
+            "default": "none"
+          },
+          "qrCodeUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "branchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isDefaultPresentation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "headerLines",
+          "footerLines",
+          "showItemCodes",
+          "showTaxBreakdown",
+          "showServerName",
+          "showTableNumber",
+          "bilingualMode",
+          "paperWidth",
+          "qrCodeMode",
+          "branchId",
+          "isDefaultPresentation"
+        ]
+      },
+      "ReceiptSettingsPutBodyDto": {
+        "type": "object",
+        "properties": {
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "headerLines": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptLineDto"
+            }
+          },
+          "footerLines": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptLineDto"
+            }
+          },
+          "showItemCodes": {
+            "type": "boolean",
+            "default": false
+          },
+          "showTaxBreakdown": {
+            "type": "boolean",
+            "default": true
+          },
+          "showServerName": {
+            "type": "boolean",
+            "default": true
+          },
+          "showTableNumber": {
+            "type": "boolean",
+            "default": true
+          },
+          "bilingualMode": {
+            "type": "string",
+            "enum": [
+              "fr_only",
+              "ar_only",
+              "stacked",
+              "side_by_side"
+            ],
+            "default": "fr_only"
+          },
+          "paperWidth": {
+            "type": "string",
+            "enum": [
+              "58mm",
+              "80mm"
+            ],
+            "default": "80mm"
+          },
+          "qrCodeMode": {
+            "type": "string",
+            "enum": [
+              "none",
+              "fidelity_signup",
+              "social_link",
+              "custom_url"
+            ],
+            "default": "none"
+          },
+          "qrCodeUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "headerLines",
+          "footerLines",
+          "showItemCodes",
+          "showTaxBreakdown",
+          "showServerName",
+          "showTableNumber",
+          "bilingualMode",
+          "paperWidth",
+          "qrCodeMode"
+        ]
+      },
+      "ReceiptPreviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "renderedText": {
+            "type": "string"
+          },
+          "paperWidth": {
+            "type": "string",
+            "enum": [
+              "58mm",
+              "80mm"
+            ]
+          },
+          "columns": {
+            "type": "number"
+          },
+          "sampleTotal": {
+            "type": "string",
+            "example": "120.00"
+          }
+        },
+        "required": [
+          "renderedText",
+          "paperWidth",
+          "columns",
+          "sampleTotal"
         ]
       },
       "TaxRateResponseDto": {
