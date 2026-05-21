@@ -368,7 +368,24 @@
           "topping": "Garniture",
           "market": "Marche",
           "custom": "Custom"
-        }
+        },
+        "modifiers": "Modificateurs",
+        "productScope": "Article",
+        "categoryScope": "Categorie",
+        "modifierLibrary": "Bibliotheque de modificateurs",
+        "groupName": "Nom du groupe",
+        "groupType": "Type de groupe",
+        "singleSelect": "Choix unique",
+        "multiSelect": "Choix multiple",
+        "freeQuantity": "Quantite offerte",
+        "extraPrice": "Extra uniforme",
+        "required": "Obligatoire",
+        "optionName": "Option",
+        "priceAddition": "Prix additionnel",
+        "recipeHook": "Cle recette",
+        "addOption": "Ajouter une option",
+        "freeThen": "offertes puis",
+        "inheritedFrom": "herite de"
       }
     }
   },

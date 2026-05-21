@@ -23,14 +23,19 @@ import { RequirePermission } from "../common/decorators/require-permission.decor
 import type { AuthenticatedRequest } from "../common/middleware/tenant-context.middleware";
 import { MenuCatalogService } from "./menu-catalog.service";
 import {
+  AttachModifierGroupsDto,
+  CreateModifierGroupDto,
   CreateMenuCategoryDto,
   CreateMenuProductDto,
   ListMenuProductsQueryDto,
   MenuCategoriesResponseDto,
   MenuCategoryResponseDto,
   MenuDeleteResponseDto,
+  MenuEffectiveModifierGroupsResponseDto,
   MenuImagesResponseDto,
   MenuLocaleSettingsResponseDto,
+  MenuModifierGroupResponseDto,
+  MenuModifierGroupsResponseDto,
   MenuProductResponseDto,
   MenuProductsResponseDto,
   MenuVariantsResponseDto,
@@ -40,6 +45,7 @@ import {
   ReplaceProductImagesDto,
   UpdateMenuCategoryDto,
   UpdateMenuLocaleSettingsDto,
+  UpdateModifierGroupDto,
   UpdateMenuProductDto,
 } from "./menu-catalog.schemas";
 
@@ -113,6 +119,79 @@ export class MenuCatalogController {
         body,
       ),
     };
+  }
+
+  @Put("categories/:categoryId/modifier-groups")
+  @RequirePermission("menu.manage")
+  @ApiParam({ name: "categoryId" })
+  @ApiBody({ type: AttachModifierGroupsDto })
+  @ZodResponse({ status: 200, type: MenuEffectiveModifierGroupsResponseDto })
+  async attachModifierGroupsToCategory(
+    @Req() request: AuthenticatedRequest,
+    @Param("categoryId") categoryId: string,
+    @Body() body: AttachModifierGroupsDto,
+  ) {
+    return {
+      groups: await this.menuCatalogService.attachModifierGroupsToCategory(
+        request.businessId!,
+        categoryId,
+        body,
+      ),
+    };
+  }
+
+  @Get("modifier-groups")
+  @RequirePermission("menu.view")
+  @ApiOperation({ summary: "List reusable modifier group templates." })
+  @ZodResponse({ status: 200, type: MenuModifierGroupsResponseDto })
+  async listModifierGroups(@Req() request: AuthenticatedRequest) {
+    return {
+      groups: await this.menuCatalogService.listModifierGroups(request.businessId!),
+    };
+  }
+
+  @Post("modifier-groups")
+  @RequirePermission("menu.manage")
+  @ApiBody({ type: CreateModifierGroupDto })
+  @ZodResponse({ status: 201, type: MenuModifierGroupResponseDto })
+  async createModifierGroup(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: CreateModifierGroupDto,
+  ) {
+    return {
+      group: await this.menuCatalogService.createModifierGroup(request.businessId!, body),
+    };
+  }
+
+  @Patch("modifier-groups/:groupId")
+  @RequirePermission("menu.manage")
+  @ApiParam({ name: "groupId" })
+  @ApiBody({ type: UpdateModifierGroupDto })
+  @ZodResponse({ status: 200, type: MenuModifierGroupResponseDto })
+  async updateModifierGroup(
+    @Req() request: AuthenticatedRequest,
+    @Param("groupId") groupId: string,
+    @Body() body: UpdateModifierGroupDto,
+  ) {
+    return {
+      group: await this.menuCatalogService.updateModifierGroup(
+        request.businessId!,
+        groupId,
+        body,
+      ),
+    };
+  }
+
+  @Delete("modifier-groups/:groupId")
+  @RequirePermission("menu.manage")
+  @ApiParam({ name: "groupId" })
+  @ZodResponse({ status: 200, type: MenuDeleteResponseDto })
+  async deleteModifierGroup(
+    @Req() request: AuthenticatedRequest,
+    @Param("groupId") groupId: string,
+  ) {
+    await this.menuCatalogService.softDeleteModifierGroup(request.businessId!, groupId);
+    return { deleted: true as const };
   }
 
   @Get("products")
@@ -213,6 +292,25 @@ export class MenuCatalogController {
   ) {
     return {
       variants: await this.menuCatalogService.replaceVariants(
+        request.businessId!,
+        productId,
+        body,
+      ),
+    };
+  }
+
+  @Put("products/:productId/modifier-groups")
+  @RequirePermission("menu.manage")
+  @ApiParam({ name: "productId" })
+  @ApiBody({ type: AttachModifierGroupsDto })
+  @ZodResponse({ status: 200, type: MenuEffectiveModifierGroupsResponseDto })
+  async attachModifierGroupsToProduct(
+    @Req() request: AuthenticatedRequest,
+    @Param("productId") productId: string,
+    @Body() body: AttachModifierGroupsDto,
+  ) {
+    return {
+      groups: await this.menuCatalogService.attachModifierGroupsToProduct(
         request.businessId!,
         productId,
         body,

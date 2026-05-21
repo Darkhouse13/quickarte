@@ -7,10 +7,15 @@ import { NestFactory } from "@nestjs/core";
 import {
   businesses,
   categories,
+  categoryModifierGroups,
   menuLocaleSettings,
+  modifierGroupTemplates,
+  modifierValueTemplates,
+  optionValues,
   permissionVersions,
   permissions,
   productImages,
+  productOptions,
   products,
   productVariants,
   rolePermissions,
@@ -367,6 +372,276 @@ test("menu API creates products with first-class fixed variants and keeps legacy
     .from(productVariants)
     .where(eq(productVariants.productId, body.product.id));
   assert.deepEqual(variantRows.map((row) => row.priceOverride), ["80.00", "120.00"]);
+});
+
+test("M3.2 RLS isolates modifier templates and category attachments", async (t) => {
+  const groupAId = randomUUID();
+  const valueAId = randomUUID();
+
+  await databaseService.withTenant(businessAId, async (tx) => {
+    await tx.insert(modifierGroupTemplates).values({
+      id: groupAId,
+      businessId: businessAId,
+      name: "Sauce au choix",
+      localizedNames: { fr: "Sauce au choix" },
+      type: "single_select",
+      required: true,
+      minSelect: 1,
+      maxSelect: 1,
+      attachScope: "category",
+    });
+    await tx.insert(modifierValueTemplates).values({
+      id: valueAId,
+      businessId: businessAId,
+      groupTemplateId: groupAId,
+      name: "Harissa",
+      localizedNames: { fr: "Harissa" },
+      priceAddition: "0.00",
+      position: 0,
+    });
+    await tx.insert(categoryModifierGroups).values({
+      businessId: businessAId,
+      categoryId: categoryAId,
+      groupTemplateId: groupAId,
+      position: 0,
+    });
+  });
+
+  await t.test("tenant A reads its own modifier rows", async () => {
+    const groups = await databaseService.withTenant(businessAId, (tx) =>
+      tx.select().from(modifierGroupTemplates),
+    );
+    const values = await databaseService.withTenant(businessAId, (tx) =>
+      tx.select().from(modifierValueTemplates),
+    );
+    const attachments = await databaseService.withTenant(businessAId, (tx) =>
+      tx.select().from(categoryModifierGroups),
+    );
+    assert.ok(groups.some((row) => row.id === groupAId));
+    assert.ok(values.some((row) => row.id === valueAId));
+    assert.ok(attachments.some((row) => row.groupTemplateId === groupAId));
+  });
+
+  await t.test("tenant B forged predicates cannot read tenant A modifier rows", async () => {
+    const groups = await databaseService.withTenant(businessBId, (tx) =>
+      tx
+        .select()
+        .from(modifierGroupTemplates)
+        .where(eq(modifierGroupTemplates.businessId, businessAId)),
+    );
+    const values = await databaseService.withTenant(businessBId, (tx) =>
+      tx
+        .select()
+        .from(modifierValueTemplates)
+        .where(eq(modifierValueTemplates.businessId, businessAId)),
+    );
+    const attachments = await databaseService.withTenant(businessBId, (tx) =>
+      tx
+        .select()
+        .from(categoryModifierGroups)
+        .where(eq(categoryModifierGroups.businessId, businessAId)),
+    );
+    assert.equal(groups.length, 0);
+    assert.equal(values.length, 0);
+    assert.equal(attachments.length, 0);
+  });
+
+  await t.test("direct app-role query without tenant context reads zero rows", async () => {
+    assert.equal((await appDb.select().from(modifierGroupTemplates)).length, 0);
+    assert.equal((await appDb.select().from(modifierValueTemplates)).length, 0);
+    assert.equal((await appDb.select().from(categoryModifierGroups)).length, 0);
+  });
+
+  await t.test("tenant A cannot attach tenant B category modifier rows", async () => {
+    await assert.rejects(
+      databaseService.withTenant(businessAId, (tx) =>
+        tx.insert(categoryModifierGroups).values({
+          businessId: businessBId,
+          categoryId: categoryBId,
+          groupTemplateId: groupAId,
+          position: 1,
+        }),
+      ),
+      (error) =>
+        /row-level security policy|violates row-level security/i.test(
+          `${String(error)} ${String((error as { cause?: unknown }).cause)}`,
+        ),
+    );
+  });
+});
+
+test("menu modifier API materializes reusable groups without leaking shared option rows", async () => {
+  const tokenA = tokenFor(businessAId, userAId, ownerRoleAId);
+  const tokenB = tokenFor(businessBId, userBId, ownerRoleBId);
+
+  const createGroupResponse = await apiJson("/v1/menu/modifier-groups", "POST", tokenA, {
+    localizedNames: { fr: "Garnitures au choix" },
+    type: "multi_select",
+    required: false,
+    minSelect: 0,
+    maxSelect: 4,
+    freeQuantity: 2,
+    extraPrice: "10.00",
+    attachScope: "product",
+    reusable: true,
+    values: [
+      {
+        name: "Olives",
+        localizedNames: { fr: "Olives" },
+        priceAddition: "0.00",
+        position: 0,
+        available: true,
+        recipeHookKey: "olives",
+      },
+      {
+        name: "Fromage",
+        localizedNames: { fr: "Fromage" },
+        priceAddition: "5.00",
+        position: 1,
+        available: true,
+        recipeHookKey: null,
+      },
+    ],
+  });
+  const createGroupBody = (await createGroupResponse.json()) as {
+    group: { id: string; values: Array<{ id: string; recipeHookKey: string | null }> };
+  };
+  assert.equal(createGroupResponse.status, 201, JSON.stringify(createGroupBody));
+  assert.equal(createGroupBody.group.values[0]?.recipeHookKey, "olives");
+
+  const attachResponse = await apiJson(
+    `/v1/menu/products/${productAId}/modifier-groups`,
+    "PUT",
+    tokenA,
+    { groupTemplateIds: [createGroupBody.group.id] },
+  );
+  const attachBody = (await attachResponse.json()) as {
+    groups: Array<{ templateId: string; source: string; freeQuantity: number; extraPrice: string }>;
+  };
+  assert.equal(attachResponse.status, 200, JSON.stringify(attachBody));
+  const materializedGroup = attachBody.groups.find(
+    (group) => group.templateId === createGroupBody.group.id,
+  );
+  assert.equal(materializedGroup?.source, "product");
+  assert.equal(materializedGroup?.freeQuantity, 2);
+  assert.equal(materializedGroup?.extraPrice, "10.00");
+
+  const optionRows = await adminDb
+    .select({ id: productOptions.id, templateId: productOptions.templateId })
+    .from(productOptions)
+    .where(eq(productOptions.productId, productAId));
+  assert.equal(optionRows.length, 1);
+  assert.equal(optionRows[0]?.templateId, createGroupBody.group.id);
+  const valueRows = await adminDb
+    .select({ templateValueId: optionValues.templateValueId })
+    .from(optionValues)
+    .where(eq(optionValues.optionId, optionRows[0]!.id));
+  assert.equal(valueRows.length, 2);
+
+  const forbiddenAttach = await apiJson(
+    `/v1/menu/products/${productBId}/modifier-groups`,
+    "PUT",
+    tokenA,
+    { groupTemplateIds: [createGroupBody.group.id] },
+  );
+  assert.equal(forbiddenAttach.status, 404, await forbiddenAttach.text());
+
+  const forbiddenGroupUse = await apiJson(
+    `/v1/menu/products/${productBId}/modifier-groups`,
+    "PUT",
+    tokenB,
+    { groupTemplateIds: [createGroupBody.group.id] },
+  );
+  assert.equal(forbiddenGroupUse.status, 404, await forbiddenGroupUse.text());
+
+  const productDetail = await apiGet(`/v1/menu/products/${productAId}`, tokenA);
+  const productDetailBody = (await productDetail.json()) as {
+    product: { modifiers: Array<{ name: string; source: string; values: Array<{ name: string }> }> };
+  };
+  assert.equal(productDetail.status, 200, JSON.stringify(productDetailBody));
+  assert.equal(productDetailBody.product.modifiers[0]?.name, "Garnitures au choix");
+  assert.equal(productDetailBody.product.modifiers[0]?.values.length, 2);
+  assert.ok(
+    productDetailBody.product.modifiers.every((group) =>
+      group.values.every((value) => value.name !== "Tenant B Secret Sauce"),
+    ),
+  );
+});
+
+test("menu modifier API exposes category-wide inherited groups on product detail", async () => {
+  const tokenA = tokenFor(businessAId, userAId, ownerRoleAId);
+  const createGroupResponse = await apiJson("/v1/menu/modifier-groups", "POST", tokenA, {
+    localizedNames: { fr: "Sauce au choix" },
+    type: "single_select",
+    required: true,
+    minSelect: 1,
+    maxSelect: 1,
+    freeQuantity: 0,
+    extraPrice: null,
+    attachScope: "category",
+    reusable: true,
+    values: [
+      {
+        name: "Harissa",
+        localizedNames: { fr: "Harissa" },
+        priceAddition: "0.00",
+        position: 0,
+        available: true,
+        recipeHookKey: null,
+      },
+    ],
+  });
+  const createGroupBody = (await createGroupResponse.json()) as { group: { id: string } };
+  assert.equal(createGroupResponse.status, 201, JSON.stringify(createGroupBody));
+
+  const attachResponse = await apiJson(
+    `/v1/menu/categories/${categoryAId}/modifier-groups`,
+    "PUT",
+    tokenA,
+    { groupTemplateIds: [createGroupBody.group.id] },
+  );
+  assert.equal(attachResponse.status, 200, await attachResponse.text());
+
+  const productDetail = await apiGet(`/v1/menu/products/${productAId}`, tokenA);
+  const productDetailBody = (await productDetail.json()) as {
+    product: {
+      modifiers: Array<{
+        templateId: string | null;
+        source: string;
+        sourceCategoryId: string | null;
+        sourceCategoryName: string | null;
+      }>;
+    };
+  };
+  assert.equal(productDetail.status, 200, JSON.stringify(productDetailBody));
+  const inherited = productDetailBody.product.modifiers.find(
+    (group) => group.templateId === createGroupBody.group.id,
+  );
+  assert.equal(inherited?.source, "category");
+  assert.equal(inherited?.sourceCategoryId, categoryAId);
+  assert.equal(inherited?.sourceCategoryName, "Tenant A Grillades");
+});
+
+test("menu category API enforces one-level subcategory depth", async () => {
+  const tokenA = tokenFor(businessAId, userAId, ownerRoleAId);
+  const childResponse = await apiJson("/v1/menu/categories", "POST", tokenA, {
+    parentId: categoryAId,
+    localizedNames: { fr: "Brochettes" },
+    slug: `brochettes-${randomUUID().slice(0, 8)}`,
+    position: 1,
+  });
+  const childBody = (await childResponse.json()) as { id: string };
+  assert.equal(childResponse.status, 201, JSON.stringify(childBody));
+
+  const grandchildResponse = await apiJson("/v1/menu/categories", "POST", tokenA, {
+    parentId: childBody.id,
+    localizedNames: { fr: "Poulet" },
+    slug: `poulet-${randomUUID().slice(0, 8)}`,
+    position: 0,
+  });
+  const body = await grandchildResponse.json();
+  assert.equal(grandchildResponse.status, 400, JSON.stringify(body));
+  assert.match(JSON.stringify(body), /category-depth-exceeded/);
 });
 
 async function seedRolesAndPermissions(businessId: string): Promise<void> {

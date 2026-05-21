@@ -8,6 +8,7 @@ const getMock = vi.fn();
 const postMock = vi.fn();
 const patchMock = vi.fn();
 const deleteMock = vi.fn();
+const putMock = vi.fn();
 
 vi.mock("../auth/api", () => ({
   apiClient: () => ({
@@ -15,6 +16,7 @@ vi.mock("../auth/api", () => ({
     POST: postMock,
     PATCH: patchMock,
     DELETE: deleteMock,
+    PUT: putMock,
   }),
   readResponseProblem: () => ({}),
 }));
@@ -85,6 +87,28 @@ describe("MenuCatalogPage", () => {
                 },
               ],
               images: [],
+              modifiers: [],
+            },
+          ],
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          groups: [
+            {
+              id: "mod-1",
+              name: "Sauce",
+              localizedNames: { fr: "Sauce" },
+              type: "single_select",
+              required: false,
+              minSelect: 0,
+              maxSelect: 1,
+              freeQuantity: 0,
+              extraPrice: null,
+              attachScope: "product",
+              reusable: true,
+              position: 0,
+              values: [],
             },
           ],
         },
@@ -122,6 +146,7 @@ describe("MenuCatalogPage", () => {
         },
       })
       .mockResolvedValueOnce({ data: { products: [] } })
+      .mockResolvedValueOnce({ data: { groups: [] } })
       .mockResolvedValueOnce({
         data: {
           categories: [
@@ -141,8 +166,10 @@ describe("MenuCatalogPage", () => {
           ],
         },
       })
-      .mockResolvedValueOnce({ data: { products: [] } });
+      .mockResolvedValueOnce({ data: { products: [] } })
+      .mockResolvedValueOnce({ data: { groups: [] } });
     postMock.mockResolvedValueOnce({ data: { product: { id: "prod-1" } } });
+    putMock.mockResolvedValueOnce({ data: { groups: [] } });
 
     render(<MenuCatalogPage />);
 
@@ -159,7 +186,7 @@ describe("MenuCatalogPage", () => {
     fireEvent.change(screen.getByLabelText("Prix 1"), {
       target: { value: "90.00" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Enregistrer" })[0]!);
 
     await waitFor(() => {
       expect(postMock).toHaveBeenCalledWith("/v1/menu/products", {

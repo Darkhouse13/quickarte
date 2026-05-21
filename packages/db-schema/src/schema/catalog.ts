@@ -7,6 +7,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -34,6 +35,11 @@ export const productVariantPricingModeEnum = pgEnum(
   "product_variant_pricing_mode",
   ["fixed", "variable_pos"],
 );
+
+export const modifierAttachScopeEnum = pgEnum("modifier_attach_scope", [
+  "product",
+  "category",
+]);
 
 export const categories = pgTable(
   "categories",
@@ -230,6 +236,118 @@ export const productImages = pgTable(
   }),
 );
 
+export const modifierGroupTemplates = pgTable(
+  "modifier_group_templates",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    localizedNames: jsonb("localized_names")
+      .$type<Record<string, string>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    type: optionTypeEnum("type").notNull().default("single_select"),
+    required: boolean("required").notNull().default(false),
+    minSelect: integer("min_select").notNull().default(0),
+    maxSelect: integer("max_select"),
+    freeQuantity: integer("free_quantity").notNull().default(0),
+    extraPrice: numeric("extra_price", { precision: 10, scale: 2 }),
+    attachScope: modifierAttachScopeEnum("attach_scope").notNull().default("product"),
+    reusable: boolean("reusable").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (table) => ({
+    businessIdx: index("modifier_group_templates_business_idx").on(
+      table.businessId,
+      table.deletedAt,
+    ),
+    selectBoundsCheck: check(
+      "modifier_group_templates_select_bounds_check",
+      sql`${table.minSelect} >= 0 and (${table.maxSelect} is null or ${table.maxSelect} >= ${table.minSelect})`,
+    ),
+    freeQuantityCheck: check(
+      "modifier_group_templates_free_quantity_check",
+      sql`${table.freeQuantity} >= 0`,
+    ),
+  }),
+);
+
+export const modifierValueTemplates = pgTable(
+  "modifier_value_templates",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    groupTemplateId: uuid("group_template_id")
+      .notNull()
+      .references(() => modifierGroupTemplates.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    localizedNames: jsonb("localized_names")
+      .$type<Record<string, string>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    priceAddition: numeric("price_addition", { precision: 10, scale: 2 })
+      .notNull()
+      .default("0"),
+    position: integer("position").notNull().default(0),
+    available: boolean("available").notNull().default(true),
+    recipeHookKey: text("recipe_hook_key"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (table) => ({
+    groupPositionIdx: index("modifier_value_templates_group_position_idx").on(
+      table.groupTemplateId,
+      table.position,
+    ),
+    businessIdx: index("modifier_value_templates_business_idx").on(table.businessId),
+  }),
+);
+
+export const categoryModifierGroups = pgTable(
+  "category_modifier_groups",
+  {
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "cascade" }),
+    groupTemplateId: uuid("group_template_id")
+      .notNull()
+      .references(() => modifierGroupTemplates.id, { onDelete: "cascade" }),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.categoryId, table.groupTemplateId] }),
+    businessIdx: index("category_modifier_groups_business_idx").on(table.businessId),
+    categoryPositionIdx: index("category_modifier_groups_category_position_idx").on(
+      table.categoryId,
+      table.position,
+    ),
+  }),
+);
+
 export const productOptions = pgTable(
   "product_options",
   {
@@ -237,11 +355,20 @@ export const productOptions = pgTable(
     productId: uuid("product_id")
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
+    templateId: uuid("template_id").references(() => modifierGroupTemplates.id, {
+      onDelete: "set null",
+    }),
     name: text("name").notNull(),
+    localizedNames: jsonb("localized_names")
+      .$type<Record<string, string>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     type: optionTypeEnum("type").notNull().default("single_select"),
     required: boolean("required").notNull().default(false),
     minSelect: integer("min_select").notNull().default(0),
     maxSelect: integer("max_select"),
+    freeQuantity: integer("free_quantity").notNull().default(0),
+    extraPrice: numeric("extra_price", { precision: 10, scale: 2 }),
     position: integer("position").notNull().default(0),
     available: boolean("available").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -267,6 +394,13 @@ export const optionValues = pgTable(
       .notNull()
       .references(() => productOptions.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    templateValueId: uuid("template_value_id").references(() => modifierValueTemplates.id, {
+      onDelete: "set null",
+    }),
+    localizedNames: jsonb("localized_names")
+      .$type<Record<string, string>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     priceAddition: numeric("price_addition", { precision: 10, scale: 2 })
       .notNull()
       .default("0"),
@@ -299,6 +433,7 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
   }),
   children: many(categories, { relationName: "category_parent" }),
   products: many(products),
+  categoryModifierGroups: many(categoryModifierGroups),
 }));
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -337,6 +472,42 @@ export const productImagesRelations = relations(productImages, ({ one }) => ({
   }),
 }));
 
+export const modifierGroupTemplatesRelations = relations(
+  modifierGroupTemplates,
+  ({ one, many }) => ({
+    business: one(businesses, {
+      fields: [modifierGroupTemplates.businessId],
+      references: [businesses.id],
+    }),
+    values: many(modifierValueTemplates),
+    categoryAttachments: many(categoryModifierGroups),
+  }),
+);
+
+export const modifierValueTemplatesRelations = relations(
+  modifierValueTemplates,
+  ({ one }) => ({
+    group: one(modifierGroupTemplates, {
+      fields: [modifierValueTemplates.groupTemplateId],
+      references: [modifierGroupTemplates.id],
+    }),
+  }),
+);
+
+export const categoryModifierGroupsRelations = relations(
+  categoryModifierGroups,
+  ({ one }) => ({
+    category: one(categories, {
+      fields: [categoryModifierGroups.categoryId],
+      references: [categories.id],
+    }),
+    group: one(modifierGroupTemplates, {
+      fields: [categoryModifierGroups.groupTemplateId],
+      references: [modifierGroupTemplates.id],
+    }),
+  }),
+);
+
 export const productOptionsRelations = relations(
   productOptions,
   ({ one, many }) => ({
@@ -345,6 +516,10 @@ export const productOptionsRelations = relations(
       references: [products.id],
     }),
     values: many(optionValues),
+    template: one(modifierGroupTemplates, {
+      fields: [productOptions.templateId],
+      references: [modifierGroupTemplates.id],
+    }),
   }),
 );
 
@@ -353,6 +528,10 @@ export const optionValuesRelations = relations(optionValues, ({ one }) => ({
     fields: [optionValues.optionId],
     references: [productOptions.id],
   }),
+  templateValue: one(modifierValueTemplates, {
+    fields: [optionValues.templateValueId],
+    references: [modifierValueTemplates.id],
+  }),
 }));
 
 export type Category = typeof categories.$inferSelect;
@@ -360,9 +539,14 @@ export type Product = typeof products.$inferSelect;
 export type ProductVariant = typeof productVariants.$inferSelect;
 export type ProductImage = typeof productImages.$inferSelect;
 export type MenuLocaleSettings = typeof menuLocaleSettings.$inferSelect;
+export type ModifierGroupTemplate = typeof modifierGroupTemplates.$inferSelect;
+export type ModifierValueTemplate = typeof modifierValueTemplates.$inferSelect;
+export type CategoryModifierGroup = typeof categoryModifierGroups.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
 export type NewProduct = typeof products.$inferInsert;
 export type NewProductVariant = typeof productVariants.$inferInsert;
 export type NewProductImage = typeof productImages.$inferInsert;
+export type NewModifierGroupTemplate = typeof modifierGroupTemplates.$inferInsert;
+export type NewModifierValueTemplate = typeof modifierValueTemplates.$inferInsert;
 export type ProductOption = typeof productOptions.$inferSelect;
 export type OptionValue = typeof optionValues.$inferSelect;

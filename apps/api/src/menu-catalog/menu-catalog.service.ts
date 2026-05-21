@@ -7,22 +7,32 @@ import {
 } from "@nestjs/common";
 import {
   categories,
+  categoryModifierGroups,
   menuLocaleSettings,
+  modifierGroupTemplates,
+  modifierValueTemplates,
+  optionValues,
   productImages,
+  productOptions,
   products,
   productVariants,
 } from "@quickarte/db-schema";
-import { and, asc, eq, ilike, inArray, isNull, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, ilike, inArray, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 import {
   DatabaseService,
   type TenantedDrizzleClient,
 } from "../database/database.service";
 import type {
   CategoryResponse,
+  AttachModifierGroupsInput,
   CreateCategoryInput,
   CreateProductInput,
   ImageResponse,
+  ModifierGroupInput,
+  ModifierGroupResponse,
+  ModifierGroupTemplateResponse,
   ProductResponse,
+  UpdateModifierGroupInput,
   ReplaceImagesInput,
   ReplaceVariantsInput,
   UpdateCategoryInput,
@@ -39,6 +49,193 @@ export class MenuCatalogService {
   constructor(
     @Inject(DatabaseService) private readonly databaseService: DatabaseService,
   ) {}
+
+  async listModifierGroups(businessId: string): Promise<ModifierGroupTemplateResponse[]> {
+    return this.databaseService.withTenant(businessId, (tx) =>
+      this.listModifierGroupsInsideTenant(tx, businessId),
+    );
+  }
+
+  async createModifierGroup(
+    businessId: string,
+    input: ModifierGroupInput,
+  ): Promise<ModifierGroupTemplateResponse> {
+    return this.databaseService.withTenant(businessId, async (tx) => {
+      this.validateModifierGroup(input);
+      const fallbackName = await this.fallbackText(tx, businessId, input.localizedNames);
+      const [created] = await tx
+        .insert(modifierGroupTemplates)
+        .values({
+          businessId,
+          name: input.name?.trim() || fallbackName,
+          localizedNames: input.localizedNames,
+          type: input.type,
+          required: input.required,
+          minSelect: input.minSelect,
+          maxSelect: input.maxSelect ?? null,
+          freeQuantity: input.freeQuantity,
+          extraPrice: input.extraPrice ?? null,
+          attachScope: input.attachScope,
+          reusable: input.reusable,
+        })
+        .returning();
+      if (!created) throw new Error("Modifier group creation failed");
+      await this.replaceModifierValueRows(tx, businessId, created.id, input.values);
+      return this.getModifierGroupInsideTenant(tx, businessId, created.id);
+    });
+  }
+
+  async updateModifierGroup(
+    businessId: string,
+    groupId: string,
+    input: UpdateModifierGroupInput,
+  ): Promise<ModifierGroupTemplateResponse> {
+    return this.databaseService.withTenant(businessId, async (tx) => {
+      const existing = await this.findModifierGroupRow(tx, businessId, groupId);
+      const merged: ModifierGroupInput = {
+        name: input.name ?? existing.name,
+        localizedNames: input.localizedNames ?? existing.localizedNames,
+        type: input.type ?? existing.type,
+        required: input.required ?? existing.required,
+        minSelect: input.minSelect ?? existing.minSelect,
+        maxSelect: input.maxSelect === undefined ? existing.maxSelect : input.maxSelect,
+        freeQuantity: input.freeQuantity ?? existing.freeQuantity,
+        extraPrice: input.extraPrice === undefined ? existing.extraPrice : input.extraPrice,
+        attachScope: input.attachScope ?? existing.attachScope,
+        reusable: input.reusable ?? existing.reusable,
+        values: input.values ?? (await this.listModifierValueInputs(tx, businessId, groupId)),
+      };
+      this.validateModifierGroup(merged);
+      const fallbackName = input.localizedNames
+        ? await this.fallbackText(tx, businessId, input.localizedNames)
+        : existing.name;
+      await tx
+        .update(modifierGroupTemplates)
+        .set({
+          name: input.name?.trim() || fallbackName,
+          localizedNames: merged.localizedNames,
+          type: merged.type,
+          required: merged.required,
+          minSelect: merged.minSelect,
+          maxSelect: merged.maxSelect ?? null,
+          freeQuantity: merged.freeQuantity,
+          extraPrice: merged.extraPrice ?? null,
+          attachScope: merged.attachScope,
+          reusable: merged.reusable,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(modifierGroupTemplates.businessId, businessId), eq(modifierGroupTemplates.id, groupId)));
+      if (input.values) {
+        await this.replaceModifierValueRows(tx, businessId, groupId, input.values);
+      }
+      return this.getModifierGroupInsideTenant(tx, businessId, groupId);
+    });
+  }
+
+  async softDeleteModifierGroup(businessId: string, groupId: string): Promise<void> {
+    await this.databaseService.withTenant(businessId, async (tx) => {
+      await this.findModifierGroupRow(tx, businessId, groupId);
+      await tx
+        .update(modifierGroupTemplates)
+        .set({ deletedAt: new Date(), updatedAt: new Date() })
+        .where(and(eq(modifierGroupTemplates.businessId, businessId), eq(modifierGroupTemplates.id, groupId)));
+    });
+  }
+
+  async attachModifierGroupsToProduct(
+    businessId: string,
+    productId: string,
+    input: AttachModifierGroupsInput,
+  ): Promise<ModifierGroupResponse[]> {
+    return this.databaseService.withTenant(businessId, async (tx) => {
+      const product = await this.findProductRow(tx, businessId, productId);
+      const groups = await this.findModifierGroupRows(tx, businessId, input.groupTemplateIds);
+      await tx
+        .delete(productOptions)
+        .where(
+          and(
+            eq(productOptions.productId, productId),
+            isNotNull(productOptions.templateId),
+          ),
+        );
+
+      for (const [index, group] of groups.entries()) {
+        const [createdOption] = await tx
+          .insert(productOptions)
+          .values({
+            productId,
+            templateId: group.id,
+            name: group.name,
+            localizedNames: group.localizedNames,
+            type: group.type,
+            required: group.required,
+            minSelect: group.minSelect,
+            maxSelect: group.maxSelect,
+            freeQuantity: group.freeQuantity,
+            extraPrice: group.extraPrice,
+            position: index,
+            available: true,
+          })
+          .returning();
+        if (!createdOption) throw new Error("Product modifier materialization failed");
+        const values = await this.listModifierValueRows(tx, businessId, group.id);
+        if (values.length > 0) {
+          await tx.insert(optionValues).values(
+            values.map((value) => ({
+              optionId: createdOption.id,
+              templateValueId: value.id,
+              name: value.name,
+              localizedNames: value.localizedNames,
+              priceAddition: value.priceAddition,
+              position: value.position,
+              available: value.available,
+            })),
+          );
+        }
+      }
+
+      return (await this.hydrateProductModifiers(tx, businessId, [product])).get(productId) ?? [];
+    });
+  }
+
+  async attachModifierGroupsToCategory(
+    businessId: string,
+    categoryId: string,
+    input: AttachModifierGroupsInput,
+  ): Promise<ModifierGroupResponse[]> {
+    return this.databaseService.withTenant(businessId, async (tx) => {
+      const category = await this.findCategoryRow(tx, businessId, categoryId);
+      const groups = await this.findModifierGroupRows(tx, businessId, input.groupTemplateIds);
+      await tx
+        .delete(categoryModifierGroups)
+        .where(
+          and(
+            eq(categoryModifierGroups.businessId, businessId),
+            eq(categoryModifierGroups.categoryId, categoryId),
+          ),
+        );
+      if (groups.length > 0) {
+        await tx.insert(categoryModifierGroups).values(
+          groups.map((group, index) => ({
+            businessId,
+            categoryId,
+            groupTemplateId: group.id,
+            position: index,
+          })),
+        );
+      }
+
+      const syntheticProduct = {
+        id: "__category_preview__",
+        categoryId: category.id,
+      } as typeof products.$inferSelect;
+      return (
+        (await this.hydrateProductModifiers(tx, businessId, [syntheticProduct])).get(
+          syntheticProduct.id,
+        ) ?? []
+      ).filter((group) => group.source === "category");
+    });
+  }
 
   async listCategories(businessId: string): Promise<CategoryResponse[]> {
     return this.databaseService.withTenant(businessId, async (tx) => {
@@ -435,6 +632,7 @@ export class MenuCatalogService {
       .from(productImages)
       .where(and(eq(productImages.businessId, businessId), inArray(productImages.productId, productIds)))
       .orderBy(asc(productImages.position));
+    const modifiersByProduct = await this.hydrateProductModifiers(tx, businessId, rows);
 
     return rows.map((row) =>
       this.toProductResponse(
@@ -443,8 +641,296 @@ export class MenuCatalogService {
           .filter((variantRow) => variantRow.variant.productId === row.id)
           .map((variantRow) => variantRow.variant),
         imageRows.filter((image) => image.productId === row.id),
+        modifiersByProduct.get(row.id) ?? [],
       ),
     );
+  }
+
+  private async listModifierGroupsInsideTenant(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+  ): Promise<ModifierGroupTemplateResponse[]> {
+    const rows = await tx
+      .select()
+      .from(modifierGroupTemplates)
+      .where(
+        and(
+          eq(modifierGroupTemplates.businessId, businessId),
+          isNull(modifierGroupTemplates.deletedAt),
+        ),
+      )
+      .orderBy(asc(modifierGroupTemplates.name));
+    if (rows.length === 0) return [];
+    const valuesByGroup = await this.listModifierValuesByGroup(
+      tx,
+      businessId,
+      rows.map((row) => row.id),
+    );
+    return rows.map((row) =>
+      this.toModifierGroupTemplateResponse(row, valuesByGroup.get(row.id) ?? []),
+    );
+  }
+
+  private async getModifierGroupInsideTenant(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    groupId: string,
+  ): Promise<ModifierGroupTemplateResponse> {
+    const row = await this.findModifierGroupRow(tx, businessId, groupId);
+    const values = await this.listModifierValueRows(tx, businessId, groupId);
+    return this.toModifierGroupTemplateResponse(row, values);
+  }
+
+  private async findModifierGroupRow(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    groupId: string,
+  ) {
+    const [row] = await tx
+      .select()
+      .from(modifierGroupTemplates)
+      .where(
+        and(
+          eq(modifierGroupTemplates.businessId, businessId),
+          eq(modifierGroupTemplates.id, groupId),
+          isNull(modifierGroupTemplates.deletedAt),
+        ),
+      )
+      .limit(1);
+    if (!row) throw new NotFoundException("Modifier group not found");
+    return row;
+  }
+
+  private async findModifierGroupRows(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    groupIds: string[],
+  ) {
+    if (groupIds.length === 0) return [];
+    const rows = await tx
+      .select()
+      .from(modifierGroupTemplates)
+      .where(
+        and(
+          eq(modifierGroupTemplates.businessId, businessId),
+          inArray(modifierGroupTemplates.id, groupIds),
+          isNull(modifierGroupTemplates.deletedAt),
+        ),
+      );
+    if (rows.length !== new Set(groupIds).size) {
+      throw new NotFoundException("Modifier group not found");
+    }
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    return groupIds.map((id) => byId.get(id)!);
+  }
+
+  private async replaceModifierValueRows(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    groupId: string,
+    values: ModifierGroupInput["values"],
+  ): Promise<void> {
+    await tx
+      .delete(modifierValueTemplates)
+      .where(
+        and(
+          eq(modifierValueTemplates.businessId, businessId),
+          eq(modifierValueTemplates.groupTemplateId, groupId),
+        ),
+      );
+    if (values.length === 0) return;
+    await tx.insert(modifierValueTemplates).values(
+      values.map((value, index) => ({
+        id: value.id,
+        businessId,
+        groupTemplateId: groupId,
+        name: value.name,
+        localizedNames: value.localizedNames,
+        priceAddition: value.priceAddition,
+        position: value.position ?? index,
+        available: value.available,
+        recipeHookKey: value.recipeHookKey ?? null,
+      })),
+    );
+  }
+
+  private async listModifierValueRows(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    groupId: string,
+  ) {
+    return tx
+      .select()
+      .from(modifierValueTemplates)
+      .where(
+        and(
+          eq(modifierValueTemplates.businessId, businessId),
+          eq(modifierValueTemplates.groupTemplateId, groupId),
+          isNull(modifierValueTemplates.deletedAt),
+        ),
+      )
+      .orderBy(asc(modifierValueTemplates.position), asc(modifierValueTemplates.name));
+  }
+
+  private async listModifierValueInputs(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    groupId: string,
+  ): Promise<ModifierGroupInput["values"]> {
+    const rows = await this.listModifierValueRows(tx, businessId, groupId);
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      localizedNames: row.localizedNames,
+      priceAddition: row.priceAddition,
+      position: row.position,
+      available: row.available,
+      recipeHookKey: row.recipeHookKey,
+    }));
+  }
+
+  private async listModifierValuesByGroup(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    groupIds: string[],
+  ) {
+    const valuesByGroup = new Map<string, Array<typeof modifierValueTemplates.$inferSelect>>();
+    if (groupIds.length === 0) return valuesByGroup;
+    const rows = await tx
+      .select()
+      .from(modifierValueTemplates)
+      .where(
+        and(
+          eq(modifierValueTemplates.businessId, businessId),
+          inArray(modifierValueTemplates.groupTemplateId, groupIds),
+          isNull(modifierValueTemplates.deletedAt),
+        ),
+      )
+      .orderBy(asc(modifierValueTemplates.position), asc(modifierValueTemplates.name));
+    for (const row of rows) {
+      const bucket = valuesByGroup.get(row.groupTemplateId) ?? [];
+      bucket.push(row);
+      valuesByGroup.set(row.groupTemplateId, bucket);
+    }
+    return valuesByGroup;
+  }
+
+  private validateModifierGroup(input: ModifierGroupInput): void {
+    if (input.maxSelect !== null && input.maxSelect !== undefined && input.maxSelect < input.minSelect) {
+      throw new BadRequestException({
+        type: `${PROBLEM_BASE_URL}/modifier-selection-bounds-invalid`,
+        message: "max_select must be greater than or equal to min_select.",
+      });
+    }
+    if (input.type === "single_select" && input.maxSelect && input.maxSelect > 1) {
+      throw new BadRequestException({
+        type: `${PROBLEM_BASE_URL}/modifier-single-select-max-invalid`,
+        message: "single_select groups cannot allow more than one selection.",
+      });
+    }
+    if (input.required && input.minSelect < 1) {
+      throw new BadRequestException({
+        type: `${PROBLEM_BASE_URL}/modifier-required-min-invalid`,
+        message: "Required modifier groups must require at least one selection.",
+      });
+    }
+  }
+
+  private async hydrateProductModifiers(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    rows: Array<typeof products.$inferSelect>,
+  ): Promise<Map<string, ModifierGroupResponse[]>> {
+    const result = new Map<string, ModifierGroupResponse[]>();
+    if (rows.length === 0) return result;
+    const productIds = rows.map((row) => row.id).filter((id) => id !== "__category_preview__");
+    const categoryIds = Array.from(
+      new Set(rows.map((row) => row.categoryId).filter((id): id is string => Boolean(id))),
+    );
+
+    const optionRows =
+      productIds.length > 0
+        ? await tx
+            .select({ option: productOptions })
+            .from(productOptions)
+            .innerJoin(products, eq(productOptions.productId, products.id))
+            .where(
+              and(
+                eq(products.businessId, businessId),
+                inArray(productOptions.productId, productIds),
+              ),
+            )
+            .orderBy(asc(productOptions.position), asc(productOptions.name))
+        : [];
+    const optionIds = optionRows.map((row) => row.option.id);
+    const valueRows =
+      optionIds.length > 0
+        ? await tx
+            .select()
+            .from(optionValues)
+            .where(inArray(optionValues.optionId, optionIds))
+            .orderBy(asc(optionValues.position), asc(optionValues.name))
+        : [];
+    const productValuesByOption = new Map<string, Array<typeof optionValues.$inferSelect>>();
+    for (const row of valueRows) {
+      const bucket = productValuesByOption.get(row.optionId) ?? [];
+      bucket.push(row);
+      productValuesByOption.set(row.optionId, bucket);
+    }
+
+    for (const row of optionRows) {
+      const bucket = result.get(row.option.productId) ?? [];
+      bucket.push(this.toProductModifierGroupResponse(row.option, productValuesByOption.get(row.option.id) ?? []));
+      result.set(row.option.productId, bucket);
+    }
+
+    const categoryRows =
+      categoryIds.length > 0
+        ? await tx
+            .select({
+              attachment: categoryModifierGroups,
+              group: modifierGroupTemplates,
+              categoryName: categories.name,
+            })
+            .from(categoryModifierGroups)
+            .innerJoin(categories, eq(categoryModifierGroups.categoryId, categories.id))
+            .innerJoin(
+              modifierGroupTemplates,
+              eq(categoryModifierGroups.groupTemplateId, modifierGroupTemplates.id),
+            )
+            .where(
+              and(
+                eq(categoryModifierGroups.businessId, businessId),
+                eq(categories.businessId, businessId),
+                inArray(categoryModifierGroups.categoryId, categoryIds),
+                isNull(categories.deletedAt),
+                isNull(modifierGroupTemplates.deletedAt),
+              ),
+            )
+            .orderBy(asc(categoryModifierGroups.position), asc(modifierGroupTemplates.name))
+        : [];
+    const groupIds = categoryRows.map((row) => row.group.id);
+    const templateValuesByGroup = await this.listModifierValuesByGroup(tx, businessId, groupIds);
+
+    for (const product of rows) {
+      if (!product.categoryId) continue;
+      const inheritedGroups = categoryRows
+        .filter((row) => row.attachment.categoryId === product.categoryId)
+        .map((row) =>
+          this.toCategoryModifierGroupResponse(
+            row.group,
+            templateValuesByGroup.get(row.group.id) ?? [],
+            row.attachment,
+            row.categoryName,
+          ),
+        );
+      if (inheritedGroups.length === 0) continue;
+      const bucket = result.get(product.id) ?? [];
+      bucket.push(...inheritedGroups);
+      result.set(product.id, bucket);
+    }
+
+    return result;
   }
 
   private async getProductInsideTenant(
@@ -722,6 +1208,7 @@ export class MenuCatalogService {
     row: typeof products.$inferSelect,
     variants: Array<typeof productVariants.$inferSelect>,
     images: Array<typeof productImages.$inferSelect>,
+    modifiers: ModifierGroupResponse[],
   ): ProductResponse {
     return {
       id: row.id,
@@ -756,6 +1243,107 @@ export class MenuCatalogService {
         altText: image.altText,
         position: image.position,
         isPrimary: image.isPrimary,
+      })),
+      modifiers,
+    };
+  }
+
+  private toModifierGroupTemplateResponse(
+    row: typeof modifierGroupTemplates.$inferSelect,
+    values: Array<typeof modifierValueTemplates.$inferSelect>,
+  ): ModifierGroupTemplateResponse {
+    return {
+      id: row.id,
+      name: row.name,
+      localizedNames: row.localizedNames,
+      type: row.type,
+      required: row.required,
+      minSelect: row.minSelect,
+      maxSelect: row.maxSelect,
+      freeQuantity: row.freeQuantity,
+      extraPrice: row.extraPrice,
+      attachScope: row.attachScope,
+      reusable: row.reusable,
+      position: 0,
+      values: values.map((value) => ({
+        id: value.id,
+        templateValueId: value.id,
+        name: value.name,
+        localizedNames: value.localizedNames,
+        priceAddition: value.priceAddition,
+        position: value.position,
+        available: value.available,
+        recipeHookKey: value.recipeHookKey,
+      })),
+    };
+  }
+
+  private toProductModifierGroupResponse(
+    row: typeof productOptions.$inferSelect,
+    values: Array<typeof optionValues.$inferSelect>,
+  ): ModifierGroupResponse {
+    return {
+      id: row.id,
+      templateId: row.templateId,
+      name: row.name,
+      localizedNames: row.localizedNames,
+      type: row.type,
+      required: row.required,
+      minSelect: row.minSelect,
+      maxSelect: row.maxSelect,
+      freeQuantity: row.freeQuantity,
+      extraPrice: row.extraPrice,
+      attachScope: "product",
+      reusable: row.templateId !== null,
+      source: "product",
+      sourceCategoryId: null,
+      sourceCategoryName: null,
+      position: row.position,
+      values: values.map((value) => ({
+        id: value.id,
+        templateValueId: value.templateValueId,
+        name: value.name,
+        localizedNames: value.localizedNames,
+        priceAddition: value.priceAddition,
+        position: value.position,
+        available: value.available,
+        recipeHookKey: null,
+      })),
+    };
+  }
+
+  private toCategoryModifierGroupResponse(
+    row: typeof modifierGroupTemplates.$inferSelect,
+    values: Array<typeof modifierValueTemplates.$inferSelect>,
+    attachment: typeof categoryModifierGroups.$inferSelect,
+    categoryName: string,
+  ): ModifierGroupResponse {
+    return {
+      id: row.id,
+      templateId: row.id,
+      name: row.name,
+      localizedNames: row.localizedNames,
+      type: row.type,
+      required: row.required,
+      minSelect: row.minSelect,
+      maxSelect: row.maxSelect,
+      freeQuantity: row.freeQuantity,
+      extraPrice: row.extraPrice,
+      attachScope: "category",
+      reusable: row.reusable,
+      source: "category",
+      sourceCategoryId: attachment.categoryId,
+      sourceCategoryName: categoryName,
+      position: attachment.position,
+      values: values.map((value) => ({
+        id: value.id,
+        templateValueId: value.id,
+        name: value.name,
+        localizedNames: value.localizedNames,
+        priceAddition: value.priceAddition,
+        position: value.position,
+        available: value.available,
+        recipeHookKey: value.recipeHookKey,
       })),
     };
   }

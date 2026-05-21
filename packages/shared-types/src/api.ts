@@ -454,6 +454,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/menu/categories/{categoryId}/modifier-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["MenuCatalogController_attachModifierGroupsToCategory"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/modifier-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List reusable modifier group templates. */
+        get: operations["MenuCatalogController_listModifierGroups"];
+        put?: never;
+        post: operations["MenuCatalogController_createModifierGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/modifier-groups/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["MenuCatalogController_deleteModifierGroup"];
+        options?: never;
+        head?: never;
+        patch: operations["MenuCatalogController_updateModifierGroup"];
+        trace?: never;
+    };
     "/v1/menu/products": {
         parameters: {
             query?: never;
@@ -512,6 +561,22 @@ export interface paths {
         };
         get?: never;
         put: operations["MenuCatalogController_replaceVariants"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/products/{productId}/modifier-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["MenuCatalogController_attachModifierGroupsToProduct"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1124,6 +1189,162 @@ export interface components {
                 position: number;
             }[];
         };
+        AttachModifierGroupsDto: {
+            groupTemplateIds: string[];
+        };
+        MenuModifierGroup_Output: {
+            /** Format: uuid */
+            id: string;
+            templateId: string | null;
+            name: string;
+            localizedNames: {
+                [key: string]: string;
+            };
+            /** @enum {string} */
+            type: "single_select" | "multi_select";
+            required: boolean;
+            minSelect: number;
+            maxSelect: number | null;
+            freeQuantity: number;
+            extraPrice: string | null;
+            /** @enum {string} */
+            attachScope: "product" | "category";
+            reusable: boolean;
+            /** @enum {string} */
+            source: "product" | "category";
+            sourceCategoryId: string | null;
+            sourceCategoryName: string | null;
+            position: number;
+            values: components["schemas"]["MenuModifierValue_Output"][];
+        };
+        MenuModifierValue_Output: {
+            id: string | null;
+            templateValueId: string | null;
+            name: string;
+            localizedNames: {
+                [key: string]: string;
+            };
+            /** @description Decimal string money value, never a JS number */
+            priceAddition: string;
+            position: number;
+            available: boolean;
+            recipeHookKey: string | null;
+        };
+        MenuEffectiveModifierGroupsResponseDto_Output: {
+            groups: components["schemas"]["MenuModifierGroup_Output"][];
+        };
+        MenuModifierGroupTemplate_Output: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            localizedNames: {
+                [key: string]: string;
+            };
+            /** @enum {string} */
+            type: "single_select" | "multi_select";
+            required: boolean;
+            minSelect: number;
+            maxSelect: number | null;
+            freeQuantity: number;
+            extraPrice: string | null;
+            /** @enum {string} */
+            attachScope: "product" | "category";
+            reusable: boolean;
+            position: number;
+            values: components["schemas"]["MenuModifierValue_Output"][];
+        };
+        MenuModifierGroupsResponseDto_Output: {
+            groups: components["schemas"]["MenuModifierGroupTemplate_Output"][];
+        };
+        CreateModifierGroupDto: {
+            name?: string;
+            localizedNames: {
+                [key: string]: string;
+            };
+            /**
+             * @default single_select
+             * @enum {string}
+             */
+            type: "single_select" | "multi_select";
+            /** @default false */
+            required: boolean;
+            /** @default 0 */
+            minSelect: number;
+            maxSelect?: number | null;
+            /** @default 0 */
+            freeQuantity: number;
+            extraPrice?: string | null;
+            /**
+             * @default product
+             * @enum {string}
+             */
+            attachScope: "product" | "category";
+            /** @default true */
+            reusable: boolean;
+            values: {
+                /** Format: uuid */
+                id?: string;
+                name: string;
+                localizedNames: {
+                    [key: string]: string;
+                };
+                /**
+                 * @description Decimal string money value, never a JS number
+                 * @default 0.00
+                 */
+                priceAddition: string;
+                position: number;
+                /** @default true */
+                available: boolean;
+                recipeHookKey?: string | null;
+            }[];
+        };
+        MenuModifierGroupResponseDto_Output: {
+            group: components["schemas"]["MenuModifierGroupTemplate_Output"];
+        };
+        UpdateModifierGroupDto: {
+            name?: string;
+            localizedNames?: {
+                [key: string]: string;
+            };
+            /**
+             * @default single_select
+             * @enum {string}
+             */
+            type: "single_select" | "multi_select";
+            /** @default false */
+            required: boolean;
+            /** @default 0 */
+            minSelect: number;
+            maxSelect?: number | null;
+            /** @default 0 */
+            freeQuantity: number;
+            extraPrice?: string | null;
+            /**
+             * @default product
+             * @enum {string}
+             */
+            attachScope: "product" | "category";
+            /** @default true */
+            reusable: boolean;
+            values?: {
+                /** Format: uuid */
+                id?: string;
+                name: string;
+                localizedNames: {
+                    [key: string]: string;
+                };
+                /**
+                 * @description Decimal string money value, never a JS number
+                 * @default 0.00
+                 */
+                priceAddition: string;
+                position: number;
+                /** @default true */
+                available: boolean;
+                recipeHookKey?: string | null;
+            }[];
+        };
         MenuProduct_Output: {
             /** Format: uuid */
             id: string;
@@ -1155,6 +1376,7 @@ export interface components {
             position: number;
             variants: components["schemas"]["MenuVariant_Output"][];
             images: components["schemas"]["MenuProductImage_Output"][];
+            modifiers: components["schemas"]["MenuModifierGroup_Output"][];
         };
         MenuVariant_Output: {
             id: string | null;
@@ -2434,6 +2656,119 @@ export interface operations {
             };
         };
     };
+    MenuCatalogController_attachModifierGroupsToCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                categoryId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttachModifierGroupsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuEffectiveModifierGroupsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_listModifierGroups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuModifierGroupsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_createModifierGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateModifierGroupDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuModifierGroupResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_deleteModifierGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuDeleteResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_updateModifierGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateModifierGroupDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuModifierGroupResponseDto_Output"];
+                };
+            };
+        };
+    };
     MenuCatalogController_listProducts: {
         parameters: {
             query?: {
@@ -2591,6 +2926,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MenuVariantsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_attachModifierGroupsToProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttachModifierGroupsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuEffectiveModifierGroupsResponseDto_Output"];
                 };
             };
         };

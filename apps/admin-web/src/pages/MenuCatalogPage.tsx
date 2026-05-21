@@ -9,9 +9,14 @@ type Category = CategoriesResponse["categories"][number];
 type ProductsResponse =
   paths["/v1/menu/products"]["get"]["responses"][200]["content"]["application/json"];
 type Product = ProductsResponse["products"][number];
+type ModifierGroupsResponse =
+  paths["/v1/menu/modifier-groups"]["get"]["responses"][200]["content"]["application/json"];
+type ModifierTemplate = ModifierGroupsResponse["groups"][number];
 type ProductBody =
   paths["/v1/menu/products"]["post"]["requestBody"]["content"]["application/json"];
 type VariantBody = ProductBody["variants"][number];
+type ModifierGroupBody =
+  paths["/v1/menu/modifier-groups"]["post"]["requestBody"]["content"]["application/json"];
 type ChannelKey = keyof ProductBody["channels"];
 type LocaleCode = "fr" | "ar" | "es" | "en";
 
@@ -45,6 +50,7 @@ type ProductForm = {
   channels: ProductBody["channels"];
   variants: VariantBody[];
   imageUrl: string;
+  modifierGroupIds: string[];
 };
 
 const emptyForm: ProductForm = {
@@ -68,15 +74,39 @@ const emptyForm: ProductForm = {
   },
   variants: [emptyVariant(0)],
   imageUrl: "",
+  modifierGroupIds: [],
 };
 
 export function MenuCatalogPage() {
   const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [modifierGroups, setModifierGroups] = useState<ModifierTemplate[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [categoryModifierIds, setCategoryModifierIds] = useState<string[] | null>(null);
   const [activeLocale, setActiveLocale] = useState<LocaleCode>("fr");
   const [form, setForm] = useState<ProductForm>(emptyForm);
+  const [modifierForm, setModifierForm] = useState<ModifierGroupBody>({
+    localizedNames: { fr: "" },
+    type: "multi_select",
+    required: false,
+    minSelect: 0,
+    maxSelect: null,
+    freeQuantity: 0,
+    extraPrice: null,
+    attachScope: "product",
+    reusable: true,
+    values: [
+      {
+        name: "",
+        localizedNames: { fr: "" },
+        priceAddition: "0.00",
+        position: 0,
+        available: true,
+        recipeHookKey: null,
+      },
+    ],
+  });
   const [categoryName, setCategoryName] = useState("");
   const [subcategoryName, setSubcategoryName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -91,13 +121,30 @@ export function MenuCatalogPage() {
   const visibleProducts = products.filter(
     (product) => !selectedCategoryId || product.categoryId === selectedCategoryId,
   );
+  const inheritedCategoryModifierIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          products
+            .filter((product) => product.categoryId === selectedCategoryId)
+            .flatMap((product) =>
+              product.modifiers
+                .filter((group) => group.source === "category" && group.templateId)
+                .map((group) => group.templateId!),
+            ),
+        ),
+      ),
+    [products, selectedCategoryId],
+  );
+  const activeCategoryModifierIds = categoryModifierIds ?? inheritedCategoryModifierIds;
 
   const loadCatalog = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [categoryResponse, productResponse] = await Promise.all([
+    const [categoryResponse, productResponse, modifierResponse] = await Promise.all([
       apiClient().GET("/v1/menu/categories"),
       apiClient().GET("/v1/menu/products"),
+      apiClient().GET("/v1/menu/modifier-groups"),
     ]);
     setLoading(false);
     if (categoryResponse.error || !categoryResponse.data) {
@@ -108,8 +155,13 @@ export function MenuCatalogPage() {
       setError(t("admin.module3.catalog.loadError"));
       return;
     }
+    if (modifierResponse.error || !modifierResponse.data) {
+      setError(t("admin.module3.catalog.loadError"));
+      return;
+    }
     setCategories(categoryResponse.data.categories);
     setProducts(productResponse.data.products);
+    setModifierGroups(modifierResponse.data.groups);
     setSelectedCategoryId(
       (current) => current ?? categoryResponse.data.categories[0]?.id ?? null,
     );
@@ -180,8 +232,86 @@ export function MenuCatalogPage() {
       setError(readResponseProblem(response).detail ?? t("admin.module3.catalog.saveError"));
       return;
     }
+    const productId = response.data.product.id;
+    const modifierResponse = await apiClient().PUT(
+      "/v1/menu/products/{productId}/modifier-groups",
+      {
+        params: { path: { productId } },
+        body: { groupTemplateIds: form.modifierGroupIds },
+      },
+    );
+    if (!modifierResponse.data) {
+      setError(readResponseProblem(modifierResponse).detail ?? t("admin.module3.catalog.saveError"));
+      return;
+    }
     setMessage(t("admin.module3.catalog.saved"));
     setForm(emptyForm);
+    await loadCatalog();
+  }
+
+  async function saveCategoryModifiers() {
+    if (!selectedCategoryId) return;
+    const response = await apiClient().PUT(
+      "/v1/menu/categories/{categoryId}/modifier-groups",
+      {
+        params: { path: { categoryId: selectedCategoryId } },
+        body: { groupTemplateIds: activeCategoryModifierIds },
+      },
+    );
+    if (!response.data) {
+      setError(readResponseProblem(response).detail ?? t("admin.module3.catalog.saveError"));
+      return;
+    }
+    setMessage(t("admin.module3.catalog.saved"));
+    await loadCatalog();
+  }
+
+  async function createModifierGroup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const values = modifierForm.values
+      .filter((value) => value.name.trim() || value.localizedNames.fr?.trim())
+      .map((value, position) => ({
+        ...value,
+        name: value.name.trim() || value.localizedNames.fr?.trim() || "",
+        localizedNames: compactLocaleMap(value.localizedNames),
+        priceAddition: value.priceAddition || "0.00",
+        position,
+      }));
+    if (!modifierForm.localizedNames.fr?.trim() || values.length === 0) return;
+    const response = await apiClient().POST("/v1/menu/modifier-groups", {
+      body: {
+        ...modifierForm,
+        localizedNames: compactLocaleMap(modifierForm.localizedNames),
+        name: modifierForm.localizedNames.fr,
+        extraPrice: modifierForm.extraPrice || null,
+        values,
+      },
+    });
+    if (!response.data) {
+      setError(readResponseProblem(response).detail ?? t("admin.module3.catalog.saveError"));
+      return;
+    }
+    setModifierForm({
+      localizedNames: { fr: "" },
+      type: "multi_select",
+      required: false,
+      minSelect: 0,
+      maxSelect: null,
+      freeQuantity: 0,
+      extraPrice: null,
+      attachScope: "product",
+      reusable: true,
+      values: [
+        {
+          name: "",
+          localizedNames: { fr: "" },
+          priceAddition: "0.00",
+          position: 0,
+          available: true,
+          recipeHookKey: null,
+        },
+      ],
+    });
     await loadCatalog();
   }
 
@@ -233,6 +363,9 @@ export function MenuCatalogPage() {
         unitLabel: variant.unitLabel,
       })),
       imageUrl: product.images.find((image) => image.isPrimary)?.url ?? product.image ?? "",
+      modifierGroupIds: product.modifiers
+        .filter((group) => group.source === "product" && group.templateId)
+        .map((group) => group.templateId!),
     });
   }
 
@@ -283,6 +416,43 @@ export function MenuCatalogPage() {
     }));
   }
 
+  function toggleProductModifier(groupId: string) {
+    setForm((current) => ({
+      ...current,
+      modifierGroupIds: toggleId(current.modifierGroupIds, groupId),
+    }));
+  }
+
+  function toggleCategoryModifier(groupId: string) {
+    setCategoryModifierIds((current) => toggleId(current ?? inheritedCategoryModifierIds, groupId));
+  }
+
+  function addModifierValueRow() {
+    setModifierForm((current) => ({
+      ...current,
+      values: [
+        ...current.values,
+        {
+          name: "",
+          localizedNames: { fr: "" },
+          priceAddition: "0.00",
+          position: current.values.length,
+          available: true,
+          recipeHookKey: null,
+        },
+      ],
+    }));
+  }
+
+  function updateModifierValue(index: number, patch: Partial<ModifierGroupBody["values"][number]>) {
+    setModifierForm((current) => ({
+      ...current,
+      values: current.values.map((value, currentIndex) =>
+        currentIndex === index ? { ...value, ...patch } : value,
+      ),
+    }));
+  }
+
   return (
     <section className="menu-builder-page">
       <div className="page-heading">
@@ -319,6 +489,7 @@ export function MenuCatalogPage() {
                   type="button"
                   onClick={() => {
                     setSelectedCategoryId(category.id);
+                    setCategoryModifierIds(null);
                     setForm((current) => ({ ...current, categoryId: category.id }));
                   }}
                 >
@@ -336,6 +507,7 @@ export function MenuCatalogPage() {
                     type="button"
                     onClick={() => {
                       setSelectedCategoryId(child.id);
+                      setCategoryModifierIds(null);
                       setForm((current) => ({ ...current, categoryId: child.id }));
                     }}
                   >
@@ -348,6 +520,7 @@ export function MenuCatalogPage() {
                     value={selectedCategoryId === category.id ? subcategoryName : ""}
                     onChange={(event) => {
                       setSelectedCategoryId(category.id);
+                      setCategoryModifierIds(null);
                       setSubcategoryName(event.target.value);
                     }}
                     placeholder={t("admin.module3.catalog.subcategoryName")}
@@ -520,7 +693,178 @@ export function MenuCatalogPage() {
               ))}
             </div>
           </section>
+
+          <section className="modifier-panel">
+            <div className="section-heading-row">
+              <h3>{t("admin.module3.catalog.modifiers")}</h3>
+              <span className="status-pill">{t("admin.module3.catalog.productScope")}</span>
+            </div>
+            <div className="modifier-checklist">
+              {modifierGroups.map((group) => (
+                <label className="toggle-row modifier-choice" key={group.id}>
+                  <input
+                    checked={form.modifierGroupIds.includes(group.id)}
+                    type="checkbox"
+                    onChange={() => toggleProductModifier(group.id)}
+                  />
+                  <span>
+                    {group.localizedNames.fr ?? group.name}
+                    {group.freeQuantity > 0
+                      ? ` - ${group.freeQuantity} ${t("admin.module3.catalog.freeThen")} ${group.extraPrice ?? "0.00"}`
+                      : ""}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {form.id
+              ? products
+                  .find((product) => product.id === form.id)
+                  ?.modifiers.filter((group) => group.source === "category")
+                  .map((group) => (
+                    <span className="inherited-badge" key={`${group.sourceCategoryId}-${group.id}`}>
+                      {group.name} - {t("admin.module3.catalog.inheritedFrom")} - {group.sourceCategoryName}
+                    </span>
+                  ))
+              : null}
+          </section>
         </form>
+
+        <aside className="modifier-library-panel">
+          <form onSubmit={(event) => void createModifierGroup(event)}>
+            <div className="section-heading-row">
+              <h2>{t("admin.module3.catalog.modifierLibrary")}</h2>
+              <button type="submit">{t("admin.module3.catalog.add")}</button>
+            </div>
+            <label>
+              <span>{t("admin.module3.catalog.groupName")}</span>
+              <input
+                value={modifierForm.localizedNames.fr ?? ""}
+                onChange={(event) =>
+                  setModifierForm((current) => ({
+                    ...current,
+                    localizedNames: { ...current.localizedNames, fr: event.target.value },
+                  }))
+                }
+              />
+            </label>
+            <div className="editor-fields two">
+              <label>
+                <span>{t("admin.module3.catalog.groupType")}</span>
+                <select
+                  value={modifierForm.type}
+                  onChange={(event) =>
+                    setModifierForm((current) => ({
+                      ...current,
+                      type: event.target.value === "single_select" ? "single_select" : "multi_select",
+                    }))
+                  }
+                >
+                  <option value="single_select">{t("admin.module3.catalog.singleSelect")}</option>
+                  <option value="multi_select">{t("admin.module3.catalog.multiSelect")}</option>
+                </select>
+              </label>
+              <label>
+                <span>{t("admin.module3.catalog.freeQuantity")}</span>
+                <input
+                  inputMode="numeric"
+                  value={modifierForm.freeQuantity}
+                  onChange={(event) =>
+                    setModifierForm((current) => ({
+                      ...current,
+                      freeQuantity: Number.parseInt(event.target.value || "0", 10),
+                    }))
+                  }
+                />
+              </label>
+              <label>
+                <span>{t("admin.module3.catalog.extraPrice")}</span>
+                <input
+                  inputMode="decimal"
+                  value={modifierForm.extraPrice ?? ""}
+                  onChange={(event) =>
+                    setModifierForm((current) => ({
+                      ...current,
+                      extraPrice: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="toggle-row">
+                <input
+                  checked={modifierForm.required}
+                  type="checkbox"
+                  onChange={() =>
+                    setModifierForm((current) => ({
+                      ...current,
+                      required: !current.required,
+                      minSelect: !current.required ? 1 : 0,
+                    }))
+                  }
+                />
+                <span>{t("admin.module3.catalog.required")}</span>
+              </label>
+            </div>
+            <div className="modifier-values-grid">
+              <span>{t("admin.module3.catalog.optionName")}</span>
+              <span>{t("admin.module3.catalog.priceAddition")}</span>
+              <span>{t("admin.module3.catalog.recipeHook")}</span>
+              {modifierForm.values.map((value, index) => (
+                <div className="modifier-value-row" key={index}>
+                  <input
+                    value={value.localizedNames.fr ?? ""}
+                    onChange={(event) =>
+                      updateModifierValue(index, {
+                        name: event.target.value,
+                        localizedNames: { ...value.localizedNames, fr: event.target.value },
+                      })
+                    }
+                  />
+                  <input
+                    inputMode="decimal"
+                    value={value.priceAddition}
+                    onChange={(event) =>
+                      updateModifierValue(index, { priceAddition: event.target.value })
+                    }
+                  />
+                  <input
+                    value={value.recipeHookKey ?? ""}
+                    onChange={(event) =>
+                      updateModifierValue(index, {
+                        recipeHookKey: event.target.value || null,
+                      })
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+            <button className="button-secondary" type="button" onClick={addModifierValueRow}>
+              {t("admin.module3.catalog.addOption")}
+            </button>
+          </form>
+
+          <div className="category-modifier-box">
+            <div className="section-heading-row">
+              <h3>{t("admin.module3.catalog.categoryScope")}</h3>
+              <button
+                disabled={!selectedCategoryId}
+                type="button"
+                onClick={() => void saveCategoryModifiers()}
+              >
+                {t("admin.module3.catalog.save")}
+              </button>
+            </div>
+            {modifierGroups.map((group) => (
+              <label className="toggle-row modifier-choice" key={`category-${group.id}`}>
+                <input
+                  checked={activeCategoryModifierIds.includes(group.id)}
+                  type="checkbox"
+                  onChange={() => toggleCategoryModifier(group.id)}
+                />
+                <span>{group.localizedNames.fr ?? group.name}</span>
+              </label>
+            ))}
+          </div>
+        </aside>
       </div>
     </section>
   );
@@ -619,6 +963,10 @@ function compactLocaleMap(values: Record<string, string>): Record<string, string
 function emptyToNull(value: string): string | null {
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
+}
+
+function toggleId(values: string[], id: string): string[] {
+  return values.includes(id) ? values.filter((value) => value !== id) : [...values, id];
 }
 
 function slugify(value: string): string {

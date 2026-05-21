@@ -211,6 +211,13 @@
       "when": 1779370200000,
       "tag": "0029_shared_catalog_variants",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1779375600000,
+      "tag": "0030_reusable_modifiers",
+      "breakpoints": true
     }
   ]
 }
