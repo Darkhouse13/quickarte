@@ -115,7 +115,8 @@
       "operatingHours": "Horaires",
       "paymentMethods": "Paiements",
       "tax": "TVA",
-      "receipts": "Tickets"
+      "receipts": "Tickets",
+      "printers": "Imprimantes"
     },
     "dashboard": {
       "eyebrow": "Admin",
@@ -276,6 +277,45 @@
         "saveError": "Impossible d'enregistrer les parametres ticket",
         "previewError": "Impossible de generer l'apercu",
         "saved": "Parametres ticket enregistres"
+      },
+      "printers": {
+        "title": "Configuration imprimantes",
+        "addTitle": "Ajouter une imprimante",
+        "editTitle": "Modifier l'imprimante",
+        "listTitle": "Imprimantes de la branche",
+        "assignments": "Affectations",
+        "name": "Nom",
+        "connectionType": "Type de connexion",
+        "address": "Adresse / IP / identifiant",
+        "model": "Modele",
+        "notes": "Notes",
+        "enabled": "Active",
+        "disabled": "Desactivee",
+        "testPrint": "Test impression",
+        "saveAssignments": "Enregistrer les affectations",
+        "noPrinter": "Aucune imprimante",
+        "noFallback": "Aucun secours",
+        "deleteConfirm": "Desactiver cette imprimante ?",
+        "loadError": "Impossible de charger les imprimantes",
+        "saveError": "Impossible d'enregistrer l'imprimante",
+        "assignmentError": "Impossible d'enregistrer les affectations",
+        "testError": "Impossible d'ajouter le test a la file d'impression",
+        "testQueued": "Test ajoute a la file d'impression",
+        "assignmentsSaved": "Affectations enregistrees",
+        "saved": "Imprimantes mises a jour",
+        "connectionTypes": {
+          "manual": "Manuelle",
+          "webprint": "Webprint",
+          "escpos_lan": "ESC/POS reseau",
+          "escpos_usb": "ESC/POS USB",
+          "bluetooth": "Bluetooth"
+        },
+        "roles": {
+          "receipt": "Ticket client",
+          "kitchen": "Cuisine",
+          "bar": "Bar",
+          "customer_copy": "Copie client"
+        }
       }
     }
   },

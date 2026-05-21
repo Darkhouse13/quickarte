@@ -231,6 +231,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/branches/{branchId}/printers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List printers and assignments for a branch */
+        get: operations["PrintersController_listBranchPrinters"];
+        put?: never;
+        /** Manually add a branch printer */
+        post: operations["PrintersController_createPrinter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/printers/{printerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Soft-delete a branch printer */
+        delete: operations["PrintersController_deletePrinter"];
+        options?: never;
+        head?: never;
+        /** Update branch printer metadata */
+        patch: operations["PrintersController_updatePrinter"];
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/printers/{printerId}/test-print": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Queue a printer test job through the print pipeline */
+        post: operations["PrintersController_enqueueTestPrint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/printer-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace branch printer assignments atomically */
+        put: operations["PrintersController_replaceAssignments"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/branches/{branchId}/receipt-settings": {
         parameters: {
             query?: never;
@@ -601,6 +671,92 @@ export interface components {
         };
         PaymentMethodsPutBodyDto: {
             methods: components["schemas"]["PaymentMethodInputDto"][];
+        };
+        PrinterResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            businessId: string;
+            /** Format: uuid */
+            branchId?: string | null;
+            name: string;
+            /** @enum {string} */
+            connectionType: "manual" | "escpos_lan" | "escpos_usb" | "webprint" | "bluetooth";
+            address?: string | null;
+            model?: string | null;
+            notes?: string | null;
+            enabled: boolean;
+            /** Format: date-time */
+            lastSeenAt?: string | null;
+            /** Format: date-time */
+            lastTestPrintAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        PrinterAssignmentResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            branchId: string;
+            /** Format: uuid */
+            printerId: string;
+            /** @enum {string} */
+            role: "receipt" | "kitchen" | "bar" | "customer_copy";
+            priority: number;
+            /** Format: uuid */
+            fallbackPrinterId?: string | null;
+            enabled: boolean;
+        };
+        BranchPrintersResponseDto: {
+            printers: components["schemas"]["PrinterResponseDto"][];
+            assignments: components["schemas"]["PrinterAssignmentResponseDto"][];
+        };
+        CreatePrinterBodyDto: {
+            name: string;
+            /** @enum {string} */
+            connectionType: "manual" | "escpos_lan" | "escpos_usb" | "webprint" | "bluetooth";
+            address?: string | null;
+            model?: string | null;
+            notes?: string | null;
+            /** @default true */
+            enabled: boolean;
+        };
+        UpdatePrinterBodyDto: {
+            name?: string;
+            /** @enum {string} */
+            connectionType?: "manual" | "escpos_lan" | "escpos_usb" | "webprint" | "bluetooth";
+            address?: string | null;
+            model?: string | null;
+            notes?: string | null;
+            enabled?: boolean;
+        };
+        DeletePrinterResponseDto: {
+            /** Format: uuid */
+            id: string;
+        };
+        TestPrintResponseDto: {
+            /** Format: uuid */
+            jobId: string;
+            queued: boolean;
+            /** Format: date-time */
+            lastTestPrintAt: string;
+        };
+        PrinterAssignmentInputDto: {
+            /** @enum {string} */
+            role: "receipt" | "kitchen" | "bar" | "customer_copy";
+            /** Format: uuid */
+            printerId: string;
+            /** Format: uuid */
+            fallbackPrinterId?: string | null;
+            /** @default 0 */
+            priority: number;
+            /** @default true */
+            enabled: boolean;
+        };
+        ReplacePrinterAssignmentsBodyDto: {
+            assignments: components["schemas"]["PrinterAssignmentInputDto"][];
         };
         ReceiptLineDto: {
             /** @enum {string} */
@@ -1252,6 +1408,147 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BranchPaymentMethodsResponseDto"];
+                };
+            };
+        };
+    };
+    PrintersController_listBranchPrinters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchPrintersResponseDto"];
+                };
+            };
+        };
+    };
+    PrintersController_createPrinter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePrinterBodyDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrinterResponseDto"];
+                };
+            };
+        };
+    };
+    PrintersController_deletePrinter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                printerId: unknown;
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletePrinterResponseDto"];
+                };
+            };
+        };
+    };
+    PrintersController_updatePrinter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                printerId: unknown;
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePrinterBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrinterResponseDto"];
+                };
+            };
+        };
+    };
+    PrintersController_enqueueTestPrint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                printerId: unknown;
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestPrintResponseDto"];
+                };
+            };
+        };
+    };
+    PrintersController_replaceAssignments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplacePrinterAssignmentsBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchPrintersResponseDto"];
                 };
             };
         };

@@ -42,6 +42,8 @@ const STARTER_PERMISSIONS = [
   ["payment_methods.update", "Update payment methods", "payment_methods"],
   ["tax.view", "View tax configuration", "tax"],
   ["tax.update", "Update tax configuration", "tax"],
+  ["printer.view", "View printer setup", "printer"],
+  ["printer.manage", "Manage printer setup", "printer"],
   ["staff.view", "View staff", "staff"],
   ["staff.create", "Create staff", "staff"],
   ["staff.update", "Update staff", "staff"],
@@ -69,6 +71,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     "settings.view",
     "payment_methods.view",
     "tax.view",
+    "printer.view",
     "order.view",
     "order.create",
     "order.update",
@@ -80,6 +83,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     "settings.view",
     "payment_methods.view",
     "tax.view",
+    "printer.view",
     "order.view",
     "order.create",
     "order.update",
@@ -90,6 +94,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     "settings.view",
     "payment_methods.view",
     "tax.view",
+    "printer.view",
     "order.view",
     "menu.view",
   ],
@@ -161,7 +166,7 @@ async function main(): Promise<void> {
 
         await tx
           .update(permissionVersions)
-          .set({ version: sql`greatest(${permissionVersions.version}, 4)` })
+          .set({ version: sql`greatest(${permissionVersions.version}, 5)` })
           .where(sql`${permissionVersions.businessId} = ${business.id}`);
       });
 

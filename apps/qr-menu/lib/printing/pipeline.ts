@@ -21,7 +21,8 @@ export type PrinterConnectionType =
   | "manual"
   | "webprint"
   | "escpos_lan"
-  | "escpos_usb";
+  | "escpos_usb"
+  | "bluetooth";
 export type PrinterStation = "counter" | "kitchen" | "bar";
 
 export type PrintJobPollingResponse = {

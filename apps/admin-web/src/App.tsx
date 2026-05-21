@@ -10,6 +10,7 @@ import { BranchesPage } from "./pages/BranchesPage";
 import { RestaurantProfilePage } from "./pages/RestaurantProfilePage";
 import { OperatingHoursPage } from "./pages/OperatingHoursPage";
 import { PaymentMethodsPage } from "./pages/PaymentMethodsPage";
+import { PrinterSetupPage } from "./pages/PrinterSetupPage";
 import { ReceiptSettingsPage } from "./pages/ReceiptSettingsPage";
 import { TaxConfigurationPage } from "./pages/TaxConfigurationPage";
 
@@ -20,6 +21,7 @@ const navItems = [
   ["paymentMethods", "/settings/payment-methods"],
   ["tax", "/settings/tax"],
   ["receipts", "/settings/receipts"],
+  ["printers", "/settings/printers"],
   ["menu", "/menu"],
   ["orders", "/orders"],
   ["reports", "/reports"],
@@ -54,6 +56,7 @@ export const router = createBrowserRouter([
           { path: "/settings/payment-methods", element: <PaymentMethodsPage /> },
           { path: "/settings/tax", element: <TaxConfigurationPage /> },
           { path: "/settings/receipts", element: <ReceiptSettingsPage /> },
+          { path: "/settings/printers", element: <PrinterSetupPage /> },
         ],
       },
     ],
