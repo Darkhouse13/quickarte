@@ -2080,6 +2080,82 @@
         ]
       }
     },
+    "/v1/branches/{branchId}/menu-tax-overrides": {
+      "put": {
+        "operationId": "BranchMenuController_replaceTaxOverrides",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceMenuTaxOverridesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchMenuOverridesResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/menu-print-routes": {
+      "put": {
+        "operationId": "BranchMenuController_replacePrintRoutes",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceMenuPrintRoutesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchMenuOverridesResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
     "/v1/branches/{branchId}/products/{productId}/availability": {
       "patch": {
         "operationId": "BranchMenuController_updateProductAvailability",
@@ -6472,6 +6548,30 @@
           "effectiveTaxRateId": {
             "type": "string"
           },
+          "taxSource": {
+            "type": "string",
+            "enum": [
+              "product",
+              "category",
+              "branch_default",
+              "fallback"
+            ]
+          },
+          "printStations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "printRouteSource": {
+            "type": "string",
+            "enum": [
+              "product",
+              "category",
+              "legacy",
+              "all"
+            ]
+          },
           "variants": {
             "type": "array",
             "items": {
@@ -6509,6 +6609,9 @@
           "positionSource",
           "channels",
           "effectiveTaxRateId",
+          "taxSource",
+          "printStations",
+          "printRouteSource",
           "variants",
           "modifiers"
         ],
@@ -7080,13 +7183,115 @@
               ],
               "additionalProperties": false
             }
+          },
+          "categoryTaxOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "categoryId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "taxRateId": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "categoryId",
+                "taxRateId"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "productTaxOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "taxRateId": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "productId",
+                "taxRateId"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "categoryPrintRoutes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "categoryId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "stations": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32
+                  }
+                }
+              },
+              "required": [
+                "categoryId",
+                "stations"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "productPrintRoutes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "stations": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32
+                  }
+                }
+              },
+              "required": [
+                "productId",
+                "stations"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [
           "categoryOverrides",
           "productOverrides",
           "priceOverrides",
-          "optionValueOverrides"
+          "optionValueOverrides",
+          "categoryTaxOverrides",
+          "productTaxOverrides",
+          "categoryPrintRoutes",
+          "productPrintRoutes"
         ],
         "id": "BranchMenuOverridesResponse_Output",
         "additionalProperties": false
@@ -7365,13 +7570,223 @@
                 "priceAddition"
               ]
             }
+          },
+          "categoryTaxOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "categoryId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "taxRateId": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "categoryId",
+                "taxRateId"
+              ]
+            }
+          },
+          "productTaxOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "taxRateId": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "productId",
+                "taxRateId"
+              ]
+            }
+          },
+          "categoryPrintRoutes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "categoryId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "stations": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32
+                  }
+                }
+              },
+              "required": [
+                "categoryId",
+                "stations"
+              ]
+            }
+          },
+          "productPrintRoutes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "stations": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32
+                  }
+                }
+              },
+              "required": [
+                "productId",
+                "stations"
+              ]
+            }
           }
         },
         "required": [
           "categoryOverrides",
           "productOverrides",
           "priceOverrides",
-          "optionValueOverrides"
+          "optionValueOverrides",
+          "categoryTaxOverrides",
+          "productTaxOverrides",
+          "categoryPrintRoutes",
+          "productPrintRoutes"
+        ]
+      },
+      "ReplaceMenuTaxOverridesDto": {
+        "type": "object",
+        "properties": {
+          "categoryTaxOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "categoryId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "taxRateId": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "categoryId",
+                "taxRateId"
+              ]
+            }
+          },
+          "productTaxOverrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "taxRateId": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "productId",
+                "taxRateId"
+              ]
+            }
+          }
+        },
+        "required": [
+          "categoryTaxOverrides",
+          "productTaxOverrides"
+        ]
+      },
+      "ReplaceMenuPrintRoutesDto": {
+        "type": "object",
+        "properties": {
+          "categoryPrintRoutes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "categoryId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "stations": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32
+                  }
+                }
+              },
+              "required": [
+                "categoryId",
+                "stations"
+              ]
+            }
+          },
+          "productPrintRoutes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "stations": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32
+                  }
+                }
+              },
+              "required": [
+                "productId",
+                "stations"
+              ]
+            }
+          }
+        },
+        "required": [
+          "categoryPrintRoutes",
+          "productPrintRoutes"
         ]
       },
       "UpdateProductAvailabilityDto": {

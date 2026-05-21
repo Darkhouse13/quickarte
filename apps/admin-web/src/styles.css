@@ -628,6 +628,36 @@ body.dir-rtl .subcategory-add {
   font-weight: var(--fw-semibold);
 }
 
+.branch-tax-input,
+.branch-route-group {
+  display: grid;
+  gap: var(--s-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--s-2);
+  color: var(--fg-2);
+  font-size: var(--t-caption);
+  font-weight: var(--fw-semibold);
+}
+
+.branch-tax-input span,
+.branch-route-group legend {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.branch-tax-input em,
+.branch-route-group em {
+  color: var(--fg-3);
+  font-style: normal;
+  font-weight: var(--fw-regular);
+}
+
+.branch-route-group {
+  margin: 0;
+}
+
 .item-editor-panel {
   min-width: 0;
 }

@@ -16,6 +16,11 @@ type Branch = BranchesResponse["branches"][number];
 type EffectiveMenuResponse =
   paths["/v1/branches/{branchId}/menu/effective"]["get"]["responses"][200]["content"]["application/json"];
 type EffectiveProduct = EffectiveMenuResponse["categories"][number]["products"][number];
+type MenuOverridesResponse =
+  paths["/v1/branches/{branchId}/menu-overrides"]["get"]["responses"][200]["content"]["application/json"];
+type TaxRatesResponse =
+  paths["/v1/tax-rates"]["get"]["responses"][200]["content"]["application/json"];
+type TaxRate = TaxRatesResponse["rates"][number];
 type ModifierGroupsResponse =
   paths["/v1/menu/modifier-groups"]["get"]["responses"][200]["content"]["application/json"];
 type ModifierTemplate = ModifierGroupsResponse["groups"][number];
@@ -28,6 +33,10 @@ type ProductAvailabilityBody =
   paths["/v1/branches/{branchId}/products/{productId}/availability"]["patch"]["requestBody"]["content"]["application/json"];
 type ProductPricesBody =
   paths["/v1/branches/{branchId}/products/{productId}/prices"]["put"]["requestBody"]["content"]["application/json"];
+type MenuTaxOverridesBody =
+  paths["/v1/branches/{branchId}/menu-tax-overrides"]["put"]["requestBody"]["content"]["application/json"];
+type MenuPrintRoutesBody =
+  paths["/v1/branches/{branchId}/menu-print-routes"]["put"]["requestBody"]["content"]["application/json"];
 type ChannelKey = keyof ProductBody["channels"];
 type EffectiveChannelKey = keyof EffectiveProduct["channels"];
 type LocaleCode = "fr" | "ar" | "es" | "en";
@@ -96,8 +105,12 @@ export function MenuCatalogPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<string>("");
   const [effectiveMenu, setEffectiveMenu] = useState<EffectiveMenuResponse | null>(null);
+  const [menuOverrides, setMenuOverrides] = useState<MenuOverridesResponse | null>(null);
   const [effectiveChannel, setEffectiveChannel] = useState<EffectiveMenuResponse["channel"]>("pos");
   const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
+  const [taxRates, setTaxRates] = useState<TaxRate[]>([]);
+  const [taxDrafts, setTaxDrafts] = useState<Record<string, string>>({});
+  const [printDrafts, setPrintDrafts] = useState<Record<string, string[]>>({});
   const [modifierGroups, setModifierGroups] = useState<ModifierTemplate[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [categoryModifierIds, setCategoryModifierIds] = useState<string[] | null>(null);
@@ -158,11 +171,12 @@ export function MenuCatalogPage() {
   const loadCatalog = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [categoryResponse, productResponse, modifierResponse, branchResponse] = await Promise.all([
+    const [categoryResponse, productResponse, modifierResponse, branchResponse, taxResponse] = await Promise.all([
       apiClient().GET("/v1/menu/categories"),
       apiClient().GET("/v1/menu/products"),
       apiClient().GET("/v1/menu/modifier-groups"),
       apiClient().GET("/v1/branches"),
+      apiClient().GET("/v1/tax-rates"),
     ]);
     setLoading(false);
     if (categoryResponse.error || !categoryResponse.data) {
@@ -181,10 +195,15 @@ export function MenuCatalogPage() {
       setError(t("admin.module3.catalog.loadError"));
       return;
     }
+    if (taxResponse.error || !taxResponse.data) {
+      setError(t("admin.module3.catalog.loadError"));
+      return;
+    }
     setCategories(categoryResponse.data.categories);
     setProducts(productResponse.data.products);
     setModifierGroups(modifierResponse.data.groups);
     setBranches(branchResponse.data.branches);
+    setTaxRates(taxResponse.data.rates);
     setSelectedBranchId(
       (current) =>
         current ||
@@ -203,14 +222,24 @@ export function MenuCatalogPage() {
 
   const loadEffectiveMenu = useCallback(async () => {
     if (!selectedBranchId) return;
-    const response = await apiClient().GET("/v1/branches/{branchId}/menu/effective", {
-      params: { path: { branchId: selectedBranchId }, query: { channel: effectiveChannel } },
-    });
+    const [response, overridesResponse] = await Promise.all([
+      apiClient().GET("/v1/branches/{branchId}/menu/effective", {
+        params: { path: { branchId: selectedBranchId }, query: { channel: effectiveChannel } },
+      }),
+      apiClient().GET("/v1/branches/{branchId}/menu-overrides", {
+        params: { path: { branchId: selectedBranchId } },
+      }),
+    ]);
     if (!response.data) {
       setError(readResponseProblem(response).detail ?? t("admin.module3.catalog.loadError"));
       return;
     }
+    if (!overridesResponse.data) {
+      setError(readResponseProblem(overridesResponse).detail ?? t("admin.module3.catalog.loadError"));
+      return;
+    }
     setEffectiveMenu(response.data);
+    setMenuOverrides(overridesResponse.data);
     setPriceDrafts((current) => ({
       ...Object.fromEntries(
         response.data.categories
@@ -221,6 +250,24 @@ export function MenuCatalogPage() {
               .filter((variant) => variant.id && variant.price)
               .map((variant) => [`${product.id}:${variant.id}`, variant.price ?? ""]),
           ),
+      ),
+      ...current,
+    }));
+    setTaxDrafts((current) => ({
+      ...Object.fromEntries(
+        response.data.categories
+          .flatMap((category) => [category, ...category.children])
+          .flatMap((category) => category.products)
+          .map((product) => [product.id, product.effectiveTaxRateId]),
+      ),
+      ...current,
+    }));
+    setPrintDrafts((current) => ({
+      ...Object.fromEntries(
+        response.data.categories
+          .flatMap((category) => [category, ...category.children])
+          .flatMap((category) => category.products)
+          .map((product) => [product.id, product.printStations]),
       ),
       ...current,
     }));
@@ -449,6 +496,48 @@ export function MenuCatalogPage() {
     await loadEffectiveMenu();
   }
 
+  async function saveProductTaxOverride(product: EffectiveProduct) {
+    if (!selectedBranchId || !menuOverrides) return;
+    const taxRateId = taxDrafts[product.id] || product.effectiveTaxRateId;
+    const productTaxOverrides: MenuTaxOverridesBody["productTaxOverrides"] = [
+      ...menuOverrides.productTaxOverrides.filter((row) => row.productId !== product.id),
+      { productId: product.id, taxRateId },
+    ];
+    const response = await apiClient().PUT("/v1/branches/{branchId}/menu-tax-overrides", {
+      params: { path: { branchId: selectedBranchId } },
+      body: {
+        categoryTaxOverrides: menuOverrides.categoryTaxOverrides,
+        productTaxOverrides,
+      },
+    });
+    if (!response.data) {
+      setError(readResponseProblem(response).detail ?? t("admin.module3.catalog.saveError"));
+      return;
+    }
+    await loadEffectiveMenu();
+  }
+
+  async function saveProductPrintRoutes(product: EffectiveProduct) {
+    if (!selectedBranchId || !menuOverrides) return;
+    const stations = printDrafts[product.id] ?? product.printStations;
+    const productPrintRoutes: MenuPrintRoutesBody["productPrintRoutes"] = [
+      ...menuOverrides.productPrintRoutes.filter((row) => row.productId !== product.id),
+      { productId: product.id, stations },
+    ];
+    const response = await apiClient().PUT("/v1/branches/{branchId}/menu-print-routes", {
+      params: { path: { branchId: selectedBranchId } },
+      body: {
+        categoryPrintRoutes: menuOverrides.categoryPrintRoutes,
+        productPrintRoutes,
+      },
+    });
+    if (!response.data) {
+      setError(readResponseProblem(response).detail ?? t("admin.module3.catalog.saveError"));
+      return;
+    }
+    await loadEffectiveMenu();
+  }
+
   function selectedProductPosition(productId: string): number {
     return products.find((product) => product.id === productId)?.position ?? products.length;
   }
@@ -666,13 +755,24 @@ export function MenuCatalogPage() {
             effectiveChannel={effectiveChannel}
             effectiveMenu={effectiveMenu}
             priceDrafts={priceDrafts}
+            printDrafts={printDrafts}
             selectedBranchId={selectedBranchId}
+            taxDrafts={taxDrafts}
+            taxRates={taxRates}
             onBranchChange={setSelectedBranchId}
             onChannelChange={setEffectiveChannel}
             onPriceDraftChange={(key, value) =>
               setPriceDrafts((current) => ({ ...current, [key]: value }))
             }
+            onPrintDraftChange={(productId, stations) =>
+              setPrintDrafts((current) => ({ ...current, [productId]: stations }))
+            }
             onSavePrices={saveBranchPrices}
+            onSavePrintRoutes={saveProductPrintRoutes}
+            onSaveTax={saveProductTaxOverride}
+            onTaxDraftChange={(productId, taxRateId) =>
+              setTaxDrafts((current) => ({ ...current, [productId]: taxRateId }))
+            }
             onToggleAvailability={toggleBranchAvailability}
             onToggleChannel={toggleBranchChannel}
           />

@@ -8,6 +8,8 @@ import {
   EffectiveMenuResponseDto,
   ReplaceBranchMenuOverridesDto,
   ReplaceBranchProductPricesDto,
+  ReplaceMenuPrintRoutesDto,
+  ReplaceMenuTaxOverridesDto,
   UpdateProductAvailabilityDto,
   menuChannelSchema,
   type MenuChannel,
@@ -65,6 +67,32 @@ export class BranchMenuController {
     @Body() body: ReplaceBranchMenuOverridesDto,
   ) {
     return this.effectiveMenuResolver.replaceOverrides(request.businessId!, branchId, body);
+  }
+
+  @Put("menu-tax-overrides")
+  @RequireAnyPermission("menu.manage", "tax.update")
+  @ApiParam({ name: "branchId" })
+  @ApiBody({ type: ReplaceMenuTaxOverridesDto })
+  @ZodResponse({ status: 200, type: BranchMenuOverridesResponseDto })
+  replaceTaxOverrides(
+    @Req() request: AuthenticatedRequest,
+    @Param("branchId") branchId: string,
+    @Body() body: ReplaceMenuTaxOverridesDto,
+  ) {
+    return this.effectiveMenuResolver.replaceTaxOverrides(request.businessId!, branchId, body);
+  }
+
+  @Put("menu-print-routes")
+  @RequirePermission("printer.manage")
+  @ApiParam({ name: "branchId" })
+  @ApiBody({ type: ReplaceMenuPrintRoutesDto })
+  @ZodResponse({ status: 200, type: BranchMenuOverridesResponseDto })
+  replacePrintRoutes(
+    @Req() request: AuthenticatedRequest,
+    @Param("branchId") branchId: string,
+    @Body() body: ReplaceMenuPrintRoutesDto,
+  ) {
+    return this.effectiveMenuResolver.replacePrintRoutes(request.businessId!, branchId, body);
   }
 
   @Patch("products/:productId/availability")

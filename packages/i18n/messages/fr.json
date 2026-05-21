@@ -396,6 +396,27 @@
         "reasonPrompt": "Raison du 86",
         "noReason": "Non precise",
         "savePrices": "Enregistrer prix",
+        "taxRate": "TVA effective",
+        "saveTax": "Enregistrer TVA",
+        "printStations": "Stations KDS",
+        "saveRoutes": "Enregistrer routage",
+        "taxSource": {
+          "product": "Produit",
+          "category": "Categorie",
+          "branch_default": "Defaut branche",
+          "fallback": "Defaut service"
+        },
+        "routeSource": {
+          "product": "Produit",
+          "category": "Categorie",
+          "legacy": "Routage historique",
+          "all": "Toutes stations"
+        },
+        "station": {
+          "bar": "Bar",
+          "counter": "Comptoir",
+          "kitchen": "Cuisine"
+        },
         "channel": {
           "pos": "POS",
           "qr": "QR",

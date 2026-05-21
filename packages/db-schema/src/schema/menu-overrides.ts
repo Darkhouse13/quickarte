@@ -3,14 +3,16 @@ import {
   index,
   integer,
   numeric,
+  primaryKey,
   pgTable,
   text,
   timestamp,
   uniqueIndex,
   uuid,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
-import { businesses, branches } from "./business";
+import { businesses, branches, taxRates } from "./business";
 import { categories, optionValues, products, productVariants } from "./catalog";
 import { users } from "./identity";
 
@@ -157,6 +159,130 @@ export const branchOptionValueOverrides = pgTable(
   }),
 );
 
+export const branchCategoryTaxOverrides = pgTable(
+  "branch_category_tax_overrides",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id")
+      .notNull()
+      .references(() => branches.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "cascade" }),
+    taxRateId: varchar("tax_rate_id", { length: 64 })
+      .notNull()
+      .references(() => taxRates.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    branchCategoryUnique: uniqueIndex("branch_category_tax_overrides_unique").on(
+      table.branchId,
+      table.categoryId,
+    ),
+    businessIdx: index("branch_category_tax_overrides_business_idx").on(table.businessId),
+    branchIdx: index("branch_category_tax_overrides_branch_idx").on(table.branchId),
+  }),
+);
+
+export const branchProductTaxOverrides = pgTable(
+  "branch_product_tax_overrides",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id")
+      .notNull()
+      .references(() => branches.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    taxRateId: varchar("tax_rate_id", { length: 64 })
+      .notNull()
+      .references(() => taxRates.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    branchProductUnique: uniqueIndex("branch_product_tax_overrides_unique").on(
+      table.branchId,
+      table.productId,
+    ),
+    businessIdx: index("branch_product_tax_overrides_business_idx").on(table.businessId),
+    branchIdx: index("branch_product_tax_overrides_branch_idx").on(table.branchId),
+  }),
+);
+
+export const branchCategoryPrintRoutes = pgTable(
+  "branch_category_print_routes",
+  {
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id")
+      .notNull()
+      .references(() => branches.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "cascade" }),
+    station: varchar("station", { length: 32 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({
+      columns: [table.branchId, table.categoryId, table.station],
+    }),
+    businessIdx: index("branch_category_print_routes_business_idx").on(table.businessId),
+    branchIdx: index("branch_category_print_routes_branch_idx").on(table.branchId),
+  }),
+);
+
+export const branchProductPrintRoutes = pgTable(
+  "branch_product_print_routes",
+  {
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id")
+      .notNull()
+      .references(() => branches.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    station: varchar("station", { length: 32 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({
+      columns: [table.branchId, table.productId, table.station],
+    }),
+    businessIdx: index("branch_product_print_routes_business_idx").on(table.businessId),
+    branchIdx: index("branch_product_print_routes_branch_idx").on(table.branchId),
+  }),
+);
+
 export const branchCategoryOverridesRelations = relations(
   branchCategoryOverrides,
   ({ one }) => ({
@@ -233,7 +359,91 @@ export const branchOptionValueOverridesRelations = relations(
   }),
 );
 
+export const branchCategoryTaxOverridesRelations = relations(
+  branchCategoryTaxOverrides,
+  ({ one }) => ({
+    business: one(businesses, {
+      fields: [branchCategoryTaxOverrides.businessId],
+      references: [businesses.id],
+    }),
+    branch: one(branches, {
+      fields: [branchCategoryTaxOverrides.branchId],
+      references: [branches.id],
+    }),
+    category: one(categories, {
+      fields: [branchCategoryTaxOverrides.categoryId],
+      references: [categories.id],
+    }),
+    taxRate: one(taxRates, {
+      fields: [branchCategoryTaxOverrides.taxRateId],
+      references: [taxRates.id],
+    }),
+  }),
+);
+
+export const branchProductTaxOverridesRelations = relations(
+  branchProductTaxOverrides,
+  ({ one }) => ({
+    business: one(businesses, {
+      fields: [branchProductTaxOverrides.businessId],
+      references: [businesses.id],
+    }),
+    branch: one(branches, {
+      fields: [branchProductTaxOverrides.branchId],
+      references: [branches.id],
+    }),
+    product: one(products, {
+      fields: [branchProductTaxOverrides.productId],
+      references: [products.id],
+    }),
+    taxRate: one(taxRates, {
+      fields: [branchProductTaxOverrides.taxRateId],
+      references: [taxRates.id],
+    }),
+  }),
+);
+
+export const branchCategoryPrintRoutesRelations = relations(
+  branchCategoryPrintRoutes,
+  ({ one }) => ({
+    business: one(businesses, {
+      fields: [branchCategoryPrintRoutes.businessId],
+      references: [businesses.id],
+    }),
+    branch: one(branches, {
+      fields: [branchCategoryPrintRoutes.branchId],
+      references: [branches.id],
+    }),
+    category: one(categories, {
+      fields: [branchCategoryPrintRoutes.categoryId],
+      references: [categories.id],
+    }),
+  }),
+);
+
+export const branchProductPrintRoutesRelations = relations(
+  branchProductPrintRoutes,
+  ({ one }) => ({
+    business: one(businesses, {
+      fields: [branchProductPrintRoutes.businessId],
+      references: [businesses.id],
+    }),
+    branch: one(branches, {
+      fields: [branchProductPrintRoutes.branchId],
+      references: [branches.id],
+    }),
+    product: one(products, {
+      fields: [branchProductPrintRoutes.productId],
+      references: [products.id],
+    }),
+  }),
+);
+
 export type BranchCategoryOverride = typeof branchCategoryOverrides.$inferSelect;
 export type BranchProductOverride = typeof branchProductOverrides.$inferSelect;
 export type BranchProductPriceOverride = typeof branchProductPriceOverrides.$inferSelect;
 export type BranchOptionValueOverride = typeof branchOptionValueOverrides.$inferSelect;
+export type BranchCategoryTaxOverride = typeof branchCategoryTaxOverrides.$inferSelect;
+export type BranchProductTaxOverride = typeof branchProductTaxOverrides.$inferSelect;
+export type BranchCategoryPrintRoute = typeof branchCategoryPrintRoutes.$inferSelect;
+export type BranchProductPrintRoute = typeof branchProductPrintRoutes.$inferSelect;
