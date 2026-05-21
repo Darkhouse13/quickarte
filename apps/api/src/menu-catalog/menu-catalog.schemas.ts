@@ -16,6 +16,8 @@ export const variantKindSchema = z.enum([
   "custom",
 ]);
 export const pricingModeSchema = z.enum(["fixed", "variable_pos"]);
+export const modifierSourceSchema = z.enum(["product", "category"]);
+export const modifierAttachScopeSchema = z.enum(["product", "category"]);
 
 export const menuVariantSchema = z
   .object({
@@ -44,6 +46,54 @@ export const productImageSchema = z
     isPrimary: z.boolean(),
   })
   .meta({ id: "MenuProductImage" });
+
+export const modifierValueSchema = z
+  .object({
+    id: z.uuid().nullable(),
+    templateValueId: z.uuid().nullable(),
+    name: z.string(),
+    localizedNames: localizedTextSchema,
+    priceAddition: decimalStringSchema,
+    position: z.number().int().min(0),
+    available: z.boolean(),
+    recipeHookKey: z.string().nullable(),
+  })
+  .meta({ id: "MenuModifierValue" });
+
+export const modifierGroupSchema = z
+  .object({
+    id: z.uuid(),
+    templateId: z.uuid().nullable(),
+    name: z.string(),
+    localizedNames: localizedTextSchema,
+    type: z.enum(["single_select", "multi_select"]),
+    required: z.boolean(),
+    minSelect: z.number().int().min(0),
+    maxSelect: z.number().int().min(0).nullable(),
+    freeQuantity: z.number().int().min(0),
+    extraPrice: decimalStringSchema.nullable(),
+    attachScope: modifierAttachScopeSchema,
+    reusable: z.boolean(),
+    source: modifierSourceSchema,
+    sourceCategoryId: z.uuid().nullable(),
+    sourceCategoryName: z.string().nullable(),
+    position: z.number().int().min(0),
+    values: z.array(modifierValueSchema),
+  })
+  .meta({ id: "MenuModifierGroup" });
+
+export const modifierGroupTemplateSchema = modifierGroupSchema
+  .omit({
+    templateId: true,
+    source: true,
+    sourceCategoryId: true,
+    sourceCategoryName: true,
+  })
+  .extend({
+    id: z.uuid(),
+    values: z.array(modifierValueSchema),
+  })
+  .meta({ id: "MenuModifierGroupTemplate" });
 
 const categoryBaseSchema = z
   .object({
@@ -92,6 +142,7 @@ export const productSchema = z
     position: z.number().int(),
     variants: z.array(menuVariantSchema),
     images: z.array(productImageSchema),
+    modifiers: z.array(modifierGroupSchema),
   })
   .meta({ id: "MenuProduct" });
 
@@ -111,6 +162,15 @@ export const imagesResponseSchema = z.object({
   images: z.array(productImageSchema),
 });
 export const deleteResponseSchema = z.object({ deleted: z.literal(true) });
+export const modifierGroupsResponseSchema = z.object({
+  groups: z.array(modifierGroupTemplateSchema),
+});
+export const modifierGroupResponseSchema = z.object({
+  group: modifierGroupTemplateSchema,
+});
+export const effectiveModifierGroupsResponseSchema = z.object({
+  groups: z.array(modifierGroupSchema),
+});
 
 export const localeSettingsResponseSchema = z.object({
   activeLocales: z.array(z.string()),
@@ -157,6 +217,30 @@ const variantWriteSchema = z.object({
   displayPriceMin: decimalStringSchema.nullable().optional(),
   displayPriceMax: decimalStringSchema.nullable().optional(),
   unitLabel: z.string().nullable().optional(),
+});
+
+const modifierValueWriteSchema = z.object({
+  id: z.uuid().optional(),
+  name: z.string().min(1),
+  localizedNames: localizedTextSchema,
+  priceAddition: decimalStringSchema.default("0.00"),
+  position: z.number().int().min(0),
+  available: z.boolean().default(true),
+  recipeHookKey: z.string().nullable().optional(),
+});
+
+export const modifierGroupWriteSchema = z.object({
+  name: z.string().min(1).optional(),
+  localizedNames: localizedTextSchema,
+  type: z.enum(["single_select", "multi_select"]).default("single_select"),
+  required: z.boolean().default(false),
+  minSelect: z.number().int().min(0).default(0),
+  maxSelect: z.number().int().min(0).nullable().optional(),
+  freeQuantity: z.number().int().min(0).default(0),
+  extraPrice: decimalStringSchema.nullable().optional(),
+  attachScope: modifierAttachScopeSchema.default("product"),
+  reusable: z.boolean().default(true),
+  values: z.array(modifierValueWriteSchema),
 });
 
 const imageWriteSchema = z.object({
@@ -215,6 +299,10 @@ export const updateLocaleSettingsBodySchema = z.object({
   activeLocales: z.array(z.string().min(2)).min(1),
   defaultLocale: z.string().min(2),
 });
+export const attachModifierGroupsBodySchema = z.object({
+  groupTemplateIds: z.array(z.uuid()),
+});
+export const updateModifierGroupBodySchema = modifierGroupWriteSchema.partial();
 
 export class MenuCategoryResponseDto extends createZodDto(categorySchema) {}
 export class MenuCategoriesResponseDto extends createZodDto(categoriesResponseSchema) {}
@@ -224,6 +312,9 @@ export class MenuVariantsResponseDto extends createZodDto(variantsResponseSchema
 export class MenuImagesResponseDto extends createZodDto(imagesResponseSchema) {}
 export class MenuDeleteResponseDto extends createZodDto(deleteResponseSchema) {}
 export class MenuLocaleSettingsResponseDto extends createZodDto(localeSettingsResponseSchema) {}
+export class MenuModifierGroupsResponseDto extends createZodDto(modifierGroupsResponseSchema) {}
+export class MenuModifierGroupResponseDto extends createZodDto(modifierGroupResponseSchema) {}
+export class MenuEffectiveModifierGroupsResponseDto extends createZodDto(effectiveModifierGroupsResponseSchema) {}
 
 export class CreateMenuCategoryDto extends createZodDto(createCategoryBodySchema) {}
 export class UpdateMenuCategoryDto extends createZodDto(updateCategoryBodySchema) {}
@@ -235,11 +326,16 @@ export class ReorderMenuProductsDto extends createZodDto(reorderProductsBodySche
 export class ReplaceMenuVariantsDto extends createZodDto(replaceVariantsBodySchema) {}
 export class ReplaceProductImagesDto extends createZodDto(replaceImagesBodySchema) {}
 export class UpdateMenuLocaleSettingsDto extends createZodDto(updateLocaleSettingsBodySchema) {}
+export class CreateModifierGroupDto extends createZodDto(modifierGroupWriteSchema) {}
+export class UpdateModifierGroupDto extends createZodDto(updateModifierGroupBodySchema) {}
+export class AttachModifierGroupsDto extends createZodDto(attachModifierGroupsBodySchema) {}
 
 export type CategoryResponse = z.infer<typeof categorySchema>;
 export type ProductResponse = z.infer<typeof productSchema>;
 export type VariantResponse = z.infer<typeof menuVariantSchema>;
 export type ImageResponse = z.infer<typeof productImageSchema>;
+export type ModifierGroupResponse = z.infer<typeof modifierGroupSchema>;
+export type ModifierGroupTemplateResponse = z.infer<typeof modifierGroupTemplateSchema>;
 export type CreateProductInput = z.infer<typeof createProductBodySchema>;
 export type UpdateProductInput = z.infer<typeof updateProductBodySchema>;
 export type ListProductsQueryInput = z.infer<typeof listProductsQuerySchema>;
@@ -248,3 +344,6 @@ export type UpdateCategoryInput = z.infer<typeof updateCategoryBodySchema>;
 export type ReplaceVariantsInput = z.infer<typeof replaceVariantsBodySchema>;
 export type ReplaceImagesInput = z.infer<typeof replaceImagesBodySchema>;
 export type UpdateLocaleSettingsInput = z.infer<typeof updateLocaleSettingsBodySchema>;
+export type ModifierGroupInput = z.infer<typeof modifierGroupWriteSchema>;
+export type UpdateModifierGroupInput = z.infer<typeof updateModifierGroupBodySchema>;
+export type AttachModifierGroupsInput = z.infer<typeof attachModifierGroupsBodySchema>;
