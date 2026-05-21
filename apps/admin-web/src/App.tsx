@@ -14,7 +14,15 @@ import { PrinterSetupPage } from "./pages/PrinterSetupPage";
 import { ReceiptSettingsPage } from "./pages/ReceiptSettingsPage";
 import { TaxConfigurationPage } from "./pages/TaxConfigurationPage";
 
-const navItems = [
+const primaryNavItems = [
+  ["dashboard", "/"],
+  ["menu", "/menu"],
+  ["orders", "/orders"],
+  ["reports", "/reports"],
+  ["staff", "/staff"],
+] as const;
+
+const module2SettingsNavItems = [
   ["profile", "/settings/profile"],
   ["branches", "/settings/branches"],
   ["operatingHours", "/settings/operating-hours"],
@@ -22,11 +30,6 @@ const navItems = [
   ["tax", "/settings/tax"],
   ["receipts", "/settings/receipts"],
   ["printers", "/settings/printers"],
-  ["menu", "/menu"],
-  ["orders", "/orders"],
-  ["reports", "/reports"],
-  ["staff", "/staff"],
-  ["settings", "/settings"],
 ] as const;
 
 export const router = createBrowserRouter([
@@ -49,7 +52,7 @@ export const router = createBrowserRouter([
           { path: "/orders", element: <PlaceholderPage name="orders" /> },
           { path: "/reports", element: <PlaceholderPage name="reports" /> },
           { path: "/staff", element: <PlaceholderPage name="staff" /> },
-          { path: "/settings", element: <PlaceholderPage name="settings" /> },
+          { path: "/settings", element: <Navigate to="/settings/profile" replace /> },
           { path: "/settings/profile", element: <RestaurantProfilePage /> },
           { path: "/settings/branches", element: <BranchesPage /> },
           { path: "/settings/operating-hours", element: <OperatingHoursPage /> },
@@ -112,11 +115,21 @@ function AppLayout() {
       <aside className="sidebar">
         <div className="brand">{t("admin.shell.brand")}</div>
         <nav className="nav-list" aria-label={t("admin.shell.navigation")}>
-          {navItems.map(([key, href]) => (
-            <NavLink to={href} key={key}>
-              {t(`admin.nav.${key}`)}
-            </NavLink>
-          ))}
+          <div className="nav-section">
+            {primaryNavItems.map(([key, href]) => (
+              <NavLink to={href} key={key} end={href === "/"}>
+                {t(`admin.nav.${key}`)}
+              </NavLink>
+            ))}
+          </div>
+          <div className="nav-section">
+            <p className="nav-section-label">{t("admin.navGroups.settings")}</p>
+            {module2SettingsNavItems.map(([key, href]) => (
+              <NavLink to={href} key={key}>
+                {t(`admin.nav.${key}`)}
+              </NavLink>
+            ))}
+          </div>
         </nav>
       </aside>
       <div className="content-shell">
