@@ -79,6 +79,9 @@ const effectiveMenuResponse = {
               online: true,
             },
             effectiveTaxRateId: "ma_tva_10",
+            taxSource: "fallback",
+            printStations: ["bar", "counter", "kitchen"],
+            printRouteSource: "all",
             variants: [
               {
                 id: null,
@@ -103,6 +106,33 @@ const effectiveMenuResponse = {
         children: [],
       },
     ],
+  },
+};
+
+const taxRatesResponse = {
+  data: {
+    rates: [
+      {
+        id: "ma_tva_10",
+        countryCode: "MA",
+        label: "TVA 10%",
+        rate: 10,
+        isActive: true,
+      },
+    ],
+  },
+};
+
+const menuOverridesResponse = {
+  data: {
+    categoryOverrides: [],
+    productOverrides: [],
+    priceOverrides: [],
+    optionValueOverrides: [],
+    categoryTaxOverrides: [],
+    productTaxOverrides: [],
+    categoryPrintRoutes: [],
+    productPrintRoutes: [],
   },
 };
 
@@ -210,7 +240,9 @@ describe("MenuCatalogPage", () => {
         },
       })
       .mockResolvedValueOnce(branchResponse)
-      .mockResolvedValueOnce(effectiveMenuResponse);
+      .mockResolvedValueOnce(taxRatesResponse)
+      .mockResolvedValueOnce(effectiveMenuResponse)
+      .mockResolvedValueOnce(menuOverridesResponse);
 
     render(<MenuCatalogPage />);
 
@@ -246,7 +278,9 @@ describe("MenuCatalogPage", () => {
       .mockResolvedValueOnce({ data: { products: [] } })
       .mockResolvedValueOnce({ data: { groups: [] } })
       .mockResolvedValueOnce(branchResponse)
+      .mockResolvedValueOnce(taxRatesResponse)
       .mockResolvedValueOnce({ data: { ...effectiveMenuResponse.data, categories: [] } })
+      .mockResolvedValueOnce(menuOverridesResponse)
       .mockResolvedValueOnce({
         data: {
           categories: [
@@ -269,7 +303,9 @@ describe("MenuCatalogPage", () => {
       .mockResolvedValueOnce({ data: { products: [] } })
       .mockResolvedValueOnce({ data: { groups: [] } })
       .mockResolvedValueOnce(branchResponse)
-      .mockResolvedValueOnce({ data: { ...effectiveMenuResponse.data, categories: [] } });
+      .mockResolvedValueOnce(taxRatesResponse)
+      .mockResolvedValueOnce({ data: { ...effectiveMenuResponse.data, categories: [] } })
+      .mockResolvedValueOnce(menuOverridesResponse);
     postMock.mockResolvedValueOnce({ data: { product: { id: "prod-1" } } });
     putMock.mockResolvedValueOnce({ data: { groups: [] } });
 

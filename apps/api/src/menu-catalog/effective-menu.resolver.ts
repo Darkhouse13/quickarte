@@ -1,19 +1,25 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import {
   branchCategoryOverrides,
+  branchCategoryPrintRoutes,
+  branchCategoryTaxOverrides,
   branchOptionValueOverrides,
   branchProductOverrides,
+  branchProductPrintRoutes,
   branchProductPriceOverrides,
+  branchProductTaxOverrides,
   branchTaxSettings,
   branches,
   categories,
   categoryModifierGroups,
+  categoryPrintRoutes,
   modifierGroupTemplates,
   modifierValueTemplates,
   optionValues,
   productOptions,
   products,
   productVariants,
+  taxRates,
 } from "@quickarte/db-schema";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import {
@@ -26,11 +32,14 @@ import type {
   MenuChannel,
   ReplaceBranchMenuOverridesInput,
   ReplaceBranchProductPricesInput,
+  ReplaceMenuPrintRoutesInput,
+  ReplaceMenuTaxOverridesInput,
   UpdateProductAvailabilityInput,
 } from "./branch-menu.schemas";
 import type { ModifierGroupResponse } from "./menu-catalog.schemas";
 
 const DEFAULT_TAX_RATE_ID = "ma_tva_10";
+const ALL_PRINT_STATIONS = ["bar", "counter", "kitchen"] as const;
 
 @Injectable()
 export class EffectiveMenuResolver {
@@ -45,7 +54,7 @@ export class EffectiveMenuResolver {
   ): Promise<EffectiveMenuResponse> {
     return this.databaseService.withTenant(businessId, async (tx) => {
       await this.assertBranch(tx, businessId, branchId);
-      const defaultTaxRateId = await this.getDefaultTaxRateId(tx, businessId, branchId);
+      const defaultTaxRate = await this.getDefaultTaxRateId(tx, businessId, branchId);
       const categoryRows = await tx
         .select()
         .from(categories)
@@ -108,6 +117,54 @@ export class EffectiveMenuResolver {
       const priceOverridesByVariant = new Map(
         priceOverrideRows.map((row) => [row.variantId, row]),
       );
+      const [categoryTaxRows, productTaxRows, branchCategoryRouteRows, branchProductRouteRows, legacyRouteRows] =
+        await Promise.all([
+          tx
+            .select()
+            .from(branchCategoryTaxOverrides)
+            .where(
+              and(
+                eq(branchCategoryTaxOverrides.businessId, businessId),
+                eq(branchCategoryTaxOverrides.branchId, branchId),
+              ),
+            ),
+          tx
+            .select()
+            .from(branchProductTaxOverrides)
+            .where(
+              and(
+                eq(branchProductTaxOverrides.businessId, businessId),
+                eq(branchProductTaxOverrides.branchId, branchId),
+              ),
+            ),
+          tx
+            .select()
+            .from(branchCategoryPrintRoutes)
+            .where(
+              and(
+                eq(branchCategoryPrintRoutes.businessId, businessId),
+                eq(branchCategoryPrintRoutes.branchId, branchId),
+              ),
+            ),
+          tx
+            .select()
+            .from(branchProductPrintRoutes)
+            .where(
+              and(
+                eq(branchProductPrintRoutes.businessId, businessId),
+                eq(branchProductPrintRoutes.branchId, branchId),
+              ),
+            ),
+          tx
+            .select()
+            .from(categoryPrintRoutes)
+            .where(eq(categoryPrintRoutes.businessId, businessId)),
+        ]);
+      const categoryTaxById = new Map(categoryTaxRows.map((row) => [row.categoryId, row.taxRateId]));
+      const productTaxById = new Map(productTaxRows.map((row) => [row.productId, row.taxRateId]));
+      const branchCategoryRoutesById = stationSetById(branchCategoryRouteRows, (row) => row.categoryId);
+      const branchProductRoutesById = stationSetById(branchProductRouteRows, (row) => row.productId);
+      const legacyRoutesByCategoryId = stationSetById(legacyRouteRows, (row) => row.categoryId);
       const modifiersByProduct = await this.loadEffectiveModifiers(
         tx,
         businessId,
@@ -120,6 +177,18 @@ export class EffectiveMenuResolver {
         if (product.categoryId && !visibleCategoryIds.has(product.categoryId)) continue;
         const override = productOverridesById.get(product.id);
         if (!this.isProductVisibleForChannel(product, override, channel)) continue;
+        const taxResolution = this.resolveTaxRate(
+          product,
+          defaultTaxRate,
+          productTaxById,
+          categoryTaxById,
+        );
+        const routingResolution = this.resolvePrintStations(
+          product,
+          branchProductRoutesById,
+          branchCategoryRoutesById,
+          legacyRoutesByCategoryId,
+        );
         const effectiveProduct = {
           id: product.id,
           categoryId: product.categoryId,
@@ -149,7 +218,10 @@ export class EffectiveMenuResolver {
             qr: override?.availableQr ?? product.availableQr,
             online: override?.availableOnline ?? product.availableOnline,
           },
-          effectiveTaxRateId: defaultTaxRateId,
+          effectiveTaxRateId: taxResolution.taxRateId,
+          taxSource: taxResolution.source,
+          printStations: routingResolution.stations,
+          printRouteSource: routingResolution.source,
           variants: this.resolveVariants(
             product,
             variantsByProduct.get(product.id) ?? [],
@@ -189,7 +261,7 @@ export class EffectiveMenuResolver {
         branchId,
         channel,
         generatedAt: new Date().toISOString(),
-        defaultTaxRateId,
+        defaultTaxRateId: defaultTaxRate.taxRateId,
         categories: responseCategories,
       };
     });
@@ -201,7 +273,16 @@ export class EffectiveMenuResolver {
   ): Promise<BranchMenuOverridesResponse> {
     return this.databaseService.withTenant(businessId, async (tx) => {
       await this.assertBranch(tx, businessId, branchId);
-      const [categoryRows, productRows, priceRows, optionRows] = await Promise.all([
+      const [
+        categoryRows,
+        productRows,
+        priceRows,
+        optionRows,
+        categoryTaxRows,
+        productTaxRows,
+        categoryPrintRows,
+        productPrintRows,
+      ] = await Promise.all([
         tx
           .select()
           .from(branchCategoryOverrides)
@@ -236,6 +317,42 @@ export class EffectiveMenuResolver {
             and(
               eq(branchOptionValueOverrides.businessId, businessId),
               eq(branchOptionValueOverrides.branchId, branchId),
+            ),
+          ),
+        tx
+          .select()
+          .from(branchCategoryTaxOverrides)
+          .where(
+            and(
+              eq(branchCategoryTaxOverrides.businessId, businessId),
+              eq(branchCategoryTaxOverrides.branchId, branchId),
+            ),
+          ),
+        tx
+          .select()
+          .from(branchProductTaxOverrides)
+          .where(
+            and(
+              eq(branchProductTaxOverrides.businessId, businessId),
+              eq(branchProductTaxOverrides.branchId, branchId),
+            ),
+          ),
+        tx
+          .select()
+          .from(branchCategoryPrintRoutes)
+          .where(
+            and(
+              eq(branchCategoryPrintRoutes.businessId, businessId),
+              eq(branchCategoryPrintRoutes.branchId, branchId),
+            ),
+          ),
+        tx
+          .select()
+          .from(branchProductPrintRoutes)
+          .where(
+            and(
+              eq(branchProductPrintRoutes.businessId, businessId),
+              eq(branchProductPrintRoutes.branchId, branchId),
             ),
           ),
       ]);
@@ -273,6 +390,20 @@ export class EffectiveMenuResolver {
           available: row.available,
           priceAddition: row.priceAddition,
         })),
+        categoryTaxOverrides: categoryTaxRows.map((row) => ({
+          categoryId: row.categoryId,
+          taxRateId: row.taxRateId,
+        })),
+        productTaxOverrides: productTaxRows.map((row) => ({
+          productId: row.productId,
+          taxRateId: row.taxRateId,
+        })),
+        categoryPrintRoutes: groupRouteRows(categoryPrintRows, (row) => row.categoryId).map(
+          ([categoryId, stations]) => ({ categoryId, stations }),
+        ),
+        productPrintRoutes: groupRouteRows(productPrintRows, (row) => row.productId).map(
+          ([productId, stations]) => ({ productId, stations }),
+        ),
       };
     });
   }
@@ -335,6 +466,116 @@ export class EffectiveMenuResolver {
           })),
         );
       }
+    });
+    return this.getOverrides(businessId, branchId);
+  }
+
+  async replaceTaxOverrides(
+    businessId: string,
+    branchId: string,
+    input: ReplaceMenuTaxOverridesInput,
+  ): Promise<BranchMenuOverridesResponse> {
+    await this.databaseService.withTenant(businessId, async (tx) => {
+      await this.assertBranch(tx, businessId, branchId);
+      for (const row of input.categoryTaxOverrides) {
+        await this.assertCategory(tx, businessId, row.categoryId);
+        await this.assertTaxRate(tx, row.taxRateId);
+      }
+      for (const row of input.productTaxOverrides) {
+        await this.assertProduct(tx, businessId, row.productId);
+        await this.assertTaxRate(tx, row.taxRateId);
+      }
+      await Promise.all([
+        tx
+          .delete(branchCategoryTaxOverrides)
+          .where(
+            and(
+              eq(branchCategoryTaxOverrides.businessId, businessId),
+              eq(branchCategoryTaxOverrides.branchId, branchId),
+            ),
+          ),
+        tx
+          .delete(branchProductTaxOverrides)
+          .where(
+            and(
+              eq(branchProductTaxOverrides.businessId, businessId),
+              eq(branchProductTaxOverrides.branchId, branchId),
+            ),
+          ),
+      ]);
+      if (input.categoryTaxOverrides.length > 0) {
+        await tx.insert(branchCategoryTaxOverrides).values(
+          input.categoryTaxOverrides.map((row) => ({
+            businessId,
+            branchId,
+            categoryId: row.categoryId,
+            taxRateId: row.taxRateId,
+          })),
+        );
+      }
+      if (input.productTaxOverrides.length > 0) {
+        await tx.insert(branchProductTaxOverrides).values(
+          input.productTaxOverrides.map((row) => ({
+            businessId,
+            branchId,
+            productId: row.productId,
+            taxRateId: row.taxRateId,
+          })),
+        );
+      }
+    });
+    return this.getOverrides(businessId, branchId);
+  }
+
+  async replacePrintRoutes(
+    businessId: string,
+    branchId: string,
+    input: ReplaceMenuPrintRoutesInput,
+  ): Promise<BranchMenuOverridesResponse> {
+    await this.databaseService.withTenant(businessId, async (tx) => {
+      await this.assertBranch(tx, businessId, branchId);
+      for (const row of input.categoryPrintRoutes) {
+        await this.assertCategory(tx, businessId, row.categoryId);
+      }
+      for (const row of input.productPrintRoutes) {
+        await this.assertProduct(tx, businessId, row.productId);
+      }
+      await Promise.all([
+        tx
+          .delete(branchCategoryPrintRoutes)
+          .where(
+            and(
+              eq(branchCategoryPrintRoutes.businessId, businessId),
+              eq(branchCategoryPrintRoutes.branchId, branchId),
+            ),
+          ),
+        tx
+          .delete(branchProductPrintRoutes)
+          .where(
+            and(
+              eq(branchProductPrintRoutes.businessId, businessId),
+              eq(branchProductPrintRoutes.branchId, branchId),
+            ),
+          ),
+      ]);
+      const categoryRows = input.categoryPrintRoutes.flatMap((row) =>
+        Array.from(new Set(row.stations)).map((station) => ({
+          businessId,
+          branchId,
+          categoryId: row.categoryId,
+          station,
+        })),
+      );
+      const productRows = input.productPrintRoutes.flatMap((row) =>
+        Array.from(new Set(row.stations)).map((station) => ({
+          businessId,
+          branchId,
+          productId: row.productId,
+          station,
+        })),
+      );
+      if (categoryRows.length > 0) await tx.insert(branchCategoryPrintRoutes).values(categoryRows);
+      if (productRows.length > 0) await tx.insert(branchProductPrintRoutes).values(productRows);
     });
     return this.getOverrides(businessId, branchId);
   }
@@ -667,6 +908,43 @@ export class EffectiveMenuResolver {
       });
   }
 
+  private resolveTaxRate(
+    product: typeof products.$inferSelect,
+    defaultTaxRate: { taxRateId: string; isExplicit: boolean },
+    productTaxById: Map<string, string>,
+    categoryTaxById: Map<string, string>,
+  ): { taxRateId: string; source: "product" | "category" | "branch_default" | "fallback" } {
+    const productOverride = productTaxById.get(product.id);
+    if (productOverride) return { taxRateId: productOverride, source: "product" };
+    const categoryOverride = product.categoryId ? categoryTaxById.get(product.categoryId) : undefined;
+    if (categoryOverride) return { taxRateId: categoryOverride, source: "category" };
+    if (defaultTaxRate.isExplicit) {
+      return { taxRateId: defaultTaxRate.taxRateId, source: "branch_default" };
+    }
+    return { taxRateId: DEFAULT_TAX_RATE_ID, source: "fallback" };
+  }
+
+  private resolvePrintStations(
+    product: typeof products.$inferSelect,
+    productRoutesById: Map<string, string[]>,
+    categoryRoutesById: Map<string, string[]>,
+    legacyRoutesByCategoryId: Map<string, string[]>,
+  ): { stations: string[]; source: "product" | "category" | "legacy" | "all" } {
+    const productRoutes = productRoutesById.get(product.id);
+    if (productRoutes && productRoutes.length > 0) {
+      return { stations: productRoutes, source: "product" };
+    }
+    const categoryRoutes = product.categoryId ? categoryRoutesById.get(product.categoryId) : undefined;
+    if (categoryRoutes && categoryRoutes.length > 0) {
+      return { stations: categoryRoutes, source: "category" };
+    }
+    const legacyRoutes = product.categoryId ? legacyRoutesByCategoryId.get(product.categoryId) : undefined;
+    if (legacyRoutes && legacyRoutes.length > 0) {
+      return { stations: legacyRoutes, source: "legacy" };
+    }
+    return { stations: [...ALL_PRINT_STATIONS], source: "all" };
+  }
+
   private isProductVisibleForChannel(
     product: typeof products.$inferSelect,
     override: typeof branchProductOverrides.$inferSelect | undefined,
@@ -706,7 +984,7 @@ export class EffectiveMenuResolver {
     tx: TenantedDrizzleClient,
     businessId: string,
     branchId: string,
-  ): Promise<string> {
+  ): Promise<{ taxRateId: string; isExplicit: boolean }> {
     const [row] = await tx
       .select({ id: branchTaxSettings.defaultTaxRateId })
       .from(branchTaxSettings)
@@ -717,7 +995,9 @@ export class EffectiveMenuResolver {
         ),
       )
       .limit(1);
-    return row?.id ?? DEFAULT_TAX_RATE_ID;
+    return row
+      ? { taxRateId: row.id, isExplicit: true }
+      : { taxRateId: DEFAULT_TAX_RATE_ID, isExplicit: false };
   }
 
   private async assertBranch(
@@ -758,6 +1038,37 @@ export class EffectiveMenuResolver {
     if (!product) throw new NotFoundException("Product not found");
   }
 
+  private async assertCategory(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    categoryId: string,
+  ): Promise<void> {
+    const [category] = await tx
+      .select({ id: categories.id })
+      .from(categories)
+      .where(
+        and(
+          eq(categories.businessId, businessId),
+          eq(categories.id, categoryId),
+          isNull(categories.deletedAt),
+        ),
+      )
+      .limit(1);
+    if (!category) throw new NotFoundException("Category not found");
+  }
+
+  private async assertTaxRate(
+    tx: TenantedDrizzleClient,
+    taxRateId: string,
+  ): Promise<void> {
+    const [rate] = await tx
+      .select({ id: taxRates.id })
+      .from(taxRates)
+      .where(and(eq(taxRates.id, taxRateId), eq(taxRates.isActive, true)))
+      .limit(1);
+    if (!rate) throw new NotFoundException("Tax rate not found");
+  }
+
   private async findProductOverride(
     tx: TenantedDrizzleClient,
     businessId: string,
@@ -787,4 +1098,26 @@ function bucketBy<T, K>(rows: T[], key: (row: T) => K): Map<K, T[]> {
     result.set(key(row), bucket);
   }
   return result;
+}
+
+function stationSetById<T extends { station: string }>(rows: T[], id: (row: T) => string): Map<string, string[]> {
+  return new Map(
+    groupRouteRows(rows, id).map(([rowId, stations]) => [rowId, stations.sort()]),
+  );
+}
+
+function groupRouteRows<T extends { station: string }>(
+  rows: T[],
+  id: (row: T) => string,
+): Array<[string, string[]]> {
+  const grouped = new Map<string, Set<string>>();
+  for (const row of rows) {
+    const bucket = grouped.get(id(row)) ?? new Set<string>();
+    bucket.add(row.station);
+    grouped.set(id(row), bucket);
+  }
+  return Array.from(grouped.entries()).map(([rowId, stations]) => [
+    rowId,
+    Array.from(stations).sort(),
+  ]);
 }

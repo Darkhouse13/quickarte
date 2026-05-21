@@ -649,6 +649,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/branches/{branchId}/menu-tax-overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["BranchMenuController_replaceTaxOverrides"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/menu-print-routes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["BranchMenuController_replacePrintRoutes"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/branches/{branchId}/products/{productId}/availability": {
         parameters: {
             query?: never;
@@ -1736,6 +1768,11 @@ export interface components {
                 online: boolean;
             };
             effectiveTaxRateId: string;
+            /** @enum {string} */
+            taxSource: "product" | "category" | "branch_default" | "fallback";
+            printStations: string[];
+            /** @enum {string} */
+            printRouteSource: "product" | "category" | "legacy" | "all";
             variants: components["schemas"]["EffectiveMenuVariant_Output"][];
             modifiers: components["schemas"]["MenuModifierGroup_Output"][];
         };
@@ -1829,6 +1866,26 @@ export interface components {
                 available: boolean | null;
                 priceAddition: string | null;
             }[];
+            categoryTaxOverrides: {
+                /** Format: uuid */
+                categoryId: string;
+                taxRateId: string;
+            }[];
+            productTaxOverrides: {
+                /** Format: uuid */
+                productId: string;
+                taxRateId: string;
+            }[];
+            categoryPrintRoutes: {
+                /** Format: uuid */
+                categoryId: string;
+                stations: string[];
+            }[];
+            productPrintRoutes: {
+                /** Format: uuid */
+                productId: string;
+                stations: string[];
+            }[];
         };
         ReplaceBranchMenuOverridesDto: {
             categoryOverrides: {
@@ -1870,6 +1927,50 @@ export interface components {
                 optionValueId: string;
                 available: boolean | null;
                 priceAddition: string | null;
+            }[];
+            categoryTaxOverrides: {
+                /** Format: uuid */
+                categoryId: string;
+                taxRateId: string;
+            }[];
+            productTaxOverrides: {
+                /** Format: uuid */
+                productId: string;
+                taxRateId: string;
+            }[];
+            categoryPrintRoutes: {
+                /** Format: uuid */
+                categoryId: string;
+                stations: string[];
+            }[];
+            productPrintRoutes: {
+                /** Format: uuid */
+                productId: string;
+                stations: string[];
+            }[];
+        };
+        ReplaceMenuTaxOverridesDto: {
+            categoryTaxOverrides: {
+                /** Format: uuid */
+                categoryId: string;
+                taxRateId: string;
+            }[];
+            productTaxOverrides: {
+                /** Format: uuid */
+                productId: string;
+                taxRateId: string;
+            }[];
+        };
+        ReplaceMenuPrintRoutesDto: {
+            categoryPrintRoutes: {
+                /** Format: uuid */
+                categoryId: string;
+                stations: string[];
+            }[];
+            productPrintRoutes: {
+                /** Format: uuid */
+                productId: string;
+                stations: string[];
             }[];
         };
         UpdateProductAvailabilityDto: {
@@ -3362,6 +3463,56 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ReplaceBranchMenuOverridesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchMenuOverridesResponse_Output"];
+                };
+            };
+        };
+    };
+    BranchMenuController_replaceTaxOverrides: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceMenuTaxOverridesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchMenuOverridesResponse_Output"];
+                };
+            };
+        };
+    };
+    BranchMenuController_replacePrintRoutes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceMenuPrintRoutesDto"];
             };
         };
         responses: {

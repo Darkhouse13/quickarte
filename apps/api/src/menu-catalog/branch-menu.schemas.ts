@@ -18,6 +18,13 @@ export const menuChannelSchema = z.enum([
 ]);
 
 export const branchOverrideSourceSchema = z.enum(["inherited", "overridden"]);
+export const taxSourceSchema = z.enum([
+  "product",
+  "category",
+  "branch_default",
+  "fallback",
+]);
+export const printRouteSourceSchema = z.enum(["product", "category", "legacy", "all"]);
 
 export const effectiveMenuVariantSchema = z
   .object({
@@ -69,6 +76,9 @@ export const effectiveMenuProductSchema = z
       online: z.boolean(),
     }),
     effectiveTaxRateId: z.string(),
+    taxSource: taxSourceSchema,
+    printStations: z.array(z.string()),
+    printRouteSource: printRouteSourceSchema,
     variants: z.array(effectiveMenuVariantSchema),
     modifiers: z.array(modifierGroupSchema),
   })
@@ -144,12 +154,36 @@ export const optionValueOverrideSchema = z.object({
   priceAddition: decimalStringSchema.nullable(),
 });
 
+export const categoryTaxOverrideSchema = z.object({
+  categoryId: z.uuid(),
+  taxRateId: z.string().min(1),
+});
+
+export const productTaxOverrideSchema = z.object({
+  productId: z.uuid(),
+  taxRateId: z.string().min(1),
+});
+
+export const categoryPrintRouteSchema = z.object({
+  categoryId: z.uuid(),
+  stations: z.array(z.string().min(1).max(32)).min(1),
+});
+
+export const productPrintRouteSchema = z.object({
+  productId: z.uuid(),
+  stations: z.array(z.string().min(1).max(32)).min(1),
+});
+
 export const menuOverridesResponseSchema = z
   .object({
     categoryOverrides: z.array(categoryOverrideSchema),
     productOverrides: z.array(productOverrideSchema),
     priceOverrides: z.array(priceOverrideSchema),
     optionValueOverrides: z.array(optionValueOverrideSchema),
+    categoryTaxOverrides: z.array(categoryTaxOverrideSchema),
+    productTaxOverrides: z.array(productTaxOverrideSchema),
+    categoryPrintRoutes: z.array(categoryPrintRouteSchema),
+    productPrintRoutes: z.array(productPrintRouteSchema),
   })
   .meta({ id: "BranchMenuOverridesResponse" });
 
@@ -175,11 +209,23 @@ export const replaceProductPricesBodySchema = z.object({
   prices: z.array(priceOverrideSchema.omit({ productId: true })),
 });
 
+export const replaceMenuTaxOverridesBodySchema = z.object({
+  categoryTaxOverrides: z.array(categoryTaxOverrideSchema),
+  productTaxOverrides: z.array(productTaxOverrideSchema),
+});
+
+export const replaceMenuPrintRoutesBodySchema = z.object({
+  categoryPrintRoutes: z.array(categoryPrintRouteSchema),
+  productPrintRoutes: z.array(productPrintRouteSchema),
+});
+
 export class EffectiveMenuResponseDto extends createZodDto(effectiveMenuResponseSchema) {}
 export class BranchMenuOverridesResponseDto extends createZodDto(menuOverridesResponseSchema) {}
 export class ReplaceBranchMenuOverridesDto extends createZodDto(replaceMenuOverridesBodySchema) {}
 export class UpdateProductAvailabilityDto extends createZodDto(updateProductAvailabilityBodySchema) {}
 export class ReplaceBranchProductPricesDto extends createZodDto(replaceProductPricesBodySchema) {}
+export class ReplaceMenuTaxOverridesDto extends createZodDto(replaceMenuTaxOverridesBodySchema) {}
+export class ReplaceMenuPrintRoutesDto extends createZodDto(replaceMenuPrintRoutesBodySchema) {}
 
 export type MenuChannel = z.infer<typeof menuChannelSchema>;
 export type EffectiveMenuResponse = z.infer<typeof effectiveMenuResponseSchema>;
@@ -187,3 +233,5 @@ export type BranchMenuOverridesResponse = z.infer<typeof menuOverridesResponseSc
 export type ReplaceBranchMenuOverridesInput = z.infer<typeof replaceMenuOverridesBodySchema>;
 export type UpdateProductAvailabilityInput = z.infer<typeof updateProductAvailabilityBodySchema>;
 export type ReplaceBranchProductPricesInput = z.infer<typeof replaceProductPricesBodySchema>;
+export type ReplaceMenuTaxOverridesInput = z.infer<typeof replaceMenuTaxOverridesBodySchema>;
+export type ReplaceMenuPrintRoutesInput = z.infer<typeof replaceMenuPrintRoutesBodySchema>;
