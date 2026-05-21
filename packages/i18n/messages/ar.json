@@ -320,6 +320,56 @@
           "customer_copy": "Copie client"
         }
       }
+    },
+    "module3": {
+      "eyebrow": "Menu",
+      "catalog": {
+        "title": "Catalogue menu",
+        "categories": "Categories",
+        "categoryName": "Nom de categorie",
+        "subcategoryName": "Nom de sous-categorie",
+        "add": "Ajouter",
+        "items": "Articles",
+        "newItem": "Nouvel article",
+        "editItem": "Modifier l'article",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "deleteConfirm": "Supprimer cet article du catalogue ?",
+        "hidden": "Masque",
+        "save": "Enregistrer",
+        "saved": "Catalogue enregistre",
+        "loadError": "Impossible de charger le catalogue",
+        "saveError": "Impossible d'enregistrer le catalogue",
+        "locales": "Langues du contenu",
+        "category": "Categorie",
+        "basePrice": "Prix de base",
+        "sku": "SKU / code article",
+        "image": "Image principale",
+        "channels": "Canaux",
+        "variants": "Variantes",
+        "addVariant": "Ajouter une variante",
+        "variantName": "Nom variante",
+        "variantKind": "Type",
+        "price": "Prix",
+        "market": "Marche",
+        "default": "Defaut",
+        "remove": "Retirer",
+        "variable": "Prix variable",
+        "channel": {
+          "dineIn": "Sur place",
+          "takeaway": "A emporter",
+          "delivery": "Livraison",
+          "qr": "QR menu",
+          "online": "En ligne"
+        },
+        "variantKindValue": {
+          "size": "Taille",
+          "protein": "Proteine",
+          "topping": "Garniture",
+          "market": "Marche",
+          "custom": "Custom"
+        }
+      }
     }
   },
   "pos": {

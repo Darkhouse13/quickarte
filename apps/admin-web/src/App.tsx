@@ -13,6 +13,7 @@ import { PaymentMethodsPage } from "./pages/PaymentMethodsPage";
 import { PrinterSetupPage } from "./pages/PrinterSetupPage";
 import { ReceiptSettingsPage } from "./pages/ReceiptSettingsPage";
 import { TaxConfigurationPage } from "./pages/TaxConfigurationPage";
+import { MenuCatalogPage } from "./pages/MenuCatalogPage";
 
 const primaryNavItems = [
   ["dashboard", "/"],
@@ -48,7 +49,7 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { path: "/", element: <DashboardPage /> },
-          { path: "/menu", element: <PlaceholderPage name="menu" /> },
+          { path: "/menu", element: <MenuCatalogPage /> },
           { path: "/orders", element: <PlaceholderPage name="orders" /> },
           { path: "/reports", element: <PlaceholderPage name="reports" /> },
           { path: "/staff", element: <PlaceholderPage name="staff" /> },

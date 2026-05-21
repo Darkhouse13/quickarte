@@ -9,6 +9,7 @@ import { BusinessesModule } from "./businesses/businesses.module";
 import { TenantContextMiddleware } from "./common/middleware/tenant-context.middleware";
 import { validateEnv } from "./config/env";
 import { HealthModule } from "./health/health.module";
+import { MenuCatalogModule } from "./menu-catalog/menu-catalog.module";
 import { OperatingHoursModule } from "./operating-hours/operating-hours.module";
 import { PaymentMethodsModule } from "./payment-methods/payment-methods.module";
 import { PrintersModule } from "./printers/printers.module";
@@ -76,6 +77,7 @@ import { ZodSampleModule } from "./zod-sample/zod-sample.module";
     ReceiptSettingsModule,
     TaxConfigModule,
     SyncModule,
+    MenuCatalogModule,
     ZodSampleModule,
   ],
 })

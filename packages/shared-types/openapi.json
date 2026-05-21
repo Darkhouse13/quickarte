@@ -1307,6 +1307,479 @@
         ]
       }
     },
+    "/v1/menu/categories": {
+      "get": {
+        "operationId": "MenuCatalogController_listCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuCategoriesResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List shared menu categories and one-level subcategories.",
+        "tags": [
+          "menu"
+        ]
+      },
+      "post": {
+        "operationId": "MenuCatalogController_createCategory",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMenuCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuCategory_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/menu/categories/{categoryId}": {
+      "patch": {
+        "operationId": "MenuCatalogController_updateCategory",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMenuCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuCategory_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      },
+      "delete": {
+        "operationId": "MenuCatalogController_deleteCategory",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuDeleteResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/menu/categories/reorder": {
+      "put": {
+        "operationId": "MenuCatalogController_reorderCategories",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderMenuCategoriesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuCategoriesResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/menu/products": {
+      "get": {
+        "operationId": "MenuCatalogController_listProducts",
+        "parameters": [
+          {
+            "name": "hidden",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuProductsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List shared menu products with first-class variants.",
+        "tags": [
+          "menu"
+        ]
+      },
+      "post": {
+        "operationId": "MenuCatalogController_createProduct",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMenuProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuProductResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/menu/products/{productId}": {
+      "get": {
+        "operationId": "MenuCatalogController_getProduct",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuProductResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      },
+      "patch": {
+        "operationId": "MenuCatalogController_updateProduct",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMenuProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuProductResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      },
+      "delete": {
+        "operationId": "MenuCatalogController_deleteProduct",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuDeleteResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/menu/products/reorder": {
+      "put": {
+        "operationId": "MenuCatalogController_reorderProducts",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderMenuProductsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuProductsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/menu/products/{productId}/variants": {
+      "put": {
+        "operationId": "MenuCatalogController_replaceVariants",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceMenuVariantsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuVariantsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/menu/products/{productId}/images": {
+      "put": {
+        "operationId": "MenuCatalogController_replaceImages",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceProductImagesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuImagesResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
+    "/v1/menu/locale-settings": {
+      "get": {
+        "operationId": "MenuCatalogController_getLocaleSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuLocaleSettingsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      },
+      "put": {
+        "operationId": "MenuCatalogController_updateLocaleSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMenuLocaleSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuLocaleSettingsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
     "/v1/_samples/effective-menu": {
       "post": {
         "operationId": "ZodSampleController_getEffectiveMenuSample",
@@ -2968,6 +3441,1657 @@
           "taxApplicationLevel",
           "priceDisplayMode",
           "serviceChargeEnabled"
+        ]
+      },
+      "MenuCategory_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "parentId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "localizedDescriptions": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "colorTag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "children": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/MenuCategoryBase_Output"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "parentId",
+          "name",
+          "slug",
+          "description",
+          "localizedNames",
+          "localizedDescriptions",
+          "colorTag",
+          "position",
+          "visible",
+          "children"
+        ],
+        "id": "MenuCategory_Output",
+        "additionalProperties": false
+      },
+      "MenuCategoryBase_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "parentId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "localizedDescriptions": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "colorTag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "parentId",
+          "name",
+          "slug",
+          "description",
+          "localizedNames",
+          "localizedDescriptions",
+          "colorTag",
+          "position",
+          "visible"
+        ],
+        "additionalProperties": false,
+        "id": "MenuCategoryBase_Output"
+      },
+      "MenuCategoriesResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuCategory_Output"
+            }
+          }
+        },
+        "required": [
+          "categories"
+        ],
+        "additionalProperties": false
+      },
+      "CreateMenuCategoryDto": {
+        "type": "object",
+        "properties": {
+          "parentId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "localizedDescriptions": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "colorTag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "localizedNames"
+        ]
+      },
+      "UpdateMenuCategoryDto": {
+        "type": "object",
+        "properties": {
+          "parentId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "localizedDescriptions": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "colorTag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      },
+      "MenuDeleteResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "additionalProperties": false
+      },
+      "ReorderMenuCategoriesDto": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "parentId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "parentId",
+                "position"
+              ]
+            }
+          }
+        },
+        "required": [
+          "categories"
+        ]
+      },
+      "MenuProduct_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "categoryId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "basePrice": {
+            "type": "string",
+            "pattern": "^\\d+(\\.\\d{1,2})?$",
+            "description": "Decimal string money value, never a JS number"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sku": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "itemCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "colorTag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "channels": {
+            "type": "object",
+            "properties": {
+              "dineIn": {
+                "type": "boolean"
+              },
+              "takeaway": {
+                "type": "boolean"
+              },
+              "delivery": {
+                "type": "boolean"
+              },
+              "qr": {
+                "type": "boolean"
+              },
+              "online": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "dineIn",
+              "takeaway",
+              "delivery",
+              "qr",
+              "online"
+            ],
+            "additionalProperties": false
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "localizedDescriptions": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "position": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuVariant_Output"
+            }
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuProductImage_Output"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "categoryId",
+          "name",
+          "description",
+          "basePrice",
+          "image",
+          "sku",
+          "itemCode",
+          "colorTag",
+          "featured",
+          "hidden",
+          "available",
+          "channels",
+          "localizedNames",
+          "localizedDescriptions",
+          "position",
+          "variants",
+          "images"
+        ],
+        "additionalProperties": false,
+        "id": "MenuProduct_Output"
+      },
+      "MenuVariant_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+(\\.\\d{1,2})?$",
+                "description": "Decimal string money value, never a JS number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "variantKind": {
+            "type": "string",
+            "enum": [
+              "size",
+              "protein",
+              "topping",
+              "market",
+              "custom"
+            ]
+          },
+          "pricingMode": {
+            "type": "string",
+            "enum": [
+              "fixed",
+              "variable_pos"
+            ]
+          },
+          "displayPriceLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "displayPriceMin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+(\\.\\d{1,2})?$",
+                "description": "Decimal string money value, never a JS number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "displayPriceMax": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+(\\.\\d{1,2})?$",
+                "description": "Decimal string money value, never a JS number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unitLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "synthetic": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "price",
+          "isDefault",
+          "available",
+          "position",
+          "variantKind",
+          "pricingMode",
+          "displayPriceLabel",
+          "displayPriceMin",
+          "displayPriceMax",
+          "unitLabel",
+          "synthetic"
+        ],
+        "additionalProperties": false,
+        "id": "MenuVariant_Output"
+      },
+      "MenuProductImage_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "url": {
+            "type": "string",
+            "minLength": 1
+          },
+          "altText": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "isPrimary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "altText",
+          "position",
+          "isPrimary"
+        ],
+        "additionalProperties": false,
+        "id": "MenuProductImage_Output"
+      },
+      "MenuProductsResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuProduct_Output"
+            }
+          }
+        },
+        "required": [
+          "products"
+        ],
+        "additionalProperties": false
+      },
+      "CreateMenuProductDto": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "localizedDescriptions": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "basePrice": {
+            "type": "string",
+            "pattern": "^\\d+(\\.\\d{1,2})?$",
+            "description": "Decimal string money value, never a JS number"
+          },
+          "sku": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "itemCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "colorTag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "featured": {
+            "default": false,
+            "type": "boolean"
+          },
+          "hidden": {
+            "default": false,
+            "type": "boolean"
+          },
+          "available": {
+            "default": true,
+            "type": "boolean"
+          },
+          "channels": {
+            "type": "object",
+            "properties": {
+              "dineIn": {
+                "default": true,
+                "type": "boolean"
+              },
+              "takeaway": {
+                "default": true,
+                "type": "boolean"
+              },
+              "delivery": {
+                "default": true,
+                "type": "boolean"
+              },
+              "qr": {
+                "default": true,
+                "type": "boolean"
+              },
+              "online": {
+                "default": true,
+                "type": "boolean"
+              }
+            }
+          },
+          "position": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "variants": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "price": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d{1,2})?$",
+                      "description": "Decimal string money value, never a JS number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "isDefault": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "available": {
+                  "default": true,
+                  "type": "boolean"
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "variantKind": {
+                  "default": "custom",
+                  "type": "string",
+                  "enum": [
+                    "size",
+                    "protein",
+                    "topping",
+                    "market",
+                    "custom"
+                  ]
+                },
+                "pricingMode": {
+                  "default": "fixed",
+                  "type": "string",
+                  "enum": [
+                    "fixed",
+                    "variable_pos"
+                  ]
+                },
+                "displayPriceLabel": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "displayPriceMin": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d{1,2})?$",
+                      "description": "Decimal string money value, never a JS number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "displayPriceMax": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d{1,2})?$",
+                      "description": "Decimal string money value, never a JS number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "unitLabel": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "name",
+                "price",
+                "position"
+              ]
+            }
+          },
+          "images": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "url": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "altText": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "isPrimary": {
+                  "default": false,
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "url",
+                "position"
+              ]
+            }
+          }
+        },
+        "required": [
+          "localizedNames",
+          "basePrice",
+          "channels"
+        ]
+      },
+      "MenuProductResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/MenuProduct_Output"
+          }
+        },
+        "required": [
+          "product"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateMenuProductDto": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "localizedDescriptions": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "basePrice": {
+            "type": "string",
+            "pattern": "^\\d+(\\.\\d{1,2})?$",
+            "description": "Decimal string money value, never a JS number"
+          },
+          "sku": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "itemCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "colorTag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "featured": {
+            "default": false,
+            "type": "boolean"
+          },
+          "hidden": {
+            "default": false,
+            "type": "boolean"
+          },
+          "available": {
+            "default": true,
+            "type": "boolean"
+          },
+          "channels": {
+            "type": "object",
+            "properties": {
+              "dineIn": {
+                "default": true,
+                "type": "boolean"
+              },
+              "takeaway": {
+                "default": true,
+                "type": "boolean"
+              },
+              "delivery": {
+                "default": true,
+                "type": "boolean"
+              },
+              "qr": {
+                "default": true,
+                "type": "boolean"
+              },
+              "online": {
+                "default": true,
+                "type": "boolean"
+              }
+            }
+          },
+          "position": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "variants": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "price": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d{1,2})?$",
+                      "description": "Decimal string money value, never a JS number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "isDefault": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "available": {
+                  "default": true,
+                  "type": "boolean"
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "variantKind": {
+                  "default": "custom",
+                  "type": "string",
+                  "enum": [
+                    "size",
+                    "protein",
+                    "topping",
+                    "market",
+                    "custom"
+                  ]
+                },
+                "pricingMode": {
+                  "default": "fixed",
+                  "type": "string",
+                  "enum": [
+                    "fixed",
+                    "variable_pos"
+                  ]
+                },
+                "displayPriceLabel": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "displayPriceMin": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d{1,2})?$",
+                      "description": "Decimal string money value, never a JS number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "displayPriceMax": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d{1,2})?$",
+                      "description": "Decimal string money value, never a JS number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "unitLabel": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "name",
+                "price",
+                "position"
+              ]
+            }
+          },
+          "images": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "url": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "altText": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "isPrimary": {
+                  "default": false,
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "url",
+                "position"
+              ]
+            }
+          }
+        }
+      },
+      "ReorderMenuProductsDto": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "categoryId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "categoryId",
+                "position"
+              ]
+            }
+          }
+        },
+        "required": [
+          "products"
+        ]
+      },
+      "ReplaceMenuVariantsDto": {
+        "type": "object",
+        "properties": {
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "price": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d{1,2})?$",
+                      "description": "Decimal string money value, never a JS number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "isDefault": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "available": {
+                  "default": true,
+                  "type": "boolean"
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "variantKind": {
+                  "default": "custom",
+                  "type": "string",
+                  "enum": [
+                    "size",
+                    "protein",
+                    "topping",
+                    "market",
+                    "custom"
+                  ]
+                },
+                "pricingMode": {
+                  "default": "fixed",
+                  "type": "string",
+                  "enum": [
+                    "fixed",
+                    "variable_pos"
+                  ]
+                },
+                "displayPriceLabel": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "displayPriceMin": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d{1,2})?$",
+                      "description": "Decimal string money value, never a JS number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "displayPriceMax": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d{1,2})?$",
+                      "description": "Decimal string money value, never a JS number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "unitLabel": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "name",
+                "price",
+                "position"
+              ]
+            }
+          }
+        },
+        "required": [
+          "variants"
+        ]
+      },
+      "MenuVariantsResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuVariant_Output"
+            }
+          }
+        },
+        "required": [
+          "variants"
+        ],
+        "additionalProperties": false
+      },
+      "ReplaceProductImagesDto": {
+        "type": "object",
+        "properties": {
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "url": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "altText": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "isPrimary": {
+                  "default": false,
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "url",
+                "position"
+              ]
+            }
+          }
+        },
+        "required": [
+          "images"
+        ]
+      },
+      "MenuImagesResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuProductImage_Output"
+            }
+          }
+        },
+        "required": [
+          "images"
+        ],
+        "additionalProperties": false
+      },
+      "MenuLocaleSettingsResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "activeLocales": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "defaultLocale": {
+            "type": "string"
+          },
+          "availableLocales": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "activeLocales",
+          "defaultLocale",
+          "availableLocales"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateMenuLocaleSettingsDto": {
+        "type": "object",
+        "properties": {
+          "activeLocales": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 2
+            }
+          },
+          "defaultLocale": {
+            "type": "string",
+            "minLength": 2
+          }
+        },
+        "required": [
+          "activeLocales",
+          "defaultLocale"
         ]
       },
       "SampleEffectiveMenuRequestDto": {

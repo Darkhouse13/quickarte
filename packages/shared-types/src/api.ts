@@ -405,6 +405,152 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/menu/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List shared menu categories and one-level subcategories. */
+        get: operations["MenuCatalogController_listCategories"];
+        put?: never;
+        post: operations["MenuCatalogController_createCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/categories/{categoryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["MenuCatalogController_deleteCategory"];
+        options?: never;
+        head?: never;
+        patch: operations["MenuCatalogController_updateCategory"];
+        trace?: never;
+    };
+    "/v1/menu/categories/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["MenuCatalogController_reorderCategories"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List shared menu products with first-class variants. */
+        get: operations["MenuCatalogController_listProducts"];
+        put?: never;
+        post: operations["MenuCatalogController_createProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/products/{productId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MenuCatalogController_getProduct"];
+        put?: never;
+        post?: never;
+        delete: operations["MenuCatalogController_deleteProduct"];
+        options?: never;
+        head?: never;
+        patch: operations["MenuCatalogController_updateProduct"];
+        trace?: never;
+    };
+    "/v1/menu/products/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["MenuCatalogController_reorderProducts"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/products/{productId}/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["MenuCatalogController_replaceVariants"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/products/{productId}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["MenuCatalogController_replaceImages"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/locale-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MenuCatalogController_getLocaleSettings"];
+        put: operations["MenuCatalogController_updateLocaleSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/_samples/effective-menu": {
         parameters: {
             query?: never;
@@ -896,6 +1042,350 @@ export interface components {
             serviceChargeEnabled: boolean;
             serviceChargeRate?: number | null;
             serviceChargeLabel?: string | null;
+        };
+        MenuCategory_Output: {
+            /** Format: uuid */
+            id: string;
+            parentId: string | null;
+            name: string;
+            slug: string | null;
+            description: string | null;
+            localizedNames: {
+                [key: string]: string;
+            };
+            localizedDescriptions: {
+                [key: string]: string;
+            };
+            colorTag: string | null;
+            position: number;
+            visible: boolean;
+            /** @default [] */
+            children: components["schemas"]["MenuCategoryBase_Output"][];
+        };
+        MenuCategoryBase_Output: {
+            /** Format: uuid */
+            id: string;
+            parentId: string | null;
+            name: string;
+            slug: string | null;
+            description: string | null;
+            localizedNames: {
+                [key: string]: string;
+            };
+            localizedDescriptions: {
+                [key: string]: string;
+            };
+            colorTag: string | null;
+            position: number;
+            visible: boolean;
+        };
+        MenuCategoriesResponseDto_Output: {
+            categories: components["schemas"]["MenuCategory_Output"][];
+        };
+        CreateMenuCategoryDto: {
+            parentId?: string | null;
+            name?: string;
+            slug?: string | null;
+            description?: string | null;
+            localizedNames: {
+                [key: string]: string;
+            };
+            localizedDescriptions?: {
+                [key: string]: string;
+            };
+            colorTag?: string | null;
+            visible?: boolean;
+            position?: number;
+        };
+        UpdateMenuCategoryDto: {
+            parentId?: string | null;
+            name?: string;
+            slug?: string | null;
+            description?: string | null;
+            localizedNames?: {
+                [key: string]: string;
+            };
+            localizedDescriptions?: {
+                [key: string]: string;
+            };
+            colorTag?: string | null;
+            visible?: boolean;
+            position?: number;
+        };
+        MenuDeleteResponseDto_Output: {
+            /** @constant */
+            deleted: true;
+        };
+        ReorderMenuCategoriesDto: {
+            categories: {
+                /** Format: uuid */
+                id: string;
+                parentId: string | null;
+                position: number;
+            }[];
+        };
+        MenuProduct_Output: {
+            /** Format: uuid */
+            id: string;
+            categoryId: string | null;
+            name: string;
+            description: string | null;
+            /** @description Decimal string money value, never a JS number */
+            basePrice: string;
+            image: string | null;
+            sku: string | null;
+            itemCode: string | null;
+            colorTag: string | null;
+            featured: boolean;
+            hidden: boolean;
+            available: boolean;
+            channels: {
+                dineIn: boolean;
+                takeaway: boolean;
+                delivery: boolean;
+                qr: boolean;
+                online: boolean;
+            };
+            localizedNames: {
+                [key: string]: string;
+            };
+            localizedDescriptions: {
+                [key: string]: string;
+            };
+            position: number;
+            variants: components["schemas"]["MenuVariant_Output"][];
+            images: components["schemas"]["MenuProductImage_Output"][];
+        };
+        MenuVariant_Output: {
+            id: string | null;
+            name: string;
+            price: string | null;
+            isDefault: boolean;
+            available: boolean;
+            position: number;
+            /** @enum {string} */
+            variantKind: "size" | "protein" | "topping" | "market" | "custom";
+            /** @enum {string} */
+            pricingMode: "fixed" | "variable_pos";
+            displayPriceLabel: string | null;
+            displayPriceMin: string | null;
+            displayPriceMax: string | null;
+            unitLabel: string | null;
+            synthetic: boolean;
+        };
+        MenuProductImage_Output: {
+            id: string | null;
+            url: string;
+            altText: string | null;
+            position: number;
+            isPrimary: boolean;
+        };
+        MenuProductsResponseDto_Output: {
+            products: components["schemas"]["MenuProduct_Output"][];
+        };
+        CreateMenuProductDto: {
+            categoryId?: string | null;
+            localizedNames: {
+                [key: string]: string;
+            };
+            localizedDescriptions?: {
+                [key: string]: string;
+            };
+            /** @description Decimal string money value, never a JS number */
+            basePrice: string;
+            sku?: string | null;
+            itemCode?: string | null;
+            colorTag?: string | null;
+            /** @default false */
+            featured: boolean;
+            /** @default false */
+            hidden: boolean;
+            /** @default true */
+            available: boolean;
+            channels: {
+                /** @default true */
+                dineIn: boolean;
+                /** @default true */
+                takeaway: boolean;
+                /** @default true */
+                delivery: boolean;
+                /** @default true */
+                qr: boolean;
+                /** @default true */
+                online: boolean;
+            };
+            /** @default 0 */
+            position: number;
+            /** @default [] */
+            variants: {
+                /** Format: uuid */
+                id?: string;
+                name: string;
+                price: string | null;
+                /** @default false */
+                isDefault: boolean;
+                /** @default true */
+                available: boolean;
+                position: number;
+                /**
+                 * @default custom
+                 * @enum {string}
+                 */
+                variantKind: "size" | "protein" | "topping" | "market" | "custom";
+                /**
+                 * @default fixed
+                 * @enum {string}
+                 */
+                pricingMode: "fixed" | "variable_pos";
+                displayPriceLabel?: string | null;
+                displayPriceMin?: string | null;
+                displayPriceMax?: string | null;
+                unitLabel?: string | null;
+            }[];
+            /** @default [] */
+            images: {
+                /** Format: uuid */
+                id?: string;
+                url: string;
+                altText?: string | null;
+                position: number;
+                /** @default false */
+                isPrimary: boolean;
+            }[];
+        };
+        MenuProductResponseDto_Output: {
+            product: components["schemas"]["MenuProduct_Output"];
+        };
+        UpdateMenuProductDto: {
+            categoryId?: string | null;
+            localizedNames?: {
+                [key: string]: string;
+            };
+            localizedDescriptions?: {
+                [key: string]: string;
+            };
+            /** @description Decimal string money value, never a JS number */
+            basePrice?: string;
+            sku?: string | null;
+            itemCode?: string | null;
+            colorTag?: string | null;
+            /** @default false */
+            featured: boolean;
+            /** @default false */
+            hidden: boolean;
+            /** @default true */
+            available: boolean;
+            channels?: {
+                /** @default true */
+                dineIn: boolean;
+                /** @default true */
+                takeaway: boolean;
+                /** @default true */
+                delivery: boolean;
+                /** @default true */
+                qr: boolean;
+                /** @default true */
+                online: boolean;
+            };
+            /** @default 0 */
+            position: number;
+            /** @default [] */
+            variants: {
+                /** Format: uuid */
+                id?: string;
+                name: string;
+                price: string | null;
+                /** @default false */
+                isDefault: boolean;
+                /** @default true */
+                available: boolean;
+                position: number;
+                /**
+                 * @default custom
+                 * @enum {string}
+                 */
+                variantKind: "size" | "protein" | "topping" | "market" | "custom";
+                /**
+                 * @default fixed
+                 * @enum {string}
+                 */
+                pricingMode: "fixed" | "variable_pos";
+                displayPriceLabel?: string | null;
+                displayPriceMin?: string | null;
+                displayPriceMax?: string | null;
+                unitLabel?: string | null;
+            }[];
+            /** @default [] */
+            images: {
+                /** Format: uuid */
+                id?: string;
+                url: string;
+                altText?: string | null;
+                position: number;
+                /** @default false */
+                isPrimary: boolean;
+            }[];
+        };
+        ReorderMenuProductsDto: {
+            products: {
+                /** Format: uuid */
+                id: string;
+                categoryId: string | null;
+                position: number;
+            }[];
+        };
+        ReplaceMenuVariantsDto: {
+            variants: {
+                /** Format: uuid */
+                id?: string;
+                name: string;
+                price: string | null;
+                /** @default false */
+                isDefault: boolean;
+                /** @default true */
+                available: boolean;
+                position: number;
+                /**
+                 * @default custom
+                 * @enum {string}
+                 */
+                variantKind: "size" | "protein" | "topping" | "market" | "custom";
+                /**
+                 * @default fixed
+                 * @enum {string}
+                 */
+                pricingMode: "fixed" | "variable_pos";
+                displayPriceLabel?: string | null;
+                displayPriceMin?: string | null;
+                displayPriceMax?: string | null;
+                unitLabel?: string | null;
+            }[];
+        };
+        MenuVariantsResponseDto_Output: {
+            variants: components["schemas"]["MenuVariant_Output"][];
+        };
+        ReplaceProductImagesDto: {
+            images: {
+                /** Format: uuid */
+                id?: string;
+                url: string;
+                altText?: string | null;
+                position: number;
+                /** @default false */
+                isPrimary: boolean;
+            }[];
+        };
+        MenuImagesResponseDto_Output: {
+            images: components["schemas"]["MenuProductImage_Output"][];
+        };
+        MenuLocaleSettingsResponseDto_Output: {
+            activeLocales: string[];
+            defaultLocale: string;
+            availableLocales: string[];
+        };
+        UpdateMenuLocaleSettingsDto: {
+            activeLocales: string[];
+            defaultLocale: string;
         };
         SampleEffectiveMenuRequestDto: {
             /** Format: uuid */
@@ -1829,6 +2319,345 @@ export interface operations {
                         /** @enum {string} */
                         status: "ok";
                     };
+                };
+            };
+        };
+    };
+    MenuCatalogController_listCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuCategoriesResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_createCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMenuCategoryDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuCategory_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_deleteCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                categoryId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuDeleteResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_updateCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                categoryId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMenuCategoryDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuCategory_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_reorderCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderMenuCategoriesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuCategoriesResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_listProducts: {
+        parameters: {
+            query?: {
+                hidden?: "true" | "false";
+                search?: string;
+                categoryId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuProductsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_createProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMenuProductDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuProductResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_getProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuProductResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_deleteProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuDeleteResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_updateProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMenuProductDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuProductResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_reorderProducts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderMenuProductsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuProductsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_replaceVariants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceMenuVariantsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuVariantsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_replaceImages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceProductImagesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuImagesResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_getLocaleSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuLocaleSettingsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    MenuCatalogController_updateLocaleSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMenuLocaleSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuLocaleSettingsResponseDto_Output"];
                 };
             };
         };
