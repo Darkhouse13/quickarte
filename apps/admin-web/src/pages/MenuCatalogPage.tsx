@@ -2,6 +2,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { paths } from "@quickarte/shared-types";
 import { apiClient, readResponseProblem } from "../auth/api";
+import { BranchOverridePanel } from "./BranchOverridePanel";
 
 type CategoriesResponse =
   paths["/v1/menu/categories"]["get"]["responses"][200]["content"]["application/json"];
@@ -9,6 +10,12 @@ type Category = CategoriesResponse["categories"][number];
 type ProductsResponse =
   paths["/v1/menu/products"]["get"]["responses"][200]["content"]["application/json"];
 type Product = ProductsResponse["products"][number];
+type BranchesResponse =
+  paths["/v1/branches"]["get"]["responses"][200]["content"]["application/json"];
+type Branch = BranchesResponse["branches"][number];
+type EffectiveMenuResponse =
+  paths["/v1/branches/{branchId}/menu/effective"]["get"]["responses"][200]["content"]["application/json"];
+type EffectiveProduct = EffectiveMenuResponse["categories"][number]["products"][number];
 type ModifierGroupsResponse =
   paths["/v1/menu/modifier-groups"]["get"]["responses"][200]["content"]["application/json"];
 type ModifierTemplate = ModifierGroupsResponse["groups"][number];
@@ -17,7 +24,12 @@ type ProductBody =
 type VariantBody = ProductBody["variants"][number];
 type ModifierGroupBody =
   paths["/v1/menu/modifier-groups"]["post"]["requestBody"]["content"]["application/json"];
+type ProductAvailabilityBody =
+  paths["/v1/branches/{branchId}/products/{productId}/availability"]["patch"]["requestBody"]["content"]["application/json"];
+type ProductPricesBody =
+  paths["/v1/branches/{branchId}/products/{productId}/prices"]["put"]["requestBody"]["content"]["application/json"];
 type ChannelKey = keyof ProductBody["channels"];
+type EffectiveChannelKey = keyof EffectiveProduct["channels"];
 type LocaleCode = "fr" | "ar" | "es" | "en";
 
 const localeTabs: LocaleCode[] = ["fr", "ar", "es", "en"];
@@ -81,6 +93,11 @@ export function MenuCatalogPage() {
   const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("");
+  const [effectiveMenu, setEffectiveMenu] = useState<EffectiveMenuResponse | null>(null);
+  const [effectiveChannel, setEffectiveChannel] = useState<EffectiveMenuResponse["channel"]>("pos");
+  const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
   const [modifierGroups, setModifierGroups] = useState<ModifierTemplate[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [categoryModifierIds, setCategoryModifierIds] = useState<string[] | null>(null);
@@ -141,10 +158,11 @@ export function MenuCatalogPage() {
   const loadCatalog = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [categoryResponse, productResponse, modifierResponse] = await Promise.all([
+    const [categoryResponse, productResponse, modifierResponse, branchResponse] = await Promise.all([
       apiClient().GET("/v1/menu/categories"),
       apiClient().GET("/v1/menu/products"),
       apiClient().GET("/v1/menu/modifier-groups"),
+      apiClient().GET("/v1/branches"),
     ]);
     setLoading(false);
     if (categoryResponse.error || !categoryResponse.data) {
@@ -159,9 +177,21 @@ export function MenuCatalogPage() {
       setError(t("admin.module3.catalog.loadError"));
       return;
     }
+    if (branchResponse.error || !branchResponse.data) {
+      setError(t("admin.module3.catalog.loadError"));
+      return;
+    }
     setCategories(categoryResponse.data.categories);
     setProducts(productResponse.data.products);
     setModifierGroups(modifierResponse.data.groups);
+    setBranches(branchResponse.data.branches);
+    setSelectedBranchId(
+      (current) =>
+        current ||
+        branchResponse.data.branches.find((branch) => branch.isDefault)?.id ||
+        branchResponse.data.branches[0]?.id ||
+        "",
+    );
     setSelectedCategoryId(
       (current) => current ?? categoryResponse.data.categories[0]?.id ?? null,
     );
@@ -170,6 +200,35 @@ export function MenuCatalogPage() {
   useEffect(() => {
     void Promise.resolve().then(loadCatalog);
   }, [loadCatalog]);
+
+  const loadEffectiveMenu = useCallback(async () => {
+    if (!selectedBranchId) return;
+    const response = await apiClient().GET("/v1/branches/{branchId}/menu/effective", {
+      params: { path: { branchId: selectedBranchId }, query: { channel: effectiveChannel } },
+    });
+    if (!response.data) {
+      setError(readResponseProblem(response).detail ?? t("admin.module3.catalog.loadError"));
+      return;
+    }
+    setEffectiveMenu(response.data);
+    setPriceDrafts((current) => ({
+      ...Object.fromEntries(
+        response.data.categories
+          .flatMap((category) => [category, ...category.children])
+          .flatMap((category) => category.products)
+          .flatMap((product) =>
+            product.variants
+              .filter((variant) => variant.id && variant.price)
+              .map((variant) => [`${product.id}:${variant.id}`, variant.price ?? ""]),
+          ),
+      ),
+      ...current,
+    }));
+  }, [effectiveChannel, selectedBranchId, t]);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadEffectiveMenu);
+  }, [loadEffectiveMenu]);
 
   async function createCategory(parentId: string | null) {
     const name = parentId ? subcategoryName.trim() : categoryName.trim();
@@ -325,6 +384,69 @@ export function MenuCatalogPage() {
       return;
     }
     await loadCatalog();
+  }
+
+  async function toggleBranchAvailability(product: EffectiveProduct) {
+    if (!selectedBranchId) return;
+    const nextIs86d = !product.is86d;
+    const reason = nextIs86d ? window.prompt(t("admin.module3.overrides.reasonPrompt")) : null;
+    const body: ProductAvailabilityBody = {
+      is86d: nextIs86d,
+      eightySixedReason: nextIs86d ? reason || t("admin.module3.overrides.noReason") : null,
+    };
+    const response = await apiClient().PATCH(
+      "/v1/branches/{branchId}/products/{productId}/availability",
+      {
+        params: { path: { branchId: selectedBranchId, productId: product.id } },
+        body,
+      },
+    );
+    if (!response.data) {
+      setError(readResponseProblem(response).detail ?? t("admin.module3.catalog.saveError"));
+      return;
+    }
+    await loadEffectiveMenu();
+  }
+
+  async function toggleBranchChannel(product: EffectiveProduct, channel: EffectiveChannelKey) {
+    if (!selectedBranchId) return;
+    const body: ProductAvailabilityBody = {
+      channels: { [channel]: !product.channels[channel] },
+    };
+    const response = await apiClient().PATCH(
+      "/v1/branches/{branchId}/products/{productId}/availability",
+      {
+        params: { path: { branchId: selectedBranchId, productId: product.id } },
+        body,
+      },
+    );
+    if (!response.data) {
+      setError(readResponseProblem(response).detail ?? t("admin.module3.catalog.saveError"));
+      return;
+    }
+    await loadEffectiveMenu();
+  }
+
+  async function saveBranchPrices(product: EffectiveProduct) {
+    if (!selectedBranchId) return;
+    const prices: ProductPricesBody["prices"] = product.variants
+      .filter((variant) => variant.id)
+      .map((variant) => ({
+        variantId: variant.id!,
+        price: priceDrafts[`${product.id}:${variant.id}`] || variant.price || "0.00",
+      }));
+    const response = await apiClient().PUT(
+      "/v1/branches/{branchId}/products/{productId}/prices",
+      {
+        params: { path: { branchId: selectedBranchId, productId: product.id } },
+        body: { prices },
+      },
+    );
+    if (!response.data) {
+      setError(readResponseProblem(response).detail ?? t("admin.module3.catalog.saveError"));
+      return;
+    }
+    await loadEffectiveMenu();
   }
 
   function selectedProductPosition(productId: string): number {
@@ -539,6 +661,21 @@ export function MenuCatalogPage() {
         </aside>
 
         <section className="catalog-list-panel">
+          <BranchOverridePanel
+            branches={branches}
+            effectiveChannel={effectiveChannel}
+            effectiveMenu={effectiveMenu}
+            priceDrafts={priceDrafts}
+            selectedBranchId={selectedBranchId}
+            onBranchChange={setSelectedBranchId}
+            onChannelChange={setEffectiveChannel}
+            onPriceDraftChange={(key, value) =>
+              setPriceDrafts((current) => ({ ...current, [key]: value }))
+            }
+            onSavePrices={saveBranchPrices}
+            onToggleAvailability={toggleBranchAvailability}
+            onToggleChannel={toggleBranchChannel}
+          />
           <div className="section-heading-row">
             <h2>{t("admin.module3.catalog.items")}</h2>
             <button type="button" onClick={() => setForm({ ...emptyForm, categoryId: selectedCategoryId })}>

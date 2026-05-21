@@ -545,6 +545,89 @@ body.dir-rtl .subcategory-add {
   font-weight: var(--fw-semibold);
 }
 
+.variant-chip.override,
+.status-pill.override {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.status-pill.danger {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.branch-override-panel,
+.branch-effective-list,
+.branch-override-actions,
+.override-toolbar {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.branch-override-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  padding: var(--density-card-padding);
+}
+
+.branch-override-panel p {
+  margin: var(--s-1) 0 0;
+  color: var(--fg-2);
+  font-size: var(--t-body-sm);
+}
+
+.override-toolbar {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.override-toolbar button {
+  min-height: var(--touch-admin);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg-2);
+}
+
+.override-toolbar button.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-on);
+}
+
+.branch-effective-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.8fr);
+  gap: var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  padding: var(--density-row-padding);
+}
+
+.branch-effective-card.disabled {
+  opacity: 0.68;
+}
+
+.branch-effective-card h3 {
+  margin: 0;
+}
+
+.branch-override-actions {
+  justify-items: stretch;
+}
+
+.branch-price-input {
+  display: grid;
+  grid-template-columns: 1fr 96px;
+  gap: var(--s-2);
+  align-items: center;
+  color: var(--fg-2);
+  font-size: var(--t-caption);
+  font-weight: var(--fw-semibold);
+}
+
 .item-editor-panel {
   min-width: 0;
 }

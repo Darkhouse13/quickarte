@@ -616,6 +616,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/branches/{branchId}/menu/effective": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve the effective menu for one branch and channel. */
+        get: operations["BranchMenuController_getEffectiveMenu"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/menu-overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BranchMenuController_getOverrides"];
+        put: operations["BranchMenuController_replaceOverrides"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/products/{productId}/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["BranchMenuController_updateProductAvailability"];
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/products/{productId}/prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["BranchMenuController_replaceProductPrices"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/_samples/effective-menu": {
         parameters: {
             query?: never;
@@ -1608,6 +1673,225 @@ export interface components {
         UpdateMenuLocaleSettingsDto: {
             activeLocales: string[];
             defaultLocale: string;
+        };
+        EffectiveMenuCategory_Output: {
+            /** Format: uuid */
+            id: string;
+            parentId: string | null;
+            name: string;
+            localizedNames: {
+                [key: string]: string;
+            };
+            description: string | null;
+            localizedDescriptions: {
+                [key: string]: string;
+            };
+            colorTag: string | null;
+            visible: boolean;
+            /** @enum {string} */
+            visibleSource: "inherited" | "overridden";
+            position: number;
+            /** @enum {string} */
+            positionSource: "inherited" | "overridden";
+            products: components["schemas"]["EffectiveMenuProduct_Output"][];
+            /** @default [] */
+            children: components["schemas"]["EffectiveMenuCategoryBase_Output"][];
+        };
+        EffectiveMenuProduct_Output: {
+            /** Format: uuid */
+            id: string;
+            categoryId: string | null;
+            name: string;
+            localizedNames: {
+                [key: string]: string;
+            };
+            description: string | null;
+            localizedDescriptions: {
+                [key: string]: string;
+            };
+            image: string | null;
+            sku: string | null;
+            itemCode: string | null;
+            colorTag: string | null;
+            featured: boolean;
+            /** @enum {string} */
+            featuredSource: "inherited" | "overridden";
+            hidden: boolean;
+            /** @enum {string} */
+            hiddenSource: "inherited" | "overridden";
+            available: boolean;
+            /** @enum {string} */
+            availableSource: "inherited" | "overridden";
+            is86d: boolean;
+            eightySixedAt: string | null;
+            eightySixedReason: string | null;
+            position: number;
+            /** @enum {string} */
+            positionSource: "inherited" | "overridden";
+            channels: {
+                dineIn: boolean;
+                takeaway: boolean;
+                delivery: boolean;
+                qr: boolean;
+                online: boolean;
+            };
+            effectiveTaxRateId: string;
+            variants: components["schemas"]["EffectiveMenuVariant_Output"][];
+            modifiers: components["schemas"]["MenuModifierGroup_Output"][];
+        };
+        EffectiveMenuVariant_Output: {
+            id: string | null;
+            name: string;
+            price: string | null;
+            /** @enum {string} */
+            priceSource: "inherited" | "overridden";
+            isDefault: boolean;
+            available: boolean;
+            position: number;
+            /** @enum {string} */
+            variantKind: "size" | "protein" | "topping" | "market" | "custom";
+            /** @enum {string} */
+            pricingMode: "fixed" | "variable_pos";
+            displayPriceLabel: string | null;
+            displayPriceMin: string | null;
+            displayPriceMax: string | null;
+            unitLabel: string | null;
+            synthetic: boolean;
+        };
+        EffectiveMenuCategoryBase_Output: {
+            /** Format: uuid */
+            id: string;
+            parentId: string | null;
+            name: string;
+            localizedNames: {
+                [key: string]: string;
+            };
+            description: string | null;
+            localizedDescriptions: {
+                [key: string]: string;
+            };
+            colorTag: string | null;
+            visible: boolean;
+            /** @enum {string} */
+            visibleSource: "inherited" | "overridden";
+            position: number;
+            /** @enum {string} */
+            positionSource: "inherited" | "overridden";
+            products: components["schemas"]["EffectiveMenuProduct_Output"][];
+        };
+        EffectiveMenuResponse_Output: {
+            /** Format: uuid */
+            branchId: string;
+            /** @enum {string} */
+            channel: "pos" | "dine_in" | "takeaway" | "delivery" | "qr" | "online";
+            generatedAt: string;
+            defaultTaxRateId: string;
+            categories: components["schemas"]["EffectiveMenuCategory_Output"][];
+        };
+        BranchMenuOverridesResponse_Output: {
+            categoryOverrides: {
+                /** Format: uuid */
+                categoryId: string;
+                visible: boolean | null;
+                position: number | null;
+            }[];
+            productOverrides: {
+                /** Format: uuid */
+                productId: string;
+                available: boolean | null;
+                /** @default false */
+                is86d: boolean;
+                eightySixedAt: string | null;
+                eightySixedByUserId: string | null;
+                eightySixedReason: string | null;
+                featured: boolean | null;
+                hidden: boolean | null;
+                channels: {
+                    dineIn: boolean | null;
+                    takeaway: boolean | null;
+                    delivery: boolean | null;
+                    qr: boolean | null;
+                    online: boolean | null;
+                };
+                position: number | null;
+            }[];
+            priceOverrides: {
+                /** Format: uuid */
+                productId: string;
+                /** Format: uuid */
+                variantId: string;
+                /** @description Decimal string money value, never a JS number */
+                price: string;
+            }[];
+            optionValueOverrides: {
+                /** Format: uuid */
+                optionValueId: string;
+                available: boolean | null;
+                priceAddition: string | null;
+            }[];
+        };
+        ReplaceBranchMenuOverridesDto: {
+            categoryOverrides: {
+                /** Format: uuid */
+                categoryId: string;
+                visible: boolean | null;
+                position: number | null;
+            }[];
+            productOverrides: {
+                /** Format: uuid */
+                productId: string;
+                available: boolean | null;
+                /** @default false */
+                is86d: boolean;
+                eightySixedAt: string | null;
+                eightySixedByUserId: string | null;
+                eightySixedReason: string | null;
+                featured: boolean | null;
+                hidden: boolean | null;
+                channels: {
+                    dineIn: boolean | null;
+                    takeaway: boolean | null;
+                    delivery: boolean | null;
+                    qr: boolean | null;
+                    online: boolean | null;
+                };
+                position: number | null;
+            }[];
+            priceOverrides: {
+                /** Format: uuid */
+                productId: string;
+                /** Format: uuid */
+                variantId: string;
+                /** @description Decimal string money value, never a JS number */
+                price: string;
+            }[];
+            optionValueOverrides: {
+                /** Format: uuid */
+                optionValueId: string;
+                available: boolean | null;
+                priceAddition: string | null;
+            }[];
+        };
+        UpdateProductAvailabilityDto: {
+            available?: boolean | null;
+            is86d?: boolean;
+            eightySixedReason?: string | null;
+            hidden?: boolean | null;
+            channels?: {
+                dineIn?: boolean | null;
+                takeaway?: boolean | null;
+                delivery?: boolean | null;
+                qr?: boolean | null;
+                online?: boolean | null;
+            };
+        };
+        ReplaceBranchProductPricesDto: {
+            prices: {
+                /** Format: uuid */
+                variantId: string;
+                /** @description Decimal string money value, never a JS number */
+                price: string;
+            }[];
         };
         SampleEffectiveMenuRequestDto: {
             /** Format: uuid */
@@ -3018,6 +3302,127 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MenuLocaleSettingsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    BranchMenuController_getEffectiveMenu: {
+        parameters: {
+            query?: {
+                channel?: "pos" | "dine_in" | "takeaway" | "delivery" | "qr" | "online";
+            };
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EffectiveMenuResponse_Output"];
+                };
+            };
+        };
+    };
+    BranchMenuController_getOverrides: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchMenuOverridesResponse_Output"];
+                };
+            };
+        };
+    };
+    BranchMenuController_replaceOverrides: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceBranchMenuOverridesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchMenuOverridesResponse_Output"];
+                };
+            };
+        };
+    };
+    BranchMenuController_updateProductAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: unknown;
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProductAvailabilityDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchMenuOverridesResponse_Output"];
+                };
+            };
+        };
+    };
+    BranchMenuController_replaceProductPrices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: unknown;
+                branchId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceBranchProductPricesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchMenuOverridesResponse_Output"];
                 };
             };
         };
