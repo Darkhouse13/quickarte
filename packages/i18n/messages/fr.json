@@ -116,6 +116,9 @@
       "receipts": "Tickets",
       "printers": "Imprimantes"
     },
+    "navGroups": {
+      "settings": "Parametres"
+    },
     "dashboard": {
       "eyebrow": "Admin",
       "title": "Tableau de bord",
