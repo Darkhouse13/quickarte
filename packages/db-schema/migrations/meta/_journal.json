@@ -204,6 +204,13 @@
       "when": 1779366587106,
       "tag": "0028_printer_setup",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1779370200000,
+      "tag": "0029_shared_catalog_variants",
+      "breakpoints": true
     }
   ]
 }

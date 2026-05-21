@@ -210,6 +210,33 @@ test("placeOrder rejects a recomputed negative unit price", () => {
   }
 });
 
+test("QR order validation still accepts products with no real variant rows", () => {
+  const result = validateConfiguredLine(
+    {
+      product_id: productId,
+      quantity: 2,
+      variant_id: null,
+      selected_option_value_ids: [],
+      unit_price: 1,
+    },
+    {
+      id: productId,
+      name: "Eau minérale",
+      price: "12.50",
+      available: true,
+      variants: [],
+      options: [],
+    },
+  );
+
+  assert.equal(result.status, "success");
+  if (result.status === "success") {
+    assert.equal(result.line.unitPrice, 12.5);
+    assert.equal(result.line.subtotal, 25);
+    assert.equal(result.line.optionsJson, null);
+  }
+});
+
 test.skip("placeOrder writes canonical options_json in Postgres; requires live DATABASE_URL");
 test.skip("transitionOrderStatus rejects when caller does not own the order business; requires live DATABASE_URL");
 test.skip("getOrdersByBusinessId scopes order list to the caller business; requires live DATABASE_URL");

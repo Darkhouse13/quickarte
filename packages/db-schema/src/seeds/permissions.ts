@@ -56,6 +56,7 @@ const STARTER_PERMISSIONS = [
   ["order.void", "Void orders", "order"],
   ["order.refund", "Refund orders", "order"],
   ["menu.view", "View menu", "menu"],
+  ["menu.manage", "Manage menu catalog", "menu"],
   ["menu.update", "Update menu", "menu"],
   ["manager.override", "Approve manager override actions", "staff"],
 ] as const;
