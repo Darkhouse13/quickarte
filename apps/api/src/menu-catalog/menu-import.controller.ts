@@ -33,6 +33,7 @@ import {
 } from "./menu-import.parser";
 import { MenuImportService } from "./menu-import.service";
 import {
+  MenuImportCommitResponseDto,
   MenuImportJobResponseDto,
   MenuImportUploadResponseDto,
 } from "./menu-import.schemas";
@@ -94,10 +95,26 @@ export class MenuImportController {
     return new StreamableFile(buffer);
   }
 
+  @Post(":jobId/commit")
+  @RequirePermission("menu.manage")
+  @ApiOperation({ summary: "Commit a reviewed menu import job atomically." })
+  @ApiParam({ name: "jobId", schema: { type: "string", format: "uuid" } })
+  @ZodResponse({ status: 201, type: MenuImportCommitResponseDto })
+  commitImportJob(
+    @Req() request: AuthenticatedRequest,
+    @Param("jobId") jobId: string,
+  ) {
+    return this.menuImportService.commitJob(
+      request.businessId!,
+      request.userId!,
+      jobId,
+    );
+  }
+
   @Get(":jobId")
   @RequirePermission("menu.manage")
   @ApiOperation({ summary: "Fetch a stored menu import preview job." })
-  @ApiParam({ name: "jobId" })
+  @ApiParam({ name: "jobId", schema: { type: "string", format: "uuid" } })
   @ZodResponse({ status: 200, type: MenuImportJobResponseDto })
   getImportJob(
     @Req() request: AuthenticatedRequest,

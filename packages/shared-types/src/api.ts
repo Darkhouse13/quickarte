@@ -812,6 +812,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/menu/import/{jobId}/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit a reviewed menu import job atomically. */
+        post: operations["MenuImportController_commitImportJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/menu/import/{jobId}": {
         parameters: {
             query?: never;
@@ -2260,6 +2277,22 @@ export interface components {
             /** @enum {string} */
             status: "pending_review" | "committed" | "failed";
             preview: components["schemas"]["MenuImportPreview_Output"];
+        };
+        MenuImportCommitCounts_Output: {
+            categoriesCreated: number;
+            categoriesUpdated: number;
+            productsCreated: number;
+            productsUpdated: number;
+            variantsCreated: number;
+            variantsUpdated: number;
+            tagsAttached: number;
+        };
+        MenuImportCommitResponse_Output: {
+            /** Format: uuid */
+            jobId: string;
+            /** @constant */
+            status: "committed";
+            counts: components["schemas"]["MenuImportCommitCounts_Output"];
         };
         MenuImportJobResponse_Output: {
             /** Format: uuid */
@@ -4037,12 +4070,33 @@ export interface operations {
             };
         };
     };
+    MenuImportController_commitImportJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuImportCommitResponse_Output"];
+                };
+            };
+        };
+    };
     MenuImportController_getImportJob: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                jobId: unknown;
+                jobId: string;
             };
             cookie?: never;
         };

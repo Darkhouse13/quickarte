@@ -104,6 +104,26 @@ export const importUploadResponseSchema = z
   })
   .meta({ id: "MenuImportUploadResponse" });
 
+export const importCommitCountsSchema = z
+  .object({
+    categoriesCreated: z.number().int().min(0),
+    categoriesUpdated: z.number().int().min(0),
+    productsCreated: z.number().int().min(0),
+    productsUpdated: z.number().int().min(0),
+    variantsCreated: z.number().int().min(0),
+    variantsUpdated: z.number().int().min(0),
+    tagsAttached: z.number().int().min(0),
+  })
+  .meta({ id: "MenuImportCommitCounts" });
+
+export const importCommitResponseSchema = z
+  .object({
+    jobId: z.uuid(),
+    status: z.literal("committed"),
+    counts: importCommitCountsSchema,
+  })
+  .meta({ id: "MenuImportCommitResponse" });
+
 export const importJobResponseSchema = importUploadResponseSchema
   .extend({
     originalFilename: z.string(),
@@ -113,6 +133,7 @@ export const importJobResponseSchema = importUploadResponseSchema
   .meta({ id: "MenuImportJobResponse" });
 
 export class MenuImportUploadResponseDto extends createZodDto(importUploadResponseSchema) {}
+export class MenuImportCommitResponseDto extends createZodDto(importCommitResponseSchema) {}
 export class MenuImportJobResponseDto extends createZodDto(importJobResponseSchema) {}
 
 export type ImportIssue = z.infer<typeof importIssueSchema>;
@@ -120,3 +141,4 @@ export type NormalizedImportRow = z.infer<typeof normalizedImportRowSchema>;
 export type ImportPreviewRow = z.infer<typeof importPreviewRowSchema>;
 export type ImportPreview = z.infer<typeof importPreviewSchema>;
 export type ImportUploadResponse = z.infer<typeof importUploadResponseSchema>;
+export type ImportCommitResponse = z.infer<typeof importCommitResponseSchema>;

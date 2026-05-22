@@ -5,19 +5,23 @@ import { after, before, test } from "node:test";
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import {
+  auditLog,
   businesses,
+  branches,
   categories,
   menuImportJobs,
   permissionVersions,
   permissions,
   products,
+  productTags,
   productVariants,
   rolePermissions,
   roles,
+  taxRates,
   users,
 } from "@quickarte/db-schema";
 import * as schema from "@quickarte/db-schema";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
@@ -48,6 +52,7 @@ let userAId: string;
 let userBId: string;
 let ownerRoleAId: string;
 let ownerRoleBId: string;
+let branchAId: string;
 let existingCategoryId: string;
 let existingProductId: string;
 let existingVariantId: string;
@@ -108,6 +113,26 @@ before(async () => {
       type: "restaurant",
     },
   ]);
+  const [branchA, branchB] = await adminDb
+    .insert(branches)
+    .values([
+      {
+        businessId: businessAId,
+        name: "Main A",
+        slug: `main-a-${runId}`,
+        isDefault: true,
+      },
+      {
+        businessId: businessBId,
+        name: "Main B",
+        slug: `main-b-${runId}`,
+        isDefault: true,
+      },
+    ])
+    .returning({ id: branches.id });
+  assert.ok(branchA);
+  assert.ok(branchB);
+  branchAId = branchA.id;
   await seedRolesAndPermissions(businessAId);
   await seedRolesAndPermissions(businessBId);
 
@@ -414,6 +439,321 @@ test("M3.5b template endpoint returns an xlsx workbook", async () => {
   assert.equal(String.fromCharCode(bytes[0] ?? 0, bytes[1] ?? 0), "PK");
 });
 
+test("M3.5b commit applies grouped rows atomically and effective menu reflects imported variants", async () => {
+  const token = tokenFor(businessAId, userAId, ownerRoleAId);
+  await ensureSystemTags(token);
+  const sku = `GRILL-${randomUUID()}`;
+  const csv = csvFromRows([
+    {
+      category_fr: "Grillades import",
+      product_fr: "Brochette mixte",
+      description_fr: "Servie avec garniture",
+      sku,
+      item_code: "BR-MIX",
+      variant_name: "Poulet",
+      variant_kind: "protein",
+      price: "80,00",
+      tax_rate_code: "ma_tva_10",
+      tag_codes: "halal",
+      available_delivery: "false",
+      spice_level: "1",
+    },
+    {
+      category_fr: "Grillades import",
+      product_fr: "Brochette mixte",
+      sku,
+      item_code: "BR-MIX",
+      variant_name: "Viande",
+      variant_kind: "protein",
+      price: "95.00",
+      tax_rate_code: "ma_tva_10",
+      tag_codes: "halal",
+      available_delivery: "false",
+      spice_level: "1",
+    },
+  ]);
+  const uploadBody = await uploadAndParse(token, csv, "commit-happy.csv");
+
+  const commitResponse = await apiPost(`/v1/menu/import/${uploadBody.jobId}/commit`, token);
+  const commitBody = (await commitResponse.json()) as ImportCommitResponse;
+  assert.equal(commitResponse.status, 201, JSON.stringify(commitBody));
+  assert.deepEqual(commitBody.counts, {
+    categoriesCreated: 1,
+    categoriesUpdated: 0,
+    productsCreated: 1,
+    productsUpdated: 0,
+    variantsCreated: 2,
+    variantsUpdated: 0,
+    tagsAttached: 1,
+  });
+
+  const categoryRows = await adminDb
+    .select()
+    .from(categories)
+    .where(and(eq(categories.businessId, businessAId), eq(categories.name, "Grillades import")));
+  assert.equal(categoryRows.length, 1);
+  const productRows = await adminDb
+    .select()
+    .from(products)
+    .where(and(eq(products.businessId, businessAId), eq(products.sku, sku)));
+  assert.equal(productRows.length, 1);
+  assert.equal(productRows[0]?.categoryId, categoryRows[0]?.id);
+  assert.equal(productRows[0]?.price, "80.00");
+  const variantRows = await adminDb
+    .select()
+    .from(productVariants)
+    .where(eq(productVariants.productId, productRows[0]!.id));
+  assert.equal(variantRows.length, 2);
+  assert.deepEqual(
+    variantRows.map((row) => `${row.name}:${row.priceOverride}`).sort(),
+    ["Poulet:80.00", "Viande:95.00"],
+  );
+  const tagRows = await adminDb
+    .select()
+    .from(productTags)
+    .where(eq(productTags.productId, productRows[0]!.id));
+  assert.equal(tagRows.length, 1);
+
+  const effectiveResponse = await apiGet(
+    `/v1/branches/${branchAId}/menu/effective?channel=pos`,
+    token,
+  );
+  const effectiveBody = (await effectiveResponse.json()) as {
+    categories: Array<{ products: Array<{ id: string; variants: Array<{ name: string; price: string }> }> }>;
+  };
+  assert.equal(effectiveResponse.status, 200, JSON.stringify(effectiveBody));
+  const effectiveProduct = effectiveBody.categories
+    .flatMap((category) => category.products)
+    .find((product) => product.id === productRows[0]!.id);
+  assert.ok(effectiveProduct);
+  assert.deepEqual(
+    effectiveProduct.variants.map((variant) => `${variant.name}:${variant.price}`).sort(),
+    ["Poulet:80.00", "Viande:95.00"],
+  );
+
+  const [audit] = await databaseService.withTenant(businessAId, (tx) =>
+    tx
+      .select()
+      .from(auditLog)
+      .where(and(eq(auditLog.businessId, businessAId), eq(auditLog.action, "menu.import.committed"))),
+  );
+  assert.ok(audit);
+  assert.equal(audit.entityId, uploadBody.jobId);
+});
+
+test("M3.5b re-importing the same sheet updates without duplicating category, product, or variants", async () => {
+  const token = tokenFor(businessAId, userAId, ownerRoleAId);
+  const sku = `IDEMP-${randomUUID()}`;
+  const csv = csvFromRows([
+    {
+      category_fr: "Idempotent import",
+      product_fr: "Tajine kefta",
+      sku,
+      variant_name: "Standard",
+      variant_kind: "custom",
+      price: "70.00",
+      tax_rate_code: "ma_tva_10",
+    },
+    {
+      category_fr: "Idempotent import",
+      product_fr: "Tajine kefta",
+      sku,
+      variant_name: "Royal",
+      variant_kind: "custom",
+      price: "90.00",
+      tax_rate_code: "ma_tva_10",
+    },
+  ]);
+
+  const firstUpload = await uploadAndParse(token, csv, "idempotent-1.csv");
+  const firstCommit = await apiPost(`/v1/menu/import/${firstUpload.jobId}/commit`, token);
+  assert.equal(firstCommit.status, 201, await firstCommit.text());
+
+  const secondUpload = await uploadAndParse(token, csv.replace("90.00", "92.00"), "idempotent-2.csv");
+  const secondCommit = await apiPost(`/v1/menu/import/${secondUpload.jobId}/commit`, token);
+  const secondBody = (await secondCommit.json()) as ImportCommitResponse;
+  assert.equal(secondCommit.status, 201, JSON.stringify(secondBody));
+  assert.deepEqual(secondBody.counts, {
+    categoriesCreated: 0,
+    categoriesUpdated: 1,
+    productsCreated: 0,
+    productsUpdated: 1,
+    variantsCreated: 0,
+    variantsUpdated: 2,
+    tagsAttached: 0,
+  });
+
+  const categoryRows = await adminDb
+    .select()
+    .from(categories)
+    .where(and(eq(categories.businessId, businessAId), eq(categories.name, "Idempotent import")));
+  assert.equal(categoryRows.length, 1);
+  const productRows = await adminDb
+    .select()
+    .from(products)
+    .where(and(eq(products.businessId, businessAId), eq(products.sku, sku)));
+  assert.equal(productRows.length, 1);
+  const variantRows = await adminDb
+    .select()
+    .from(productVariants)
+    .where(eq(productVariants.productId, productRows[0]!.id));
+  assert.equal(variantRows.length, 2);
+  assert.equal(variantRows.find((row) => row.name === "Royal")?.priceOverride, "92.00");
+});
+
+test("M3.5b commit refuses jobs with blocking errors and leaves the job pending", async () => {
+  const token = tokenFor(businessAId, userAId, ownerRoleAId);
+  const beforeProducts = await adminDb
+    .select({ id: products.id })
+    .from(products)
+    .where(eq(products.businessId, businessAId));
+  const uploadBody = await uploadAndParse(
+    token,
+    csvFromRows([
+      {
+        category_fr: "Errors",
+        product_fr: "Bad price",
+        price: "-10.00",
+        tax_rate_code: "ma_tva_10",
+      },
+    ]),
+    "blocking-errors.csv",
+  );
+
+  const commitResponse = await apiPost(`/v1/menu/import/${uploadBody.jobId}/commit`, token);
+  const commitBody = (await commitResponse.json()) as { preview: { summary: { blockingErrors: boolean } } };
+  assert.equal(commitResponse.status, 400, JSON.stringify(commitBody));
+  assert.equal(commitBody.preview.summary.blockingErrors, true);
+  const [job] = await databaseService.withTenant(businessAId, (tx) =>
+    tx.select().from(menuImportJobs).where(eq(menuImportJobs.id, uploadBody.jobId)),
+  );
+  assert.equal(job?.status, "pending_review");
+  const afterProducts = await adminDb
+    .select({ id: products.id })
+    .from(products)
+    .where(eq(products.businessId, businessAId));
+  assert.equal(afterProducts.length, beforeProducts.length);
+});
+
+test("M3.5b commit revalidates stale tax references and rolls back the whole import", async () => {
+  const token = tokenFor(businessAId, userAId, ownerRoleAId);
+  const sku = `STALE-${randomUUID()}`;
+  const uploadBody = await uploadAndParse(
+    token,
+    csvFromRows([
+      {
+        category_fr: "Stale tax",
+        product_fr: "Pastilla",
+        sku,
+        price: "120.00",
+        tax_rate_code: "ma_tva_7",
+      },
+    ]),
+    "stale-tax.csv",
+  );
+  await adminDb.update(taxRates).set({ isActive: false }).where(eq(taxRates.id, "ma_tva_7"));
+  try {
+    const commitResponse = await apiPost(`/v1/menu/import/${uploadBody.jobId}/commit`, token);
+    const commitBody = (await commitResponse.json()) as { preview: { rows: Array<{ errors: Array<{ code: string }> }> } };
+    assert.equal(commitResponse.status, 400, JSON.stringify(commitBody));
+    assert.ok(
+      commitBody.preview.rows.some((row) =>
+        row.errors.some((error) => error.code === "unknown-tax-rate"),
+      ),
+    );
+    const productRows = await adminDb
+      .select()
+      .from(products)
+      .where(and(eq(products.businessId, businessAId), eq(products.sku, sku)));
+    assert.equal(productRows.length, 0);
+  } finally {
+    await adminDb.update(taxRates).set({ isActive: true }).where(eq(taxRates.id, "ma_tva_7"));
+  }
+});
+
+test("M3.5b commit rolls back catalog changes when a mid-transaction insert fails", async () => {
+  const token = tokenFor(businessAId, userAId, ownerRoleAId);
+  const uploadBody = await uploadAndParse(
+    token,
+    csvFromRows([
+      {
+        category_fr: "Cafe Atlas",
+        product_fr: "Produit A",
+        sku: `ATOMIC-A-${randomUUID()}`,
+        price: "40.00",
+        tax_rate_code: "ma_tva_10",
+      },
+      {
+        category_fr: "Café Atlas",
+        product_fr: "Produit B",
+        sku: `ATOMIC-B-${randomUUID()}`,
+        price: "45.00",
+        tax_rate_code: "ma_tva_10",
+      },
+    ]),
+    "atomic-failure.csv",
+  );
+
+  const commitResponse = await apiPost(`/v1/menu/import/${uploadBody.jobId}/commit`, token);
+  assert.ok(commitResponse.status >= 400, await commitResponse.text());
+  const productRows = await adminDb
+    .select()
+    .from(products)
+    .where(and(eq(products.businessId, businessAId), eq(products.name, "Produit A")));
+  assert.equal(productRows.length, 0);
+  const categoryRows = await adminDb
+    .select()
+    .from(categories)
+    .where(and(eq(categories.businessId, businessAId), eq(categories.slug, "cafe-atlas")));
+  assert.equal(categoryRows.length, 0);
+  const [job] = await databaseService.withTenant(businessAId, (tx) =>
+    tx.select().from(menuImportJobs).where(eq(menuImportJobs.id, uploadBody.jobId)),
+  );
+  assert.equal(job?.status, "pending_review");
+});
+
+test("M3.5b commit rejects already committed jobs", async () => {
+  const token = tokenFor(businessAId, userAId, ownerRoleAId);
+  const uploadBody = await uploadAndParse(
+    token,
+    csvFromRows([
+      {
+        category_fr: "Already committed",
+        product_fr: "The a la menthe",
+        sku: `DONE-${randomUUID()}`,
+        price: "15.00",
+        tax_rate_code: "ma_tva_10",
+      },
+    ]),
+    "already-committed.csv",
+  );
+  const firstCommit = await apiPost(`/v1/menu/import/${uploadBody.jobId}/commit`, token);
+  assert.equal(firstCommit.status, 201, await firstCommit.text());
+  const secondCommit = await apiPost(`/v1/menu/import/${uploadBody.jobId}/commit`, token);
+  assert.equal(secondCommit.status, 409, await secondCommit.text());
+});
+
+test("M3.5b commit rejects another tenant's job", async () => {
+  const tokenA = tokenFor(businessAId, userAId, ownerRoleAId);
+  const tokenB = tokenFor(businessBId, userBId, ownerRoleBId);
+  const uploadBody = await uploadAndParse(
+    tokenA,
+    csvFromRows([
+      {
+        category_fr: "Tenant A only",
+        product_fr: "Harira",
+        sku: `TENANT-A-${randomUUID()}`,
+        price: "25.00",
+        tax_rate_code: "ma_tva_10",
+      },
+    ]),
+    "tenant-a-commit.csv",
+  );
+
+  const forgedCommit = await apiPost(`/v1/menu/import/${uploadBody.jobId}/commit`, tokenB);
+  assert.equal(forgedCommit.status, 404, await forgedCommit.text());
+});
+
 async function existingSku(): Promise<string> {
   const [row] = await adminDb
     .select({ sku: products.sku })
@@ -454,6 +794,24 @@ async function uploadCsv(token: string, csv: string, filename: string): Promise<
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: form,
+  });
+}
+
+async function uploadAndParse(
+  token: string,
+  csv: string,
+  filename: string,
+): Promise<ImportPreviewResponse> {
+  const response = await uploadCsv(token, csv, filename);
+  const body = (await response.json()) as ImportPreviewResponse;
+  assert.equal(response.status, 201, JSON.stringify(body));
+  return body;
+}
+
+async function apiPost(path: string, token: string): Promise<Response> {
+  return fetch(`${baseUrl}${path}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
   });
 }
 
@@ -553,5 +911,19 @@ type ImportPreviewResponse = {
       warningCount: number;
       blockingErrors: boolean;
     };
+  };
+};
+
+type ImportCommitResponse = {
+  jobId: string;
+  status: "committed";
+  counts: {
+    categoriesCreated: number;
+    categoriesUpdated: number;
+    productsCreated: number;
+    productsUpdated: number;
+    variantsCreated: number;
+    variantsUpdated: number;
+    tagsAttached: number;
   };
 };
