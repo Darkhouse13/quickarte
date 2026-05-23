@@ -671,7 +671,7 @@ test("M3.5b commit revalidates stale tax references and rolls back the whole imp
   }
 });
 
-test("M3.5b commit rolls back catalog changes when a mid-transaction insert fails", async () => {
+test("M3.6 import disambiguates accent-colliding category slugs", async () => {
   const token = tokenFor(businessAId, userAId, ownerRoleAId);
   const uploadBody = await uploadAndParse(
     token,
@@ -691,25 +691,123 @@ test("M3.5b commit rolls back catalog changes when a mid-transaction insert fail
         tax_rate_code: "ma_tva_10",
       },
     ]),
-    "atomic-failure.csv",
+    "slug-collision.csv",
   );
 
   const commitResponse = await apiPost(`/v1/menu/import/${uploadBody.jobId}/commit`, token);
-  assert.ok(commitResponse.status >= 400, await commitResponse.text());
+  assert.equal(commitResponse.status, 201, await commitResponse.text());
   const productRows = await adminDb
     .select()
     .from(products)
     .where(and(eq(products.businessId, businessAId), eq(products.name, "Produit A")));
-  assert.equal(productRows.length, 0);
+  assert.equal(productRows.length, 1);
   const categoryRows = await adminDb
     .select()
     .from(categories)
     .where(and(eq(categories.businessId, businessAId), eq(categories.slug, "cafe-atlas")));
-  assert.equal(categoryRows.length, 0);
-  const [job] = await databaseService.withTenant(businessAId, (tx) =>
-    tx.select().from(menuImportJobs).where(eq(menuImportJobs.id, uploadBody.jobId)),
-  );
-  assert.equal(job?.status, "pending_review");
+  assert.equal(categoryRows.length, 1);
+  const importedCategories = await adminDb
+    .select({ name: categories.name, slug: categories.slug })
+    .from(categories)
+    .where(and(eq(categories.businessId, businessAId), sql`${categories.slug} like 'cafe-atlas%'`));
+  const slugs = importedCategories
+    .map((row) => row.slug)
+    .sort();
+  assert.deepEqual(slugs, ["cafe-atlas", "cafe-atlas-2"]);
+});
+
+test("M3.6 commit rolls back partial catalog writes when applyRows fails mid-transaction", async () => {
+  const token = tokenFor(businessAId, userAId, ownerRoleAId);
+  const runId = randomUUID();
+  const firstCategory = `Atomic rollback first ${runId}`;
+  const secondCategory = `Atomic rollback second ${runId}`;
+  const firstSku = `ROLLBACK-A-${runId}`;
+  const secondSku = `ROLLBACK-B-${runId}`;
+
+  await adminDb.execute(sql`
+    CREATE OR REPLACE FUNCTION m3_6_force_variant_failure()
+    RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+      IF NEW.name = '__FORCE_FAIL__' THEN
+        RAISE EXCEPTION 'forced variant insert failure';
+      END IF;
+      RETURN NEW;
+    END;
+    $$;
+  `);
+  await adminDb.execute(sql`DROP TRIGGER IF EXISTS m3_6_force_variant_failure ON product_variants`);
+  await adminDb.execute(sql`
+    CREATE TRIGGER m3_6_force_variant_failure
+    BEFORE INSERT ON product_variants
+    FOR EACH ROW
+    EXECUTE FUNCTION m3_6_force_variant_failure();
+  `);
+
+  try {
+    const uploadBody = await uploadAndParse(
+      token,
+      csvFromRows([
+        {
+          category_fr: firstCategory,
+          product_fr: "Should roll back",
+          sku: firstSku,
+          variant_name: "Standard",
+          price: "40.00",
+          tax_rate_code: "ma_tva_10",
+        },
+        {
+          category_fr: secondCategory,
+          product_fr: "Forces DB failure",
+          sku: secondSku,
+          variant_name: "__FORCE_FAIL__",
+          price: "45.00",
+          tax_rate_code: "ma_tva_10",
+        },
+      ]),
+      "atomic-rollback.csv",
+    );
+
+    const commitResponse = await apiPost(`/v1/menu/import/${uploadBody.jobId}/commit`, token);
+    assert.equal(commitResponse.status, 500, await commitResponse.text());
+
+    const categoryRows = await adminDb
+      .select()
+      .from(categories)
+      .where(
+        and(
+          eq(categories.businessId, businessAId),
+          sql`${categories.name} in (${firstCategory}, ${secondCategory})`,
+        ),
+      );
+    assert.equal(categoryRows.length, 0);
+
+    const productRows = await adminDb
+      .select()
+      .from(products)
+      .where(
+        and(
+          eq(products.businessId, businessAId),
+          sql`${products.sku} in (${firstSku}, ${secondSku})`,
+        ),
+      );
+    assert.equal(productRows.length, 0);
+
+    const variantRows = await adminDb
+      .select()
+      .from(productVariants)
+      .where(eq(productVariants.name, "__FORCE_FAIL__"));
+    assert.equal(variantRows.length, 0);
+
+    const [job] = await databaseService.withTenant(businessAId, (tx) =>
+      tx.select().from(menuImportJobs).where(eq(menuImportJobs.id, uploadBody.jobId)),
+    );
+    assert.equal(job?.status, "pending_review");
+  } finally {
+    await adminDb.execute(sql`DROP TRIGGER IF EXISTS m3_6_force_variant_failure ON product_variants`);
+    await adminDb.execute(sql`DROP FUNCTION IF EXISTS m3_6_force_variant_failure()`);
+  }
 });
 
 test("M3.5b commit rejects already committed jobs", async () => {

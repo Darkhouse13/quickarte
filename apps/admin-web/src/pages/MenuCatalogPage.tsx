@@ -734,6 +734,16 @@ export function MenuCatalogPage() {
     }));
   }
 
+  const qrTieredModifierWarnings = form.channels.qr
+    ? modifierGroups.filter(
+        (group) =>
+          form.modifierGroupIds.includes(group.id) &&
+          group.freeQuantity > 0 &&
+          group.extraPrice !== null &&
+          group.extraPrice !== "0.00",
+      )
+    : [];
+
   return (
     <section className="menu-builder-page">
       <div className="page-heading">
@@ -745,7 +755,7 @@ export function MenuCatalogPage() {
       {message ? <p className="form-success">{message}</p> : null}
 
       <div className="menu-builder-grid">
-        <aside className="category-rail">
+        <aside className="category-rail" id="catalog">
           <div className="section-heading-row">
             <h2>{t("admin.module3.catalog.categories")}</h2>
             <button
@@ -820,6 +830,7 @@ export function MenuCatalogPage() {
         </aside>
 
         <section className="catalog-list-panel">
+          <div id="overrides">
           <BranchOverridePanel
             branches={branches}
             effectiveChannel={effectiveChannel}
@@ -846,7 +857,9 @@ export function MenuCatalogPage() {
             onToggleAvailability={toggleBranchAvailability}
             onToggleChannel={toggleBranchChannel}
           />
+          </div>
           <MenuImportPanel
+            id="import"
             onCommitted={async () => {
               await loadCatalog();
               await loadEffectiveMenu();
@@ -981,7 +994,7 @@ export function MenuCatalogPage() {
             ))}
           </fieldset>
 
-          <section className="menu-tags-panel">
+          <section className="menu-tags-panel" id="tags-windows">
             <div className="section-heading-row">
               <h3>{t("admin.module3.catalog.tagsAndAvailability")}</h3>
               <span className="status-pill">{t("admin.module3.catalog.productScope")}</span>
@@ -1128,6 +1141,15 @@ export function MenuCatalogPage() {
                 </label>
               ))}
             </div>
+            {qrTieredModifierWarnings.length > 0 ? (
+              <p className="modifier-warning">
+                {t("admin.module3.catalog.qrTieredModifierWarning", {
+                  groups: qrTieredModifierWarnings
+                    .map((group) => group.localizedNames.fr ?? group.name)
+                    .join(", "),
+                })}
+              </p>
+            ) : null}
             {form.id
               ? products
                   .find((product) => product.id === form.id)

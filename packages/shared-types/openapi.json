@@ -1606,6 +1606,37 @@
         ]
       }
     },
+    "/v1/menu/modifier-groups/{groupId}/reapply": {
+      "post": {
+        "operationId": "MenuCatalogController_reapplyModifierGroup",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReapplyModifierGroupResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
     "/v1/menu/tags": {
       "get": {
         "operationId": "MenuCatalogController_listTags",
@@ -2552,38 +2583,6 @@
         "summary": "Fetch a stored menu import preview job.",
         "tags": [
           "menu-import"
-        ]
-      }
-    },
-    "/v1/_samples/effective-menu": {
-      "post": {
-        "operationId": "ZodSampleController_getEffectiveMenuSample",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SampleEffectiveMenuRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Nested effective-menu sample with decimal-string money fields.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SampleEffectiveMenuResponse_Output"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Test-only sample proving Zod DTOs generate precise nested menu SDK types.",
-        "tags": [
-          "zod-sample"
         ]
       }
     }
@@ -5334,6 +5333,26 @@
             }
           }
         }
+      },
+      "ReapplyModifierGroupResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "reappliedProducts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "groupId",
+          "reappliedProducts"
+        ],
+        "additionalProperties": false
       },
       "DietaryTag_Output": {
         "type": "object",
@@ -9135,159 +9154,6 @@
           "createdAt"
         ],
         "id": "MenuImportJobResponse_Output",
-        "additionalProperties": false
-      },
-      "SampleEffectiveMenuRequestDto": {
-        "type": "object",
-        "properties": {
-          "branchId": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "channel": {
-            "default": "pos",
-            "type": "string",
-            "enum": [
-              "pos",
-              "qr",
-              "online"
-            ]
-          }
-        },
-        "required": [
-          "branchId"
-        ]
-      },
-      "SampleMenuCategory_Output": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "name": {
-            "type": "object",
-            "propertyNames": {
-              "type": "string"
-            },
-            "additionalProperties": {
-              "type": "string"
-            }
-          },
-          "products": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SampleMenuProduct_Output"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "products"
-        ],
-        "additionalProperties": false,
-        "id": "SampleMenuCategory_Output"
-      },
-      "SampleMenuProduct_Output": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "name": {
-            "type": "object",
-            "propertyNames": {
-              "type": "string"
-            },
-            "additionalProperties": {
-              "type": "string"
-            }
-          },
-          "effectivePrice": {
-            "type": "string",
-            "pattern": "^-?\\d+(\\.\\d{1,2})?$",
-            "description": "Decimal string money value, never a JS number"
-          },
-          "variants": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SampleMenuVariant_Output"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "effectivePrice",
-          "variants"
-        ],
-        "additionalProperties": false,
-        "id": "SampleMenuProduct_Output"
-      },
-      "SampleMenuVariant_Output": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "name": {
-            "type": "string"
-          },
-          "effectivePrice": {
-            "type": "string",
-            "pattern": "^-?\\d+(\\.\\d{1,2})?$",
-            "description": "Decimal string money value, never a JS number"
-          },
-          "pricingMode": {
-            "type": "string",
-            "enum": [
-              "fixed",
-              "variable_pos"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "effectivePrice",
-          "pricingMode"
-        ],
-        "additionalProperties": false,
-        "id": "SampleMenuVariant_Output"
-      },
-      "SampleEffectiveMenuResponse_Output": {
-        "type": "object",
-        "properties": {
-          "branchId": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "generatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
-          },
-          "categories": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SampleMenuCategory_Output"
-            }
-          }
-        },
-        "required": [
-          "branchId",
-          "generatedAt",
-          "categories"
-        ],
-        "id": "SampleEffectiveMenuResponse_Output",
         "additionalProperties": false
       }
     }

@@ -503,6 +503,22 @@ export interface paths {
         patch: operations["MenuCatalogController_updateModifierGroup"];
         trace?: never;
     };
+    "/v1/menu/modifier-groups/{groupId}/reapply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MenuCatalogController_reapplyModifierGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/menu/tags": {
         parameters: {
             query?: never;
@@ -840,23 +856,6 @@ export interface paths {
         get: operations["MenuImportController_getImportJob"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/_samples/effective-menu": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Test-only sample proving Zod DTOs generate precise nested menu SDK types. */
-        post: operations["ZodSampleController_getEffectiveMenuSample"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1574,6 +1573,11 @@ export interface components {
                 available: boolean;
                 recipeHookKey?: string | null;
             }[];
+        };
+        ReapplyModifierGroupResponseDto_Output: {
+            /** Format: uuid */
+            groupId: string;
+            reappliedProducts: number;
         };
         DietaryTag_Output: {
             /** Format: uuid */
@@ -2304,49 +2308,6 @@ export interface components {
             /** @enum {string} */
             fileType: "csv" | "xlsx";
             createdAt: string;
-        };
-        SampleEffectiveMenuRequestDto: {
-            /** Format: uuid */
-            branchId: string;
-            /**
-             * @default pos
-             * @enum {string}
-             */
-            channel: "pos" | "qr" | "online";
-        };
-        SampleMenuCategory_Output: {
-            /** Format: uuid */
-            id: string;
-            name: {
-                [key: string]: string;
-            };
-            products: components["schemas"]["SampleMenuProduct_Output"][];
-        };
-        SampleMenuProduct_Output: {
-            /** Format: uuid */
-            id: string;
-            name: {
-                [key: string]: string;
-            };
-            /** @description Decimal string money value, never a JS number */
-            effectivePrice: string;
-            variants: components["schemas"]["SampleMenuVariant_Output"][];
-        };
-        SampleMenuVariant_Output: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            /** @description Decimal string money value, never a JS number */
-            effectivePrice: string;
-            /** @enum {string} */
-            pricingMode: "fixed" | "variable_pos";
-        };
-        SampleEffectiveMenuResponse_Output: {
-            /** Format: uuid */
-            branchId: string;
-            /** Format: date-time */
-            generatedAt: string;
-            categories: components["schemas"]["SampleMenuCategory_Output"][];
         };
     };
     responses: never;
@@ -3465,6 +3426,27 @@ export interface operations {
             };
         };
     };
+    MenuCatalogController_reapplyModifierGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReapplyModifierGroupResponseDto_Output"];
+                };
+            };
+        };
+    };
     MenuCatalogController_listTags: {
         parameters: {
             query?: never;
@@ -4108,30 +4090,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MenuImportJobResponse_Output"];
-                };
-            };
-        };
-    };
-    ZodSampleController_getEffectiveMenuSample: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SampleEffectiveMenuRequestDto"];
-            };
-        };
-        responses: {
-            /** @description Nested effective-menu sample with decimal-string money fields. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SampleEffectiveMenuResponse_Output"];
                 };
             };
         };

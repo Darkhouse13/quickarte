@@ -19,10 +19,11 @@ type ImportProblem = {
 };
 
 type MenuImportPanelProps = {
+  id?: string;
   onCommitted: () => Promise<void>;
 };
 
-export function MenuImportPanel({ onCommitted }: MenuImportPanelProps) {
+export function MenuImportPanel({ id, onCommitted }: MenuImportPanelProps) {
   const { t } = useTranslation();
   const accessToken = useAuthStore((state) => state.accessToken);
   const [job, setJob] = useState<ImportJobResponse | null>(null);
@@ -117,7 +118,7 @@ export function MenuImportPanel({ onCommitted }: MenuImportPanelProps) {
 
   const preview = job?.preview;
   return (
-    <section className="menu-import-panel">
+    <section className="menu-import-panel" id={id}>
       <div className="section-heading-row">
         <div>
           <h2>{t("admin.module3.import.title")}</h2>

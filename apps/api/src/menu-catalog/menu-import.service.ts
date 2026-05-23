@@ -38,6 +38,7 @@ import type {
 
 type CatalogLookups = {
   categoriesByName: Map<string, typeof categories.$inferSelect>;
+  categorySlugs: Set<string>;
   productsBySku: Map<string, typeof products.$inferSelect>;
   productsByCategoryAndName: Map<string, typeof products.$inferSelect>;
   variantsByProductAndName: Map<string, typeof productVariants.$inferSelect>;
@@ -299,6 +300,7 @@ export class MenuImportService {
       tagsAttached: 0,
     };
     const categoriesByName = new Map(lookups.categoriesByName);
+    const categorySlugs = new Set(lookups.categorySlugs);
     const productsBySku = new Map(lookups.productsBySku);
     const productsByCategoryAndName = new Map(lookups.productsByCategoryAndName);
     const variantsByProductAndName = new Map(lookups.variantsByProductAndName);
@@ -319,7 +321,7 @@ export class MenuImportService {
             .set({
               name: categoryName,
               localizedNames: normalized.category.localizedNames,
-              slug: category.slug ?? slugify(categoryName),
+              slug: category.slug ?? this.nextCategorySlug(categoryName, categorySlugs),
               updatedAt: new Date(),
             })
             .where(and(eq(categories.businessId, businessId), eq(categories.id, category.id)))
@@ -337,7 +339,7 @@ export class MenuImportService {
           .values({
             businessId,
             name: categoryName,
-            slug: slugify(categoryName),
+            slug: this.nextCategorySlug(categoryName, categorySlugs),
             localizedNames: normalized.category.localizedNames,
             position: categoriesByName.size,
           })
@@ -588,6 +590,7 @@ export class MenuImportService {
 
     return {
       categoriesByName: new Map(categoryRows.map((row) => [key(row.localizedNames.fr ?? row.name), row])),
+      categorySlugs: new Set(categoryRows.flatMap((row) => (row.slug ? [row.slug] : []))),
       productsBySku: new Map(
         productRows.flatMap((row) => (row.sku ? [[key(row.sku), row] as const] : [])),
       ),
@@ -635,6 +638,18 @@ export class MenuImportService {
       taxRateCode: null,
       tagCodes: [],
     };
+  }
+
+  private nextCategorySlug(name: string, usedSlugs: Set<string>): string {
+    const base = slugify(name);
+    let candidate = base;
+    let suffix = 2;
+    while (usedSlugs.has(candidate)) {
+      candidate = `${base}-${suffix}`;
+      suffix += 1;
+    }
+    usedSlugs.add(candidate);
+    return candidate;
   }
 }
 
