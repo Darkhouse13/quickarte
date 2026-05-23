@@ -2435,6 +2435,126 @@
         ]
       }
     },
+    "/v1/menu/import": {
+      "post": {
+        "operationId": "MenuImportController_uploadImport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuImportUploadResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Upload an Excel or CSV menu import file and preview all rows.",
+        "tags": [
+          "menu-import"
+        ]
+      }
+    },
+    "/v1/menu/import/template": {
+      "get": {
+        "operationId": "MenuImportController_downloadTemplate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Download the menu import workbook template.",
+        "tags": [
+          "menu-import"
+        ]
+      }
+    },
+    "/v1/menu/import/{jobId}/commit": {
+      "post": {
+        "operationId": "MenuImportController_commitImportJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuImportCommitResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Commit a reviewed menu import job atomically.",
+        "tags": [
+          "menu-import"
+        ]
+      }
+    },
+    "/v1/menu/import/{jobId}": {
+      "get": {
+        "operationId": "MenuImportController_getImportJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuImportJobResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Fetch a stored menu import preview job.",
+        "tags": [
+          "menu-import"
+        ]
+      }
+    },
     "/v1/_samples/effective-menu": {
       "post": {
         "operationId": "ZodSampleController_getEffectiveMenuSample",
@@ -8435,6 +8555,587 @@
         "required": [
           "prices"
         ]
+      },
+      "MenuImportPreview_Output": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuImportPreviewRow_Output"
+            }
+          },
+          "summary": {
+            "$ref": "#/components/schemas/MenuImportPreviewSummary_Output"
+          }
+        },
+        "required": [
+          "rows",
+          "summary"
+        ],
+        "additionalProperties": false,
+        "id": "MenuImportPreview_Output"
+      },
+      "MenuImportPreviewRow_Output": {
+        "type": "object",
+        "properties": {
+          "rowNumber": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 9007199254740991
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "create",
+              "update",
+              "skip"
+            ]
+          },
+          "normalized": {
+            "type": "object",
+            "properties": {
+              "category": {
+                "type": "object",
+                "properties": {
+                  "localizedNames": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 2
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "required": [
+                  "localizedNames"
+                ],
+                "additionalProperties": false
+              },
+              "product": {
+                "type": "object",
+                "properties": {
+                  "localizedNames": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 2
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "localizedDescriptions": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 2
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "sku": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "itemCode": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "colorTag": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "featured": {
+                    "type": "boolean"
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  },
+                  "channels": {
+                    "type": "object",
+                    "properties": {
+                      "dineIn": {
+                        "type": "boolean"
+                      },
+                      "takeaway": {
+                        "type": "boolean"
+                      },
+                      "delivery": {
+                        "type": "boolean"
+                      },
+                      "qr": {
+                        "type": "boolean"
+                      },
+                      "online": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "dineIn",
+                      "takeaway",
+                      "delivery",
+                      "qr",
+                      "online"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "spiceLevel": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 3
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "localizedNames",
+                  "localizedDescriptions",
+                  "sku",
+                  "itemCode",
+                  "colorTag",
+                  "featured",
+                  "hidden",
+                  "channels",
+                  "spiceLevel"
+                ],
+                "additionalProperties": false
+              },
+              "variant": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "variantKind": {
+                    "type": "string",
+                    "enum": [
+                      "size",
+                      "protein",
+                      "topping",
+                      "market",
+                      "custom"
+                    ]
+                  },
+                  "price": {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d{1,2})?$",
+                    "description": "Decimal string money value, never a JS number"
+                  }
+                },
+                "required": [
+                  "name",
+                  "variantKind",
+                  "price"
+                ],
+                "additionalProperties": false
+              },
+              "taxRateCode": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tagCodes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "price": {
+                "type": "string",
+                "pattern": "^\\d+(\\.\\d{1,2})?$",
+                "description": "Decimal string money value, never a JS number"
+              }
+            },
+            "required": [
+              "category",
+              "product",
+              "variant",
+              "taxRateCode",
+              "tagCodes",
+              "price"
+            ],
+            "additionalProperties": false
+          },
+          "resolvedCategory": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolvedProduct": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolvedVariant": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuImportIssue_Output"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuImportIssue_Output"
+            }
+          }
+        },
+        "required": [
+          "rowNumber",
+          "action",
+          "normalized",
+          "resolvedCategory",
+          "resolvedProduct",
+          "resolvedVariant",
+          "errors",
+          "warnings"
+        ],
+        "additionalProperties": false,
+        "id": "MenuImportPreviewRow_Output"
+      },
+      "MenuImportIssue_Output": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "field"
+        ],
+        "additionalProperties": false,
+        "id": "MenuImportIssue_Output"
+      },
+      "MenuImportPreviewSummary_Output": {
+        "type": "object",
+        "properties": {
+          "rowCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "createCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "updateCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "skipCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "errorCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "warningCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "blockingErrors": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "rowCount",
+          "createCount",
+          "updateCount",
+          "skipCount",
+          "errorCount",
+          "warningCount",
+          "blockingErrors"
+        ],
+        "additionalProperties": false,
+        "id": "MenuImportPreviewSummary_Output"
+      },
+      "MenuImportUploadResponse_Output": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending_review",
+              "committed",
+              "failed"
+            ]
+          },
+          "preview": {
+            "$ref": "#/components/schemas/MenuImportPreview_Output"
+          }
+        },
+        "required": [
+          "jobId",
+          "status",
+          "preview"
+        ],
+        "id": "MenuImportUploadResponse_Output",
+        "additionalProperties": false
+      },
+      "MenuImportCommitCounts_Output": {
+        "type": "object",
+        "properties": {
+          "categoriesCreated": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "categoriesUpdated": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "productsCreated": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "productsUpdated": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "variantsCreated": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "variantsUpdated": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "tagsAttached": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "categoriesCreated",
+          "categoriesUpdated",
+          "productsCreated",
+          "productsUpdated",
+          "variantsCreated",
+          "variantsUpdated",
+          "tagsAttached"
+        ],
+        "additionalProperties": false,
+        "id": "MenuImportCommitCounts_Output"
+      },
+      "MenuImportCommitResponse_Output": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "status": {
+            "type": "string",
+            "const": "committed"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/MenuImportCommitCounts_Output"
+          }
+        },
+        "required": [
+          "jobId",
+          "status",
+          "counts"
+        ],
+        "id": "MenuImportCommitResponse_Output",
+        "additionalProperties": false
+      },
+      "MenuImportJobResponse_Output": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending_review",
+              "committed",
+              "failed"
+            ]
+          },
+          "preview": {
+            "$ref": "#/components/schemas/MenuImportPreview_Output"
+          },
+          "originalFilename": {
+            "type": "string"
+          },
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "csv",
+              "xlsx"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "jobId",
+          "status",
+          "preview",
+          "originalFilename",
+          "fileType",
+          "createdAt"
+        ],
+        "id": "MenuImportJobResponse_Output",
+        "additionalProperties": false
       },
       "SampleEffectiveMenuRequestDto": {
         "type": "object",

@@ -4,11 +4,13 @@ import { BranchMenuController } from "./branch-menu.controller";
 import { EffectiveMenuResolver } from "./effective-menu.resolver";
 import { MenuCatalogController } from "./menu-catalog.controller";
 import { MenuCatalogService } from "./menu-catalog.service";
+import { MenuImportController } from "./menu-import.controller";
+import { MenuImportService } from "./menu-import.service";
 
 @Module({
   imports: [DatabaseModule],
-  controllers: [MenuCatalogController, BranchMenuController],
-  providers: [MenuCatalogService, EffectiveMenuResolver],
-  exports: [MenuCatalogService, EffectiveMenuResolver],
+  controllers: [MenuCatalogController, BranchMenuController, MenuImportController],
+  providers: [MenuCatalogService, EffectiveMenuResolver, MenuImportService],
+  exports: [MenuCatalogService, EffectiveMenuResolver, MenuImportService],
 })
 export class MenuCatalogModule {}

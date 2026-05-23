@@ -412,6 +412,37 @@
           "6": "Samedi"
         }
       },
+      "import": {
+        "title": "Import menu Excel/CSV",
+        "description": "Chargez une feuille plate: une ligne par variante. L'import affiche d'abord une preview, puis applique tout en une transaction.",
+        "downloadTemplate": "Telecharger le modele",
+        "templateError": "Impossible de telecharger le modele",
+        "file": "Fichier .xlsx ou .csv",
+        "uploading": "Analyse en cours",
+        "uploadError": "Impossible d'analyser le fichier",
+        "commitError": "Impossible de valider l'import",
+        "committing": "Validation...",
+        "commit": "Valider l'import",
+        "preview": "Preview de l'import menu",
+        "row": "Ligne",
+        "action": "Action",
+        "category": "Categorie",
+        "product": "Produit",
+        "variant": "Variante",
+        "messages": "Messages",
+        "rows": "{count} lignes",
+        "creates": "{count} creations",
+        "updates": "{count} mises a jour",
+        "blockingErrors": "Erreurs bloquantes",
+        "ready": "Pret a valider",
+        "noIssues": "Aucun probleme",
+        "committed": "Import valide: {products} produits, {variants} variantes.",
+        "actionValue": {
+          "create": "Creer",
+          "update": "Mettre a jour",
+          "skip": "Ignorer"
+        }
+      },
       "overrides": {
         "title": "Overrides par branche",
         "warning": "Les modificateurs a paliers restent affiches avec un avertissement: le QR historique ne calcule pas encore ces regles. Le serveur re-resoudra le menu a la commande.",

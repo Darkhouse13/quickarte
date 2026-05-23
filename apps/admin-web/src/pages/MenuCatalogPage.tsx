@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { paths } from "@quickarte/shared-types";
 import { apiClient, readResponseProblem } from "../auth/api";
 import { BranchOverridePanel } from "./BranchOverridePanel";
+import { MenuImportPanel } from "./MenuImportPanel";
 
 type CategoriesResponse =
   paths["/v1/menu/categories"]["get"]["responses"][200]["content"]["application/json"];
@@ -844,6 +845,12 @@ export function MenuCatalogPage() {
             }
             onToggleAvailability={toggleBranchAvailability}
             onToggleChannel={toggleBranchChannel}
+          />
+          <MenuImportPanel
+            onCommitted={async () => {
+              await loadCatalog();
+              await loadEffectiveMenu();
+            }}
           />
           <div className="section-heading-row">
             <h2>{t("admin.module3.catalog.items")}</h2>

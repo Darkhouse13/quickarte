@@ -574,10 +574,83 @@ body.dir-rtl .subcategory-add {
   padding: var(--density-card-padding);
 }
 
-.branch-override-panel p {
+.branch-override-panel p,
+.menu-import-panel p {
   margin: var(--s-1) 0 0;
   color: var(--fg-2);
   font-size: var(--t-body-sm);
+}
+
+.menu-import-panel,
+.menu-import-preview {
+  display: grid;
+  gap: var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  padding: var(--density-card-padding);
+}
+
+.menu-import-upload label {
+  display: grid;
+  gap: var(--s-2);
+  color: var(--fg-2);
+  font-size: var(--t-body-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.menu-import-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+.menu-import-summary > span:not(.status-pill) {
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--fg-2);
+  padding: var(--s-1) var(--s-2);
+  font-size: var(--t-caption);
+  font-weight: var(--fw-semibold);
+}
+
+.menu-import-table {
+  display: grid;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.menu-import-table-head,
+.menu-import-table-row {
+  display: grid;
+  grid-template-columns: 56px 92px minmax(120px, 1fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(180px, 1.4fr);
+  gap: var(--s-2);
+  align-items: start;
+  min-width: 760px;
+  padding: var(--s-2) var(--s-3);
+}
+
+.menu-import-table-head {
+  background: var(--surface-2);
+  color: var(--fg-3);
+  font-size: var(--t-caption);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+}
+
+.menu-import-table-row {
+  border-top: 1px solid var(--border);
+  color: var(--fg-2);
+  font-size: var(--t-body-sm);
+}
+
+.menu-import-table-row.error {
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 .override-toolbar {

@@ -156,6 +156,7 @@ const menuOverridesResponse = {
 };
 
 vi.mock("../auth/api", () => ({
+  apiBaseUrl: () => "http://localhost:3001/v1",
   apiClient: () => ({
     GET: getMock,
     POST: postMock,

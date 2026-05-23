@@ -778,6 +778,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/menu/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload an Excel or CSV menu import file and preview all rows. */
+        post: operations["MenuImportController_uploadImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/import/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download the menu import workbook template. */
+        get: operations["MenuImportController_downloadTemplate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/import/{jobId}/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit a reviewed menu import job atomically. */
+        post: operations["MenuImportController_commitImportJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/menu/import/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fetch a stored menu import preview job. */
+        get: operations["MenuImportController_getImportJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/_samples/effective-menu": {
         parameters: {
             query?: never;
@@ -2126,6 +2194,116 @@ export interface components {
                 /** @description Decimal string money value, never a JS number */
                 price: string;
             }[];
+        };
+        MenuImportPreview_Output: {
+            rows: components["schemas"]["MenuImportPreviewRow_Output"][];
+            summary: components["schemas"]["MenuImportPreviewSummary_Output"];
+        };
+        MenuImportPreviewRow_Output: {
+            rowNumber: number;
+            /** @enum {string} */
+            action: "create" | "update" | "skip";
+            normalized: {
+                category: {
+                    localizedNames: {
+                        [key: string]: string;
+                    };
+                };
+                product: {
+                    localizedNames: {
+                        [key: string]: string;
+                    };
+                    localizedDescriptions: {
+                        [key: string]: string;
+                    };
+                    sku: string | null;
+                    itemCode: string | null;
+                    colorTag: string | null;
+                    featured: boolean;
+                    hidden: boolean;
+                    channels: {
+                        dineIn: boolean;
+                        takeaway: boolean;
+                        delivery: boolean;
+                        qr: boolean;
+                        online: boolean;
+                    };
+                    spiceLevel: number | null;
+                };
+                variant: {
+                    name: string;
+                    /** @enum {string} */
+                    variantKind: "size" | "protein" | "topping" | "market" | "custom";
+                    /** @description Decimal string money value, never a JS number */
+                    price: string;
+                };
+                taxRateCode: string | null;
+                tagCodes: string[];
+                /** @description Decimal string money value, never a JS number */
+                price: string;
+            };
+            resolvedCategory: {
+                id: string | null;
+                name: string;
+            } | null;
+            resolvedProduct: {
+                id: string | null;
+                name: string;
+            } | null;
+            resolvedVariant: {
+                id: string | null;
+                name: string;
+            } | null;
+            errors: components["schemas"]["MenuImportIssue_Output"][];
+            warnings: components["schemas"]["MenuImportIssue_Output"][];
+        };
+        MenuImportIssue_Output: {
+            code: string;
+            message: string;
+            field: string | null;
+        };
+        MenuImportPreviewSummary_Output: {
+            rowCount: number;
+            createCount: number;
+            updateCount: number;
+            skipCount: number;
+            errorCount: number;
+            warningCount: number;
+            blockingErrors: boolean;
+        };
+        MenuImportUploadResponse_Output: {
+            /** Format: uuid */
+            jobId: string;
+            /** @enum {string} */
+            status: "pending_review" | "committed" | "failed";
+            preview: components["schemas"]["MenuImportPreview_Output"];
+        };
+        MenuImportCommitCounts_Output: {
+            categoriesCreated: number;
+            categoriesUpdated: number;
+            productsCreated: number;
+            productsUpdated: number;
+            variantsCreated: number;
+            variantsUpdated: number;
+            tagsAttached: number;
+        };
+        MenuImportCommitResponse_Output: {
+            /** Format: uuid */
+            jobId: string;
+            /** @constant */
+            status: "committed";
+            counts: components["schemas"]["MenuImportCommitCounts_Output"];
+        };
+        MenuImportJobResponse_Output: {
+            /** Format: uuid */
+            jobId: string;
+            /** @enum {string} */
+            status: "pending_review" | "committed" | "failed";
+            preview: components["schemas"]["MenuImportPreview_Output"];
+            originalFilename: string;
+            /** @enum {string} */
+            fileType: "csv" | "xlsx";
+            createdAt: string;
         };
         SampleEffectiveMenuRequestDto: {
             /** Format: uuid */
@@ -3845,6 +4023,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BranchMenuOverridesResponse_Output"];
+                };
+            };
+        };
+    };
+    MenuImportController_uploadImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuImportUploadResponse_Output"];
+                };
+            };
+        };
+    };
+    MenuImportController_downloadTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MenuImportController_commitImportJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuImportCommitResponse_Output"];
+                };
+            };
+        };
+    };
+    MenuImportController_getImportJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MenuImportJobResponse_Output"];
                 };
             };
         };
