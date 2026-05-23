@@ -106,6 +106,10 @@
     "nav": {
       "dashboard": "Tableau de bord",
       "menu": "Menu",
+      "menuCatalog": "Catalogue",
+      "menuOverrides": "Overrides branche",
+      "menuTagsWindows": "Tags & horaires",
+      "menuImport": "Import menu",
       "orders": "Commandes",
       "reports": "Rapports",
       "staff": "Equipe",
@@ -119,6 +123,7 @@
       "printers": "Imprimantes"
     },
     "navGroups": {
+      "menu": "Menu",
       "settings": "Parametres"
     },
     "dashboard": {
@@ -386,6 +391,7 @@
         "addOption": "Ajouter une option",
         "freeThen": "offertes puis",
         "inheritedFrom": "herite de",
+        "qrTieredModifierWarning": "Attention QR: {groups} utilise des quantites offertes puis un extra. Le QR historique ne calcule pas encore les extras au-dela du quota; Module 13 corrigera ce calcul.",
         "tagsAndAvailability": "Tags et disponibilite",
         "spiceLevel": "Niveau epice",
         "noSpiceLevel": "Non renseigne",

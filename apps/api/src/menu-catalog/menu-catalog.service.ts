@@ -343,6 +343,50 @@ export class MenuCatalogService {
     });
   }
 
+  async reapplyModifierGroup(
+    businessId: string,
+    groupId: string,
+  ): Promise<{ groupId: string; reappliedProducts: number }> {
+    return this.databaseService.withTenant(businessId, async (tx) => {
+      const group = await this.findModifierGroupRow(tx, businessId, groupId);
+      const values = await this.listModifierValueRows(tx, businessId, groupId);
+      const attachedOptions = await tx
+        .select({ option: productOptions })
+        .from(productOptions)
+        .innerJoin(products, eq(productOptions.productId, products.id))
+        .where(
+          and(
+            eq(products.businessId, businessId),
+            eq(productOptions.templateId, groupId),
+            isNull(products.deletedAt),
+          ),
+        );
+
+      for (const row of attachedOptions) {
+        await tx
+          .update(productOptions)
+          .set({
+            name: group.name,
+            localizedNames: group.localizedNames,
+            type: group.type,
+            required: group.required,
+            minSelect: group.minSelect,
+            maxSelect: group.maxSelect,
+            freeQuantity: group.freeQuantity,
+            extraPrice: group.extraPrice,
+            updatedAt: new Date(),
+          })
+          .where(eq(productOptions.id, row.option.id));
+        await this.syncMaterializedOptionValues(tx, row.option.id, values);
+      }
+
+      return {
+        groupId,
+        reappliedProducts: new Set(attachedOptions.map((row) => row.option.productId)).size,
+      };
+    });
+  }
+
   async attachModifierGroupsToProduct(
     businessId: string,
     productId: string,
@@ -379,20 +423,11 @@ export class MenuCatalogService {
           })
           .returning();
         if (!createdOption) throw new Error("Product modifier materialization failed");
-        const values = await this.listModifierValueRows(tx, businessId, group.id);
-        if (values.length > 0) {
-          await tx.insert(optionValues).values(
-            values.map((value) => ({
-              optionId: createdOption.id,
-              templateValueId: value.id,
-              name: value.name,
-              localizedNames: value.localizedNames,
-              priceAddition: value.priceAddition,
-              position: value.position,
-              available: value.available,
-            })),
-          );
-        }
+        await this.syncMaterializedOptionValues(
+          tx,
+          createdOption.id,
+          await this.listModifierValueRows(tx, businessId, group.id),
+        );
       }
 
       return (await this.hydrateProductModifiers(tx, businessId, [product])).get(productId) ?? [];
@@ -1036,28 +1071,117 @@ export class MenuCatalogService {
     groupId: string,
     values: ModifierGroupInput["values"],
   ): Promise<void> {
-    await tx
-      .delete(modifierValueTemplates)
+    const existingRows = await tx
+      .select()
+      .from(modifierValueTemplates)
       .where(
         and(
           eq(modifierValueTemplates.businessId, businessId),
           eq(modifierValueTemplates.groupTemplateId, groupId),
         ),
       );
-    if (values.length === 0) return;
-    await tx.insert(modifierValueTemplates).values(
-      values.map((value, index) => ({
-        id: value.id,
-        businessId,
-        groupTemplateId: groupId,
-        name: value.name,
-        localizedNames: value.localizedNames,
-        priceAddition: value.priceAddition,
-        position: value.position ?? index,
-        available: value.available,
-        recipeHookKey: value.recipeHookKey ?? null,
-      })),
+    const existingById = new Map(existingRows.map((row) => [row.id, row]));
+    const incomingIds = new Set(values.flatMap((value) => (value.id ? [value.id] : [])));
+
+    for (const existing of existingRows) {
+      if (!incomingIds.has(existing.id) && !existing.deletedAt) {
+        await tx
+          .update(modifierValueTemplates)
+          .set({ deletedAt: new Date(), updatedAt: new Date() })
+          .where(
+            and(
+              eq(modifierValueTemplates.businessId, businessId),
+              eq(modifierValueTemplates.id, existing.id),
+            ),
+          );
+      }
+    }
+
+    for (const [index, value] of values.entries()) {
+      const existing = value.id ? existingById.get(value.id) : undefined;
+      if (existing) {
+        await tx
+          .update(modifierValueTemplates)
+          .set({
+            name: value.name,
+            localizedNames: value.localizedNames,
+            priceAddition: value.priceAddition,
+            position: value.position ?? index,
+            available: value.available,
+            recipeHookKey: value.recipeHookKey ?? null,
+            deletedAt: null,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(modifierValueTemplates.businessId, businessId),
+              eq(modifierValueTemplates.id, existing.id),
+            ),
+          );
+      } else {
+        await tx.insert(modifierValueTemplates).values({
+          id: value.id,
+          businessId,
+          groupTemplateId: groupId,
+          name: value.name,
+          localizedNames: value.localizedNames,
+          priceAddition: value.priceAddition,
+          position: value.position ?? index,
+          available: value.available,
+          recipeHookKey: value.recipeHookKey ?? null,
+        });
+      }
+    }
+  }
+
+  private async syncMaterializedOptionValues(
+    tx: TenantedDrizzleClient,
+    optionId: string,
+    templateValues: Array<typeof modifierValueTemplates.$inferSelect>,
+  ): Promise<void> {
+    const activeTemplateValueIds = new Set(templateValues.map((value) => value.id));
+    const existingValues = await tx
+      .select()
+      .from(optionValues)
+      .where(eq(optionValues.optionId, optionId));
+    const existingByTemplateValueId = new Map(
+      existingValues.flatMap((value) =>
+        value.templateValueId ? [[value.templateValueId, value] as const] : [],
+      ),
     );
+
+    for (const existing of existingValues) {
+      if (!existing.templateValueId || !activeTemplateValueIds.has(existing.templateValueId)) {
+        await tx.delete(optionValues).where(eq(optionValues.id, existing.id));
+      }
+    }
+
+    for (const value of templateValues) {
+      const existing = existingByTemplateValueId.get(value.id);
+      if (existing) {
+        await tx
+          .update(optionValues)
+          .set({
+            name: value.name,
+            localizedNames: value.localizedNames,
+            priceAddition: value.priceAddition,
+            position: value.position,
+            available: value.available,
+            updatedAt: new Date(),
+          })
+          .where(eq(optionValues.id, existing.id));
+      } else {
+        await tx.insert(optionValues).values({
+          optionId,
+          templateValueId: value.id,
+          name: value.name,
+          localizedNames: value.localizedNames,
+          priceAddition: value.priceAddition,
+          position: value.position,
+          available: value.available,
+        });
+      }
+    }
   }
 
   private async listModifierValueRows(

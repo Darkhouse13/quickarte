@@ -5,6 +5,8 @@ import { after, before, test } from "node:test";
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import {
+  branchOptionValueOverrides,
+  branches,
   businesses,
   categories,
   categoryModifierGroups,
@@ -58,6 +60,7 @@ let categoryAId: string;
 let categoryBId: string;
 let productAId: string;
 let productBId: string;
+let branchAId: string;
 
 before(async () => {
   process.env.DATABASE_URL = appRoleUrl;
@@ -117,6 +120,18 @@ before(async () => {
   ]);
   await seedRolesAndPermissions(businessAId);
   await seedRolesAndPermissions(businessBId);
+
+  const [branchA] = await adminDb
+    .insert(branches)
+    .values({
+      businessId: businessAId,
+      name: "Tenant A Main",
+      slug: `menu-main-${runId}`,
+      isDefault: true,
+    })
+    .returning({ id: branches.id });
+  assert.ok(branchA);
+  branchAId = branchA.id;
 
   const [categoryA] = await adminDb
     .insert(categories)
@@ -566,6 +581,144 @@ test("menu modifier API materializes reusable groups without leaking shared opti
       group.values.every((value) => value.name !== "Tenant B Secret Sauce"),
     ),
   );
+});
+
+test("M3.6 re-applying a modifier template updates materialized values in place", async () => {
+  const tokenA = tokenFor(businessAId, userAId, ownerRoleAId);
+  const createGroupResponse = await apiJson("/v1/menu/modifier-groups", "POST", tokenA, {
+    localizedNames: { fr: "Sauce reapply" },
+    type: "multi_select",
+    required: false,
+    minSelect: 0,
+    maxSelect: 3,
+    freeQuantity: 1,
+    extraPrice: "5.00",
+    attachScope: "product",
+    reusable: true,
+    values: [
+      {
+        name: "Harissa",
+        localizedNames: { fr: "Harissa" },
+        priceAddition: "0.00",
+        position: 0,
+        available: true,
+        recipeHookKey: "harissa",
+      },
+      {
+        name: "Aioli",
+        localizedNames: { fr: "Aioli" },
+        priceAddition: "2.00",
+        position: 1,
+        available: true,
+        recipeHookKey: null,
+      },
+    ],
+  });
+  const createGroupBody = (await createGroupResponse.json()) as {
+    group: { id: string; values: Array<{ id: string; name: string }> };
+  };
+  assert.equal(createGroupResponse.status, 201, JSON.stringify(createGroupBody));
+
+  const attachResponse = await apiJson(
+    `/v1/menu/products/${productAId}/modifier-groups`,
+    "PUT",
+    tokenA,
+    { groupTemplateIds: [createGroupBody.group.id] },
+  );
+  assert.equal(attachResponse.status, 200, await attachResponse.text());
+
+  const [optionRow] = await adminDb
+    .select({ id: productOptions.id })
+    .from(productOptions)
+    .where(eq(productOptions.templateId, createGroupBody.group.id));
+  assert.ok(optionRow);
+  const beforeValues = await adminDb
+    .select({
+      id: optionValues.id,
+      templateValueId: optionValues.templateValueId,
+      name: optionValues.name,
+    })
+    .from(optionValues)
+    .where(eq(optionValues.optionId, optionRow.id));
+  assert.equal(beforeValues.length, 2);
+  const harissaBefore = beforeValues.find((value) => value.name === "Harissa");
+  const aioliBefore = beforeValues.find((value) => value.name === "Aioli");
+  assert.ok(harissaBefore);
+  assert.ok(aioliBefore);
+
+  await databaseService.withTenant(businessAId, (tx) =>
+    tx.insert(branchOptionValueOverrides).values({
+      businessId: businessAId,
+      branchId: branchAId,
+      optionValueId: harissaBefore.id,
+      available: false,
+      priceAddition: "1.00",
+    }),
+  );
+
+  const updateResponse = await apiJson(
+    `/v1/menu/modifier-groups/${createGroupBody.group.id}`,
+    "PATCH",
+    tokenA,
+    {
+      localizedNames: { fr: "Sauce reapply updated" },
+      values: [
+        {
+          id: harissaBefore.templateValueId,
+          name: "Harissa forte",
+          localizedNames: { fr: "Harissa forte" },
+          priceAddition: "3.00",
+          position: 0,
+          available: true,
+          recipeHookKey: "harissa",
+        },
+        {
+          name: "Mayo",
+          localizedNames: { fr: "Mayo" },
+          priceAddition: "1.00",
+          position: 1,
+          available: true,
+          recipeHookKey: null,
+        },
+      ],
+    },
+  );
+  assert.equal(updateResponse.status, 200, await updateResponse.text());
+
+  const reapplyResponse = await apiJson(
+    `/v1/menu/modifier-groups/${createGroupBody.group.id}/reapply`,
+    "POST",
+    tokenA,
+    {},
+  );
+  assert.equal(reapplyResponse.status, 201, await reapplyResponse.text());
+
+  const afterValues = await adminDb
+    .select({
+      id: optionValues.id,
+      templateValueId: optionValues.templateValueId,
+      name: optionValues.name,
+      priceAddition: optionValues.priceAddition,
+    })
+    .from(optionValues)
+    .where(eq(optionValues.optionId, optionRow.id));
+  assert.equal(afterValues.length, 2);
+  const harissaAfter = afterValues.find((value) => value.templateValueId === harissaBefore.templateValueId);
+  assert.ok(harissaAfter);
+  assert.equal(harissaAfter.id, harissaBefore.id);
+  assert.equal(harissaAfter.name, "Harissa forte");
+  assert.equal(harissaAfter.priceAddition, "3.00");
+  assert.equal(afterValues.some((value) => value.id === aioliBefore.id), false);
+  assert.ok(afterValues.some((value) => value.name === "Mayo"));
+
+  const overrideRows = await databaseService.withTenant(businessAId, (tx) =>
+    tx
+      .select()
+      .from(branchOptionValueOverrides)
+      .where(eq(branchOptionValueOverrides.optionValueId, harissaBefore.id)),
+  );
+  assert.equal(overrideRows.length, 1);
+  assert.equal(overrideRows[0]?.available, false);
 });
 
 test("menu modifier API exposes category-wide inherited groups on product detail", async () => {

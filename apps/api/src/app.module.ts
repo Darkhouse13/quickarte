@@ -16,7 +16,6 @@ import { PrintersModule } from "./printers/printers.module";
 import { ReceiptSettingsModule } from "./receipt-settings/receipt-settings.module";
 import { SyncModule } from "./sync/sync.module";
 import { TaxConfigModule } from "./tax-config/tax-config.module";
-import { ZodSampleModule } from "./zod-sample/zod-sample.module";
 
 @Module({
   imports: [
@@ -78,7 +77,6 @@ import { ZodSampleModule } from "./zod-sample/zod-sample.module";
     TaxConfigModule,
     SyncModule,
     MenuCatalogModule,
-    ZodSampleModule,
   ],
 })
 export class AppModule implements NestModule {

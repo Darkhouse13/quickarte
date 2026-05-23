@@ -17,10 +17,16 @@ import { MenuCatalogPage } from "./pages/MenuCatalogPage";
 
 const primaryNavItems = [
   ["dashboard", "/"],
-  ["menu", "/menu"],
   ["orders", "/orders"],
   ["reports", "/reports"],
   ["staff", "/staff"],
+] as const;
+
+const menuNavItems = [
+  ["menuCatalog", "/menu#catalog"],
+  ["menuOverrides", "/menu#overrides"],
+  ["menuTagsWindows", "/menu#tags-windows"],
+  ["menuImport", "/menu#import"],
 ] as const;
 
 const module2SettingsNavItems = [
@@ -119,6 +125,14 @@ function AppLayout() {
           <div className="nav-section">
             {primaryNavItems.map(([key, href]) => (
               <NavLink to={href} key={key} end={href === "/"}>
+                {t(`admin.nav.${key}`)}
+              </NavLink>
+            ))}
+          </div>
+          <div className="nav-section">
+            <p className="nav-section-label">{t("admin.navGroups.menu")}</p>
+            {menuNavItems.map(([key, href]) => (
+              <NavLink to={href} key={key}>
                 {t(`admin.nav.${key}`)}
               </NavLink>
             ))}

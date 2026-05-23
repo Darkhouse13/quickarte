@@ -192,6 +192,10 @@ export const modifierGroupsResponseSchema = z.object({
 export const modifierGroupResponseSchema = z.object({
   group: modifierGroupTemplateSchema,
 });
+export const reapplyModifierGroupResponseSchema = z.object({
+  groupId: z.uuid(),
+  reappliedProducts: z.number().int().min(0),
+});
 export const effectiveModifierGroupsResponseSchema = z.object({
   groups: z.array(modifierGroupSchema),
 });
@@ -372,6 +376,7 @@ export class MenuDeleteResponseDto extends createZodDto(deleteResponseSchema) {}
 export class MenuLocaleSettingsResponseDto extends createZodDto(localeSettingsResponseSchema) {}
 export class MenuModifierGroupsResponseDto extends createZodDto(modifierGroupsResponseSchema) {}
 export class MenuModifierGroupResponseDto extends createZodDto(modifierGroupResponseSchema) {}
+export class ReapplyModifierGroupResponseDto extends createZodDto(reapplyModifierGroupResponseSchema) {}
 export class MenuEffectiveModifierGroupsResponseDto extends createZodDto(effectiveModifierGroupsResponseSchema) {}
 export class MenuTagsResponseDto extends createZodDto(tagsResponseSchema) {}
 export class MenuTagResponseDto extends createZodDto(tagResponseSchema) {}

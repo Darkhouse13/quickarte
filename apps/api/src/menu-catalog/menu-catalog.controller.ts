@@ -43,6 +43,7 @@ import {
   MenuTagResponseDto,
   MenuTagsResponseDto,
   MenuVariantsResponseDto,
+  ReapplyModifierGroupResponseDto,
   ReorderMenuCategoriesDto,
   ReorderMenuProductsDto,
   ReplaceMenuVariantsDto,
@@ -187,6 +188,17 @@ export class MenuCatalogController {
         body,
       ),
     };
+  }
+
+  @Post("modifier-groups/:groupId/reapply")
+  @RequirePermission("menu.manage")
+  @ApiParam({ name: "groupId", type: String, format: "uuid" })
+  @ZodResponse({ status: 201, type: ReapplyModifierGroupResponseDto })
+  async reapplyModifierGroup(
+    @Req() request: AuthenticatedRequest,
+    @Param("groupId") groupId: string,
+  ) {
+    return this.menuCatalogService.reapplyModifierGroup(request.businessId!, groupId);
   }
 
   @Delete("modifier-groups/:groupId")
