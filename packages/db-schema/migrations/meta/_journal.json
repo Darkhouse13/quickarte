@@ -253,6 +253,13 @@
       "when": 1779408600000,
       "tag": "0035_ingredients_units",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1779412200000,
+      "tag": "0036_recipes",
+      "breakpoints": true
     }
   ]
 }

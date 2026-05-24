@@ -3,6 +3,7 @@ export * from "./business";
 export * from "./catalog";
 export * from "./menu-overrides";
 export * from "./ingredients";
+export * from "./recipes";
 export * from "./ordering";
 export * from "./growth";
 export * from "./entitlements";

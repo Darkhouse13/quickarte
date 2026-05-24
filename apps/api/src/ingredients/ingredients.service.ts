@@ -8,6 +8,7 @@ import {
 } from "@quickarte/db-schema";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { DatabaseService, type TenantedDrizzleClient } from "../database/database.service";
+import { RecipesService } from "../recipes/recipes.service";
 import type {
   CreateIngredientInput,
   ReplaceIngredientConversionsInput,
@@ -20,6 +21,8 @@ export class IngredientsService {
   constructor(
     @Inject(DatabaseService)
     private readonly databaseService: DatabaseService,
+    @Inject(RecipesService)
+    private readonly recipesService: RecipesService,
   ) {}
 
   async listUnits(businessId: string) {
@@ -117,6 +120,13 @@ export class IngredientsService {
         )
         .returning();
       if (!updated) throw new NotFoundException("Ingredient not found");
+      if (input.currentCostPerUom !== undefined) {
+        await this.recipesService.recomputeRecipesForIngredientInTransaction(
+          tx,
+          businessId,
+          ingredientId,
+        );
+      }
       const [hydrated] = await this.hydrateIngredients(tx, businessId, [updated]);
       if (!hydrated) throw new Error("Failed to hydrate ingredient");
       return { ingredient: hydrated };

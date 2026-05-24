@@ -2839,6 +2839,229 @@
           "ingredients"
         ]
       }
+    },
+    "/v1/recipes": {
+      "get": {
+        "operationId": "RecipesController_listRecipes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipesResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List recipes for the current tenant.",
+        "tags": [
+          "recipes"
+        ]
+      },
+      "post": {
+        "operationId": "RecipesController_createRecipe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecipeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a variant recipe or sub-recipe.",
+        "tags": [
+          "recipes"
+        ]
+      }
+    },
+    "/v1/recipes/by-variant/{variantId}": {
+      "get": {
+        "operationId": "RecipesController_getRecipeByVariant",
+        "parameters": [
+          {
+            "name": "variantId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "recipes"
+        ]
+      }
+    },
+    "/v1/recipes/{recipeId}": {
+      "get": {
+        "operationId": "RecipesController_getRecipe",
+        "parameters": [
+          {
+            "name": "recipeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "recipes"
+        ]
+      },
+      "patch": {
+        "operationId": "RecipesController_updateRecipe",
+        "parameters": [
+          {
+            "name": "recipeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecipeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "recipes"
+        ]
+      },
+      "delete": {
+        "operationId": "RecipesController_deleteRecipe",
+        "parameters": [
+          {
+            "name": "recipeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeDeleteResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "recipes"
+        ]
+      }
+    },
+    "/v1/recipes/{recipeId}/lines": {
+      "put": {
+        "operationId": "RecipesController_replaceLines",
+        "parameters": [
+          {
+            "name": "recipeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceRecipeLinesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "recipes"
+        ]
+      }
     }
   },
   "info": {
@@ -9902,6 +10125,450 @@
           "tags"
         ],
         "additionalProperties": false
+      },
+      "Recipe_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "variantId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "yieldQty": {
+            "type": "string",
+            "pattern": "^(?!0+(?:\\.0+)?$)\\d+(?:\\.\\d{1,4})?$"
+          },
+          "yieldUom": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prepNotes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "photoUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "computedCost": {
+            "type": "string",
+            "pattern": "^\\d+(?:\\.\\d{1,4})?$"
+          },
+          "costIsComplete": {
+            "type": "boolean"
+          },
+          "foodCostPct": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+(?:\\.\\d{1,4})?$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecipeLine_Output"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "variantId",
+          "name",
+          "localizedNames",
+          "yieldQty",
+          "yieldUom",
+          "prepNotes",
+          "photoUrl",
+          "computedCost",
+          "costIsComplete",
+          "foodCostPct",
+          "lines"
+        ],
+        "additionalProperties": false,
+        "id": "Recipe_Output"
+      },
+      "RecipeLine_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "componentType": {
+            "type": "string",
+            "enum": [
+              "ingredient",
+              "sub_recipe"
+            ]
+          },
+          "ingredientId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subRecipeId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?!0+(?:\\.0+)?$)\\d+(?:\\.\\d{1,4})?$"
+          },
+          "uom": {
+            "type": "string"
+          },
+          "yieldPct": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!0+(?:\\.0+)?$)\\d+(?:\\.\\d{1,4})?$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quantityIsCooked": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "componentType",
+          "ingredientId",
+          "subRecipeId",
+          "quantity",
+          "uom",
+          "yieldPct",
+          "quantityIsCooked",
+          "position"
+        ],
+        "additionalProperties": false,
+        "id": "RecipeLine_Output"
+      },
+      "RecipesResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "recipes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recipe_Output"
+            }
+          }
+        },
+        "required": [
+          "recipes"
+        ],
+        "additionalProperties": false
+      },
+      "CreateRecipeDto": {
+        "type": "object",
+        "properties": {
+          "variantId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "yieldQty": {
+            "type": "string",
+            "pattern": "^(?!0+(?:\\.0+)?$)\\d+(?:\\.\\d{1,4})?$"
+          },
+          "yieldUom": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prepNotes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "photoUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "RecipeResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "recipe": {
+            "$ref": "#/components/schemas/Recipe_Output"
+          }
+        },
+        "required": [
+          "recipe"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateRecipeDto": {
+        "type": "object",
+        "properties": {
+          "variantId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "yieldQty": {
+            "type": "string",
+            "pattern": "^(?!0+(?:\\.0+)?$)\\d+(?:\\.\\d{1,4})?$"
+          },
+          "yieldUom": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prepNotes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "photoUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "RecipeDeleteResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "additionalProperties": false
+      },
+      "ReplaceRecipeLinesDto": {
+        "type": "object",
+        "properties": {
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "componentType": {
+                  "type": "string",
+                  "enum": [
+                    "ingredient",
+                    "sub_recipe"
+                  ]
+                },
+                "ingredientId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "subRecipeId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "quantity": {
+                  "type": "string",
+                  "pattern": "^(?!0+(?:\\.0+)?$)\\d+(?:\\.\\d{1,4})?$"
+                },
+                "uom": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "yieldPct": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^(?!0+(?:\\.0+)?$)\\d+(?:\\.\\d{1,4})?$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "quantityIsCooked": {
+                  "type": "boolean"
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "componentType",
+                "quantity",
+                "uom"
+              ]
+            }
+          }
+        },
+        "required": [
+          "lines"
+        ]
       }
     }
   }
