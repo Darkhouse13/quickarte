@@ -43,11 +43,13 @@ import {
   MenuTagResponseDto,
   MenuTagsResponseDto,
   MenuVariantsResponseDto,
+  ModifierValueIngredientDeltasResponseDto,
   ReapplyModifierGroupResponseDto,
   ReorderMenuCategoriesDto,
   ReorderMenuProductsDto,
   ReplaceMenuVariantsDto,
   ReplaceProductImagesDto,
+  ReplaceModifierValueIngredientDeltasDto,
   ReplaceProductAvailabilityWindowsDto,
   ReplaceProductTagsDto,
   UpdateMenuCategoryDto,
@@ -211,6 +213,26 @@ export class MenuCatalogController {
   ) {
     await this.menuCatalogService.softDeleteModifierGroup(request.businessId!, groupId);
     return { deleted: true as const };
+  }
+
+  @Put("modifier-values/:valueTemplateId/ingredient-deltas")
+  @RequirePermission("menu.manage")
+  @ApiParam({ name: "valueTemplateId", type: String, format: "uuid" })
+  @ApiBody({ type: ReplaceModifierValueIngredientDeltasDto })
+  @ZodResponse({ status: 200, type: ModifierValueIngredientDeltasResponseDto })
+  async replaceModifierValueIngredientDeltas(
+    @Req() request: AuthenticatedRequest,
+    @Param("valueTemplateId") valueTemplateId: string,
+    @Body(new ZodValidationPipe(ReplaceModifierValueIngredientDeltasDto))
+    body: ReplaceModifierValueIngredientDeltasDto,
+  ) {
+    return {
+      deltas: await this.menuCatalogService.replaceModifierValueIngredientDeltas(
+        request.businessId!,
+        valueTemplateId,
+        body,
+      ),
+    };
   }
 
   @Get("tags")

@@ -9,8 +9,10 @@ import {
   categories,
   categoryModifierGroups,
   dietaryTags,
+  ingredients,
   menuLocaleSettings,
   modifierGroupTemplates,
+  modifierValueIngredientDeltas,
   modifierValueTemplates,
   optionValues,
   productAvailabilityWindows,
@@ -43,6 +45,8 @@ import type {
   ReplaceImagesInput,
   ReplaceProductTagsInput,
   ReplaceVariantsInput,
+  ReplaceModifierValueIngredientDeltasInput,
+  ModifierValueIngredientDeltaResponse,
   UpdateCategoryInput,
   UpdateLocaleSettingsInput,
   UpdateProductInput,
@@ -340,6 +344,56 @@ export class MenuCatalogService {
         .update(modifierGroupTemplates)
         .set({ deletedAt: new Date(), updatedAt: new Date() })
         .where(and(eq(modifierGroupTemplates.businessId, businessId), eq(modifierGroupTemplates.id, groupId)));
+    });
+  }
+
+  async replaceModifierValueIngredientDeltas(
+    businessId: string,
+    valueTemplateId: string,
+    input: ReplaceModifierValueIngredientDeltasInput,
+  ): Promise<ModifierValueIngredientDeltaResponse[]> {
+    return this.databaseService.withTenant(businessId, async (tx) => {
+      await this.findModifierValueTemplateRow(tx, businessId, valueTemplateId);
+      if (input.deltas.length > 0) {
+        const ingredientIds = [...new Set(input.deltas.map((delta) => delta.ingredientId))];
+        const ingredientRows = await tx
+          .select({ id: ingredients.id })
+          .from(ingredients)
+          .where(
+            and(
+              eq(ingredients.businessId, businessId),
+              inArray(ingredients.id, ingredientIds),
+              isNull(ingredients.deletedAt),
+            ),
+          );
+        if (ingredientRows.length !== ingredientIds.length) {
+          throw new NotFoundException("Ingredient not found");
+        }
+      }
+
+      await tx
+        .delete(modifierValueIngredientDeltas)
+        .where(
+          and(
+            eq(modifierValueIngredientDeltas.businessId, businessId),
+            eq(modifierValueIngredientDeltas.modifierValueTemplateId, valueTemplateId),
+          ),
+        );
+      if (input.deltas.length > 0) {
+        await tx.insert(modifierValueIngredientDeltas).values(
+          input.deltas.map((delta, index) => ({
+            businessId,
+            modifierValueTemplateId: valueTemplateId,
+            ingredientId: delta.ingredientId,
+            quantityDelta: delta.quantityDelta,
+            uom: delta.uom,
+            quantityIsCooked: delta.quantityIsCooked,
+            yieldPct: delta.yieldPct ?? null,
+            position: delta.position ?? index,
+          })),
+        );
+      }
+      return this.listModifierValueIngredientDeltas(tx, businessId, valueTemplateId);
     });
   }
 
@@ -1063,6 +1117,59 @@ export class MenuCatalogService {
     }
     const byId = new Map(rows.map((row) => [row.id, row]));
     return groupIds.map((id) => byId.get(id)!);
+  }
+
+  private async findModifierValueTemplateRow(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    valueTemplateId: string,
+  ) {
+    const [row] = await tx
+      .select()
+      .from(modifierValueTemplates)
+      .innerJoin(
+        modifierGroupTemplates,
+        eq(modifierValueTemplates.groupTemplateId, modifierGroupTemplates.id),
+      )
+      .where(
+        and(
+          eq(modifierValueTemplates.businessId, businessId),
+          eq(modifierValueTemplates.id, valueTemplateId),
+          isNull(modifierValueTemplates.deletedAt),
+          eq(modifierGroupTemplates.businessId, businessId),
+          isNull(modifierGroupTemplates.deletedAt),
+        ),
+      )
+      .limit(1);
+    if (!row) throw new NotFoundException("Modifier value template not found");
+    return row.modifier_value_templates;
+  }
+
+  private async listModifierValueIngredientDeltas(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    valueTemplateId: string,
+  ): Promise<ModifierValueIngredientDeltaResponse[]> {
+    const rows = await tx
+      .select()
+      .from(modifierValueIngredientDeltas)
+      .where(
+        and(
+          eq(modifierValueIngredientDeltas.businessId, businessId),
+          eq(modifierValueIngredientDeltas.modifierValueTemplateId, valueTemplateId),
+        ),
+      )
+      .orderBy(asc(modifierValueIngredientDeltas.position), asc(modifierValueIngredientDeltas.id));
+    return rows.map((row) => ({
+      id: row.id,
+      modifierValueTemplateId: row.modifierValueTemplateId,
+      ingredientId: row.ingredientId,
+      quantityDelta: row.quantityDelta,
+      uom: row.uom,
+      quantityIsCooked: row.quantityIsCooked,
+      yieldPct: row.yieldPct,
+      position: row.position,
+    }));
   }
 
   private async replaceModifierValueRows(

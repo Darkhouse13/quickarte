@@ -1,9 +1,12 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import {
   dietaryTags,
   ingredientTags,
   ingredientUnitConversions,
   ingredients,
+  modifierValueIngredientDeltas,
+  recipeLines,
+  recipes,
   unitsOfMeasure,
 } from "@quickarte/db-schema";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
@@ -136,6 +139,7 @@ export class IngredientsService {
   async softDeleteIngredient(businessId: string, ingredientId: string) {
     return this.databaseService.withTenant(businessId, async (tx) => {
       await this.findIngredient(tx, businessId, ingredientId);
+      await this.assertIngredientNotInUse(tx, businessId, ingredientId);
       await tx
         .update(ingredients)
         .set({ deletedAt: new Date(), updatedAt: new Date() })
@@ -243,6 +247,49 @@ export class IngredientsService {
       .limit(1);
     if (!row) throw new NotFoundException("Ingredient not found");
     return row;
+  }
+
+  private async assertIngredientNotInUse(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    ingredientId: string,
+  ): Promise<void> {
+    const [recipeReference] = await tx
+      .select({ id: recipeLines.id })
+      .from(recipeLines)
+      .innerJoin(recipes, eq(recipeLines.recipeId, recipes.id))
+      .where(
+        and(
+          eq(recipeLines.businessId, businessId),
+          eq(recipeLines.ingredientId, ingredientId),
+          eq(recipes.businessId, businessId),
+          isNull(recipes.deletedAt),
+        ),
+      )
+      .limit(1);
+    if (recipeReference) {
+      throw new ConflictException({
+        type: "https://api.quickarte.ma/problems/ingredient-in-use",
+        message: "Ingredient is used by an active recipe and cannot be deleted.",
+      });
+    }
+
+    const [modifierReference] = await tx
+      .select({ id: modifierValueIngredientDeltas.id })
+      .from(modifierValueIngredientDeltas)
+      .where(
+        and(
+          eq(modifierValueIngredientDeltas.businessId, businessId),
+          eq(modifierValueIngredientDeltas.ingredientId, ingredientId),
+        ),
+      )
+      .limit(1);
+    if (modifierReference) {
+      throw new ConflictException({
+        type: "https://api.quickarte.ma/problems/ingredient-in-use",
+        message: "Ingredient is used by a modifier stock delta and cannot be deleted.",
+      });
+    }
   }
 
   private async hydrateIngredients(
