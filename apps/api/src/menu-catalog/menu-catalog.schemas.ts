@@ -81,6 +81,24 @@ export const modifierValueSchema = z
   })
   .meta({ id: "MenuModifierValue" });
 
+export const modifierValueIngredientDeltaSchema = z
+  .object({
+    id: z.uuid(),
+    modifierValueTemplateId: z.uuid(),
+    ingredientId: z.uuid(),
+    quantityDelta: z
+      .string()
+      .regex(/^-?\d+(?:\.\d{1,4})?$/, "Expected a signed decimal string"),
+    uom: z.string().min(1),
+    quantityIsCooked: z.boolean(),
+    yieldPct: z
+      .string()
+      .regex(/^\d+(?:\.\d{1,4})?$/, "Expected a decimal string")
+      .nullable(),
+    position: z.number().int().min(0),
+  })
+  .meta({ id: "ModifierValueIngredientDelta" });
+
 export const modifierGroupSchema = z
   .object({
     id: z.uuid(),
@@ -191,6 +209,9 @@ export const modifierGroupsResponseSchema = z.object({
 });
 export const modifierGroupResponseSchema = z.object({
   group: modifierGroupTemplateSchema,
+});
+export const modifierValueIngredientDeltasResponseSchema = z.object({
+  deltas: z.array(modifierValueIngredientDeltaSchema),
 });
 export const reapplyModifierGroupResponseSchema = z.object({
   groupId: z.uuid(),
@@ -341,6 +362,24 @@ export const attachModifierGroupsBodySchema = z.object({
   groupTemplateIds: z.array(z.uuid()),
 });
 export const updateModifierGroupBodySchema = modifierGroupWriteSchema.partial();
+export const replaceModifierValueIngredientDeltasBodySchema = z.object({
+  deltas: z.array(
+    z.object({
+      ingredientId: z.uuid(),
+      quantityDelta: z
+        .string()
+        .regex(/^-?(?!0+(?:\.0+)?$)\d+(?:\.\d{1,4})?$/, "Expected a non-zero signed decimal string"),
+      uom: z.string().min(1),
+      quantityIsCooked: z.boolean().default(false),
+      yieldPct: z
+        .string()
+        .regex(/^\d+(?:\.\d{1,4})?$/, "Expected a decimal string")
+        .nullable()
+        .optional(),
+      position: z.number().int().min(0).optional(),
+    }),
+  ),
+});
 export const createTagBodySchema = z.object({
   kind: dietaryTagKindSchema,
   code: z.string().regex(/^[a-z0-9]+(?:_[a-z0-9]+)*$/),
@@ -376,6 +415,9 @@ export class MenuDeleteResponseDto extends createZodDto(deleteResponseSchema) {}
 export class MenuLocaleSettingsResponseDto extends createZodDto(localeSettingsResponseSchema) {}
 export class MenuModifierGroupsResponseDto extends createZodDto(modifierGroupsResponseSchema) {}
 export class MenuModifierGroupResponseDto extends createZodDto(modifierGroupResponseSchema) {}
+export class ModifierValueIngredientDeltasResponseDto extends createZodDto(
+  modifierValueIngredientDeltasResponseSchema,
+) {}
 export class ReapplyModifierGroupResponseDto extends createZodDto(reapplyModifierGroupResponseSchema) {}
 export class MenuEffectiveModifierGroupsResponseDto extends createZodDto(effectiveModifierGroupsResponseSchema) {}
 export class MenuTagsResponseDto extends createZodDto(tagsResponseSchema) {}
@@ -394,6 +436,9 @@ export class ReplaceProductImagesDto extends createZodDto(replaceImagesBodySchem
 export class UpdateMenuLocaleSettingsDto extends createZodDto(updateLocaleSettingsBodySchema) {}
 export class CreateModifierGroupDto extends createZodDto(modifierGroupWriteSchema) {}
 export class UpdateModifierGroupDto extends createZodDto(updateModifierGroupBodySchema) {}
+export class ReplaceModifierValueIngredientDeltasDto extends createZodDto(
+  replaceModifierValueIngredientDeltasBodySchema,
+) {}
 export class AttachModifierGroupsDto extends createZodDto(attachModifierGroupsBodySchema) {}
 export class CreateDietaryTagDto extends createZodDto(createTagBodySchema) {}
 export class UpdateDietaryTagDto extends createZodDto(updateTagBodySchema) {}
@@ -406,6 +451,7 @@ export type VariantResponse = z.infer<typeof menuVariantSchema>;
 export type ImageResponse = z.infer<typeof productImageSchema>;
 export type ModifierGroupResponse = z.infer<typeof modifierGroupSchema>;
 export type ModifierGroupTemplateResponse = z.infer<typeof modifierGroupTemplateSchema>;
+export type ModifierValueIngredientDeltaResponse = z.infer<typeof modifierValueIngredientDeltaSchema>;
 export type DietaryTagResponse = z.infer<typeof dietaryTagSchema>;
 export type AvailabilityWindowResponse = z.infer<typeof availabilityWindowSchema>;
 export type CreateProductInput = z.infer<typeof createProductBodySchema>;
@@ -418,6 +464,9 @@ export type ReplaceImagesInput = z.infer<typeof replaceImagesBodySchema>;
 export type UpdateLocaleSettingsInput = z.infer<typeof updateLocaleSettingsBodySchema>;
 export type ModifierGroupInput = z.infer<typeof modifierGroupWriteSchema>;
 export type UpdateModifierGroupInput = z.infer<typeof updateModifierGroupBodySchema>;
+export type ReplaceModifierValueIngredientDeltasInput = z.infer<
+  typeof replaceModifierValueIngredientDeltasBodySchema
+>;
 export type AttachModifierGroupsInput = z.infer<typeof attachModifierGroupsBodySchema>;
 export type CreateTagInput = z.infer<typeof createTagBodySchema>;
 export type UpdateTagInput = z.infer<typeof updateTagBodySchema>;

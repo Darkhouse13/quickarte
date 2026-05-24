@@ -9,6 +9,9 @@ import {
   branches,
   ingredientUnitConversions,
   ingredients,
+  modifierValueIngredientDeltas,
+  optionValues,
+  productOptions,
   productVariants,
   products,
   recipeLines,
@@ -150,6 +153,7 @@ export class StockService {
         deductions: [],
         negatives: [],
         skipped: [],
+        configurationWarnings: [],
       };
     }
 
@@ -158,6 +162,7 @@ export class StockService {
     const totals = new Map<string, string>();
     const ingredientOrigins = new Map<string, Set<string>>();
     const skipped: StockDeductionSkippedLine[] = [];
+    const configurationWarnings: StockDeductionConfigurationWarning[] = [];
 
     for (const line of input.lines) {
       const saleQuantity = assertPositiveDecimal(line.quantity);
@@ -168,8 +173,32 @@ export class StockService {
       }
       const perYield = await this.explodeRecipePerYield(tx, input.businessId, recipe.id, units, memo, []);
       const scale = divideDecimalStrings(saleQuantity, recipe.yieldQty);
-      this.addScaledMap(totals, perYield, scale);
-      for (const ingredientId of perYield.keys()) {
+      const lineTotals = new Map<string, string>();
+      this.addScaledMap(lineTotals, perYield, scale);
+      await this.addModifierDeltasForLine(
+        tx,
+        input.businessId,
+        line.variantId,
+        line.selectedOptionValueIds ?? [],
+        saleQuantity,
+        units,
+        lineTotals,
+      );
+      for (const [ingredientId, quantity] of [...lineTotals.entries()]) {
+        if (compareDecimal(quantity, "0") < 0) {
+          const selectedOptionValueId = line.selectedOptionValueIds?.[0] ?? null;
+          configurationWarnings.push({
+            variantId: line.variantId,
+            optionValueId: selectedOptionValueId,
+            ingredientId,
+            reason: "modifier_delta_clamped_to_zero",
+          });
+          lineTotals.set(ingredientId, "0.0000");
+        }
+      }
+      for (const [ingredientId, quantity] of lineTotals.entries()) {
+        if (compareDecimal(quantity, "0") === 0) continue;
+        addToMap(totals, ingredientId, quantity);
         const origins = ingredientOrigins.get(ingredientId) ?? new Set<string>();
         origins.add(line.variantId);
         ingredientOrigins.set(ingredientId, origins);
@@ -182,6 +211,7 @@ export class StockService {
         deductions: [],
         negatives: [],
         skipped,
+        configurationWarnings,
       };
     }
 
@@ -251,6 +281,7 @@ export class StockService {
       deductions,
       negatives,
       skipped: dedupeSkipped(skipped),
+      configurationWarnings,
     };
   }
 
@@ -506,6 +537,111 @@ export class StockService {
     return output;
   }
 
+  private async addModifierDeltasForLine(
+    tx: TenantedDrizzleClient,
+    businessId: string,
+    variantId: string,
+    selectedOptionValueIds: string[],
+    saleQuantity: string,
+    units: UnitDefinition[],
+    lineTotals: IngredientQuantityMap,
+  ): Promise<void> {
+    const uniqueOptionValueIds = [...new Set(selectedOptionValueIds)];
+    if (uniqueOptionValueIds.length === 0) return;
+
+    const optionRows = await tx
+      .select({
+        optionValueId: optionValues.id,
+        templateValueId: optionValues.templateValueId,
+      })
+      .from(optionValues)
+      .innerJoin(productOptions, eq(optionValues.optionId, productOptions.id))
+      .innerJoin(productVariants, eq(productOptions.productId, productVariants.productId))
+      .innerJoin(products, eq(productOptions.productId, products.id))
+      .where(
+        and(
+          eq(products.businessId, businessId),
+          eq(productVariants.id, variantId),
+          inArray(optionValues.id, uniqueOptionValueIds),
+          isNull(products.deletedAt),
+        ),
+      );
+    const templateValueIds = optionRows
+      .map((row) => row.templateValueId)
+      .filter((id): id is string => id !== null);
+    if (templateValueIds.length === 0) return;
+
+    const deltaRows = await tx
+      .select({
+        delta: modifierValueIngredientDeltas,
+        ingredient: ingredients,
+      })
+      .from(modifierValueIngredientDeltas)
+      .innerJoin(ingredients, eq(modifierValueIngredientDeltas.ingredientId, ingredients.id))
+      .where(
+        and(
+          eq(modifierValueIngredientDeltas.businessId, businessId),
+          inArray(modifierValueIngredientDeltas.modifierValueTemplateId, templateValueIds),
+          eq(ingredients.businessId, businessId),
+          isNull(ingredients.deletedAt),
+        ),
+      )
+      .orderBy(
+        asc(modifierValueIngredientDeltas.modifierValueTemplateId),
+        asc(modifierValueIngredientDeltas.position),
+      );
+    if (deltaRows.length === 0) return;
+
+    const ingredientIds = [...new Set(deltaRows.map((row) => row.delta.ingredientId))];
+    const conversionRows = await tx
+      .select()
+      .from(ingredientUnitConversions)
+      .where(
+        and(
+          eq(ingredientUnitConversions.businessId, businessId),
+          inArray(ingredientUnitConversions.ingredientId, ingredientIds),
+        ),
+      );
+    const conversionsByIngredient = new Map<string, Array<{ altUom: string; qtyInStockUom: string }>>();
+    for (const conversion of conversionRows) {
+      const bucket = conversionsByIngredient.get(conversion.ingredientId) ?? [];
+      bucket.push({ altUom: conversion.altUom, qtyInStockUom: conversion.qtyInStockUom });
+      conversionsByIngredient.set(conversion.ingredientId, bucket);
+    }
+
+    for (const row of deltaRows) {
+      try {
+        const sign = compareDecimal(row.delta.quantityDelta, "0") < 0 ? "-" : "";
+        const absoluteDelta = sign === "-"
+          ? normalizeDecimal(row.delta.quantityDelta).slice(1)
+          : normalizeDecimal(row.delta.quantityDelta);
+        const rawQuantity = row.delta.quantityIsCooked
+          ? applyYieldToCookedQuantity(absoluteDelta, row.delta.yieldPct)
+          : absoluteDelta;
+        const converted = convertToStockUom(rawQuantity, row.delta.uom, {
+          stockUom: row.ingredient.stockUom,
+          units,
+          conversions: conversionsByIngredient.get(row.ingredient.id) ?? [],
+        });
+        const signedConverted = sign === "-" ? negateDecimalString(converted) : converted;
+        addToMap(
+          lineTotals,
+          row.ingredient.id,
+          multiplyDecimalStrings(signedConverted, saleQuantity),
+        );
+      } catch (error) {
+        if (error instanceof StockDecimalError || error instanceof UnitConversionError) {
+          throw new BadRequestException({
+            type: "https://api.quickarte.ma/problems/stock-deduction-invalid",
+            message: error.message,
+            error: "Bad Request",
+          });
+        }
+        throw error;
+      }
+    }
+  }
+
   private async findVariantRecipe(
     tx: TenantedDrizzleClient,
     businessId: string,
@@ -694,6 +830,7 @@ export type StockDeductionSummary = {
   deductions: StockDeductionLineSummary[];
   negatives: StockNegativeSummary[];
   skipped: StockDeductionSkippedLine[];
+  configurationWarnings: StockDeductionConfigurationWarning[];
 };
 
 export type StockReversalSummary = {
@@ -715,6 +852,13 @@ type StockNegativeSummary = {
 type StockDeductionSkippedLine =
   | { variantId: string; reason: "no_recipe" }
   | { variantId: string; reason: "untracked_ingredient"; ingredientId: string };
+
+type StockDeductionConfigurationWarning = {
+  variantId: string;
+  optionValueId: string | null;
+  ingredientId: string;
+  reason: "modifier_delta_clamped_to_zero";
+};
 
 function addToMap(map: IngredientQuantityMap, ingredientId: string, quantity: string) {
   map.set(ingredientId, addDecimalStrings(map.get(ingredientId) ?? "0.0000", quantity));

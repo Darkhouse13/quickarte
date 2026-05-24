@@ -7,9 +7,17 @@ import { NestFactory } from "@nestjs/core";
 import {
   businesses,
   dietaryTags,
+  categories,
   ingredientTags,
   ingredientUnitConversions,
   ingredients,
+  modifierGroupTemplates,
+  modifierValueIngredientDeltas,
+  modifierValueTemplates,
+  products,
+  productVariants,
+  recipes,
+  recipeLines,
   permissionVersions,
   permissions,
   rolePermissions,
@@ -197,6 +205,105 @@ test("M4.1 ingredient CRUD validates decimal-string cost, soft-delete, conversio
   assert.equal(deleteResponse.status, 200);
   const getDeletedResponse = await apiGet(`/v1/ingredients/${createBody.ingredient.id}`, token);
   assert.equal(getDeletedResponse.status, 404);
+});
+
+test("M4.4 ingredient soft-delete is blocked when referenced by recipes or modifier deltas", async () => {
+  const token = tokenFor(businessAId, userAId, ownerRoleAId);
+  const recipeIngredientId = randomUUID();
+  const modifierIngredientId = randomUUID();
+  await adminDb.insert(ingredients).values([
+    {
+      id: recipeIngredientId,
+      businessId: businessAId,
+      name: "Recipe guarded ingredient",
+      category: "dry_good",
+      stockUom: "g",
+      currentCostPerUom: "1.0000",
+    },
+    {
+      id: modifierIngredientId,
+      businessId: businessAId,
+      name: "Modifier guarded ingredient",
+      category: "dry_good",
+      stockUom: "g",
+      currentCostPerUom: "1.0000",
+    },
+  ]);
+  const categoryId = randomUUID();
+  const productId = randomUUID();
+  const variantId = randomUUID();
+  const recipeId = randomUUID();
+  await adminDb.insert(categories).values({
+    id: categoryId,
+    businessId: businessAId,
+    name: "Guard category",
+    slug: `guard-${randomUUID()}`,
+  });
+  await adminDb.insert(products).values({
+    id: productId,
+    businessId: businessAId,
+    categoryId,
+    name: "Guard product",
+    price: "10.00",
+  });
+  await adminDb.insert(productVariants).values({
+    id: variantId,
+    productId,
+    name: "Default",
+    priceOverride: "10.00",
+    isDefault: true,
+  });
+  await adminDb.insert(recipes).values({
+    id: recipeId,
+    businessId: businessAId,
+    variantId,
+    name: "Guard recipe",
+  });
+  await adminDb.insert(recipeLines).values({
+    businessId: businessAId,
+    recipeId,
+    componentType: "ingredient",
+    ingredientId: recipeIngredientId,
+    quantity: "10.0000",
+    uom: "g",
+    position: 0,
+  });
+  const [group] = await adminDb
+    .insert(modifierGroupTemplates)
+    .values({
+      businessId: businessAId,
+      name: "Guard modifier",
+      localizedNames: { fr: "Guard modifier" },
+      type: "multi_select",
+    })
+    .returning({ id: modifierGroupTemplates.id });
+  assert.ok(group);
+  const [value] = await adminDb
+    .insert(modifierValueTemplates)
+    .values({
+      businessId: businessAId,
+      groupTemplateId: group.id,
+      name: "Extra guard",
+      localizedNames: { fr: "Extra guard" },
+      priceAddition: "0.00",
+    })
+    .returning({ id: modifierValueTemplates.id });
+  assert.ok(value);
+  await adminDb.insert(modifierValueIngredientDeltas).values({
+    businessId: businessAId,
+    modifierValueTemplateId: value.id,
+    ingredientId: modifierIngredientId,
+    quantityDelta: "5.0000",
+    uom: "g",
+  });
+
+  const recipeDelete = await apiDelete(`/v1/ingredients/${recipeIngredientId}`, token);
+  assert.equal(recipeDelete.status, 409, await recipeDelete.clone().text());
+  assert.match(await recipeDelete.text(), /ingredient-in-use/i);
+
+  const modifierDelete = await apiDelete(`/v1/ingredients/${modifierIngredientId}`, token);
+  assert.equal(modifierDelete.status, 409, await modifierDelete.clone().text());
+  assert.match(await modifierDelete.text(), /ingredient-in-use/i);
 });
 
 test("M4.1 ingredient RLS isolates ingredients, conversions, and tags by tenant", async (t) => {

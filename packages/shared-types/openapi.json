@@ -1637,6 +1637,47 @@
         ]
       }
     },
+    "/v1/menu/modifier-values/{valueTemplateId}/ingredient-deltas": {
+      "put": {
+        "operationId": "MenuCatalogController_replaceModifierValueIngredientDeltas",
+        "parameters": [
+          {
+            "name": "valueTemplateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceModifierValueIngredientDeltasDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModifierValueIngredientDeltasResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "menu"
+        ]
+      }
+    },
     "/v1/menu/tags": {
       "get": {
         "operationId": "MenuCatalogController_listTags",
@@ -2837,6 +2878,126 @@
         },
         "tags": [
           "ingredients"
+        ]
+      }
+    },
+    "/v1/ingredients/import": {
+      "post": {
+        "operationId": "IngredientImportController_uploadImport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientImportUploadResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Upload an Excel or CSV ingredient import file and preview all rows.",
+        "tags": [
+          "ingredient-import"
+        ]
+      }
+    },
+    "/v1/ingredients/import/template": {
+      "get": {
+        "operationId": "IngredientImportController_downloadTemplate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Download the ingredient import workbook template.",
+        "tags": [
+          "ingredient-import"
+        ]
+      }
+    },
+    "/v1/ingredients/import/{jobId}/commit": {
+      "post": {
+        "operationId": "IngredientImportController_commitImportJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientImportCommitResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Commit a reviewed ingredient import job atomically.",
+        "tags": [
+          "ingredient-import"
+        ]
+      }
+    },
+    "/v1/ingredients/import/{jobId}": {
+      "get": {
+        "operationId": "IngredientImportController_getImportJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientImportJobResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Fetch a stored ingredient import preview job.",
+        "tags": [
+          "ingredient-import"
         ]
       }
     },
@@ -5943,6 +6104,134 @@
         "required": [
           "groupId",
           "reappliedProducts"
+        ],
+        "additionalProperties": false
+      },
+      "ReplaceModifierValueIngredientDeltasDto": {
+        "type": "object",
+        "properties": {
+          "deltas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ingredientId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "quantityDelta": {
+                  "type": "string",
+                  "pattern": "^-?(?!0+(?:\\.0+)?$)\\d+(?:\\.\\d{1,4})?$"
+                },
+                "uom": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "quantityIsCooked": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "yieldPct": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(?:\\.\\d{1,4})?$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "ingredientId",
+                "quantityDelta",
+                "uom"
+              ]
+            }
+          }
+        },
+        "required": [
+          "deltas"
+        ]
+      },
+      "ModifierValueIngredientDelta_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "modifierValueTemplateId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "ingredientId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "quantityDelta": {
+            "type": "string",
+            "pattern": "^-?\\d+(?:\\.\\d{1,4})?$"
+          },
+          "uom": {
+            "type": "string",
+            "minLength": 1
+          },
+          "quantityIsCooked": {
+            "type": "boolean"
+          },
+          "yieldPct": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+(?:\\.\\d{1,4})?$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "modifierValueTemplateId",
+          "ingredientId",
+          "quantityDelta",
+          "uom",
+          "quantityIsCooked",
+          "yieldPct",
+          "position"
+        ],
+        "additionalProperties": false,
+        "id": "ModifierValueIngredientDelta_Output"
+      },
+      "ModifierValueIngredientDeltasResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "deltas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModifierValueIngredientDelta_Output"
+            }
+          }
+        },
+        "required": [
+          "deltas"
         ],
         "additionalProperties": false
       },
@@ -10239,6 +10528,380 @@
         "required": [
           "tags"
         ],
+        "additionalProperties": false
+      },
+      "IngredientImportPreview_Output": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientImportPreviewRow_Output"
+            }
+          },
+          "summary": {
+            "$ref": "#/components/schemas/IngredientImportPreviewSummary_Output"
+          }
+        },
+        "required": [
+          "rows",
+          "summary"
+        ],
+        "additionalProperties": false,
+        "id": "IngredientImportPreview_Output"
+      },
+      "IngredientImportPreviewRow_Output": {
+        "type": "object",
+        "properties": {
+          "rowNumber": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 9007199254740991
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "create",
+              "update",
+              "skip"
+            ]
+          },
+          "normalized": {
+            "$ref": "#/components/schemas/IngredientImportNormalizedRow_Output"
+          },
+          "resolvedIngredient": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientImportIssue_Output"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientImportIssue_Output"
+            }
+          }
+        },
+        "required": [
+          "rowNumber",
+          "action",
+          "normalized",
+          "resolvedIngredient",
+          "errors",
+          "warnings"
+        ],
+        "additionalProperties": false,
+        "id": "IngredientImportPreviewRow_Output"
+      },
+      "IngredientImportNormalizedRow_Output": {
+        "type": "object",
+        "properties": {
+          "rowNumber": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 9007199254740991
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "meat",
+              "dairy",
+              "vegetable",
+              "spice",
+              "dry_good",
+              "beverage",
+              "alcohol",
+              "packaging"
+            ]
+          },
+          "stockUom": {
+            "type": "string"
+          },
+          "currentCostPerUom": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+(?:\\.\\d{1,4})?$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trackedInStock": {
+            "type": "boolean"
+          },
+          "storageLocation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tagCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "rowNumber",
+          "localizedNames",
+          "category",
+          "stockUom",
+          "currentCostPerUom",
+          "trackedInStock",
+          "storageLocation",
+          "tagCodes"
+        ],
+        "additionalProperties": false,
+        "id": "IngredientImportNormalizedRow_Output"
+      },
+      "IngredientImportIssue_Output": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "field"
+        ],
+        "additionalProperties": false,
+        "id": "IngredientImportIssue_Output"
+      },
+      "IngredientImportPreviewSummary_Output": {
+        "type": "object",
+        "properties": {
+          "rowCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "createCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "updateCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "skipCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "errorCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "warningCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "blockingErrors": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "rowCount",
+          "createCount",
+          "updateCount",
+          "skipCount",
+          "errorCount",
+          "warningCount",
+          "blockingErrors"
+        ],
+        "additionalProperties": false,
+        "id": "IngredientImportPreviewSummary_Output"
+      },
+      "IngredientImportUploadResponse_Output": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending_review",
+              "committed",
+              "failed"
+            ]
+          },
+          "preview": {
+            "$ref": "#/components/schemas/IngredientImportPreview_Output"
+          }
+        },
+        "required": [
+          "jobId",
+          "status",
+          "preview"
+        ],
+        "id": "IngredientImportUploadResponse_Output",
+        "additionalProperties": false
+      },
+      "IngredientImportCommitCounts_Output": {
+        "type": "object",
+        "properties": {
+          "ingredientsCreated": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "ingredientsUpdated": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "tagsAttached": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "ingredientsCreated",
+          "ingredientsUpdated",
+          "tagsAttached"
+        ],
+        "additionalProperties": false,
+        "id": "IngredientImportCommitCounts_Output"
+      },
+      "IngredientImportCommitResponse_Output": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "status": {
+            "type": "string",
+            "const": "committed"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/IngredientImportCommitCounts_Output"
+          }
+        },
+        "required": [
+          "jobId",
+          "status",
+          "counts"
+        ],
+        "id": "IngredientImportCommitResponse_Output",
+        "additionalProperties": false
+      },
+      "IngredientImportJobResponse_Output": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending_review",
+              "committed",
+              "failed"
+            ]
+          },
+          "preview": {
+            "$ref": "#/components/schemas/IngredientImportPreview_Output"
+          },
+          "originalFilename": {
+            "type": "string"
+          },
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "csv",
+              "xlsx"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "jobId",
+          "status",
+          "preview",
+          "originalFilename",
+          "fileType",
+          "createdAt"
+        ],
+        "id": "IngredientImportJobResponse_Output",
         "additionalProperties": false
       },
       "Recipe_Output": {

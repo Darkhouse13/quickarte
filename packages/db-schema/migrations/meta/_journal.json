@@ -267,6 +267,13 @@
       "when": 1779415800000,
       "tag": "0037_stock_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1779419400000,
+      "tag": "0038_modifier_deltas_ingredient_import",
+      "breakpoints": true
     }
   ]
 }

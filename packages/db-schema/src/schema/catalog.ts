@@ -481,6 +481,7 @@ export const modifierValueTemplates = pgTable(
   }),
 );
 
+
 export const categoryModifierGroups = pgTable(
   "category_modifier_groups",
   {

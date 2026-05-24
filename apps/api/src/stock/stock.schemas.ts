@@ -63,7 +63,7 @@ export const stockAdjustmentResponseSchema = z.object({
 
 export const createStockAdjustmentSchema = z.object({
   ingredientId: z.uuid(),
-  quantityDelta: decimalQuantitySchema.refine((value) => value !== "0" && value !== "0.0000", {
+  quantityDelta: decimalQuantitySchema.refine((value) => !isZeroDecimal(value), {
     message: "Adjustment quantity cannot be zero",
   }),
   reason: z.string().min(1),
@@ -86,3 +86,7 @@ export class CreateStockAdjustmentDto extends createZodDto(
 
 export type CreateStockAdjustmentInput = z.infer<typeof createStockAdjustmentSchema>;
 export type StockDeductionLineInput = z.infer<typeof stockDeductionLineSchema>;
+
+function isZeroDecimal(value: string): boolean {
+  return /^-?0+(?:\.0+)?$/.test(value);
+}

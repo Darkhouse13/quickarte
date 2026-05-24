@@ -10,8 +10,13 @@ import {
   categories,
   ingredients,
   ingredientUnitConversions,
+  modifierGroupTemplates,
+  modifierValueIngredientDeltas,
+  modifierValueTemplates,
+  optionValues,
   permissionVersions,
   permissions,
+  productOptions,
   productVariants,
   products,
   recipeLines,
@@ -344,6 +349,99 @@ test("M4.3 sale reference idempotency prevents double deduction on replay", asyn
   assert.equal((await movementsFor("sale-idempotent")).length, 1);
 });
 
+test("M4.4 positive modifier delta adds ingredient deduction and scales by sale quantity", async () => {
+  const pattyId = await createIngredient("Patty base", "g");
+  const cheeseId = await createIngredient("Extra cheese", "g");
+  const variantId = await createVariant("Cheese burger");
+  const recipeId = await createVariantRecipe(variantId);
+  await setRecipeLines(recipeId, [ingredientLine(pattyId, "100.0000", "g")]);
+  const optionValueId = await createOptionValueWithDeltas(variantId, "Fromage", [
+    {
+      ingredientId: cheeseId,
+      quantityDelta: "30.0000",
+      uom: "g",
+    },
+  ]);
+  await adjust(pattyId, "500.0000", "opening");
+  await adjust(cheeseId, "500.0000", "opening");
+
+  const result = await deduct("sale-extra-cheese", [
+    {
+      variantId,
+      quantity: "2.0000",
+      selectedOptionValueIds: [optionValueId],
+    },
+  ]);
+
+  assert.equal(
+    result.deductions.find((deduction) => deduction.ingredientId === pattyId)?.deductedQty,
+    "200.0000",
+  );
+  assert.equal(
+    result.deductions.find((deduction) => deduction.ingredientId === cheeseId)?.deductedQty,
+    "60.0000",
+  );
+  assert.deepEqual(result.configurationWarnings, []);
+  assert.equal(await levelFor(pattyId), "300.0000");
+  assert.equal(await levelFor(cheeseId), "440.0000");
+});
+
+test("M4.4 negative modifier delta reduces base deduction and clamps over-subtraction to zero", async () => {
+  const olivesId = await createIngredient("Olives sans", "g");
+  const variantId = await createVariant("Sans olives sandwich");
+  const recipeId = await createVariantRecipe(variantId);
+  await setRecipeLines(recipeId, [ingredientLine(olivesId, "5.0000", "g")]);
+  const optionValueId = await createOptionValueWithDeltas(variantId, "Sans olives", [
+    {
+      ingredientId: olivesId,
+      quantityDelta: "-10.0000",
+      uom: "g",
+    },
+  ]);
+  await adjust(olivesId, "100.0000", "opening");
+
+  const result = await deduct("sale-sans-olives", [
+    {
+      variantId,
+      quantity: "1.0000",
+      selectedOptionValueIds: [optionValueId],
+    },
+  ]);
+
+  assert.equal(result.deductions.some((deduction) => deduction.ingredientId === olivesId), false);
+  assert.deepEqual(result.configurationWarnings, [
+    {
+      variantId,
+      optionValueId,
+      ingredientId: olivesId,
+      reason: "modifier_delta_clamped_to_zero",
+    },
+  ]);
+  assert.equal(await levelFor(olivesId), "100.0000");
+  assert.equal((await movementsFor("sale-sans-olives")).length, 0);
+});
+
+test("M4.4 option value without template deltas is a no-op", async () => {
+  const ingredientId = await createIngredient("No-op base", "g");
+  const variantId = await createVariant("No-op modifier dish");
+  const recipeId = await createVariantRecipe(variantId);
+  await setRecipeLines(recipeId, [ingredientLine(ingredientId, "25.0000", "g")]);
+  const optionValueId = await createOptionValueWithDeltas(variantId, "No stock effect", []);
+  await adjust(ingredientId, "100.0000", "opening");
+
+  const result = await deduct("sale-noop-modifier", [
+    {
+      variantId,
+      quantity: "1.0000",
+      selectedOptionValueIds: [optionValueId],
+    },
+  ]);
+
+  assert.equal(result.deductions[0].deductedQty, "25.0000");
+  assert.deepEqual(result.configurationWarnings, []);
+  assert.equal(await levelFor(ingredientId), "75.0000");
+});
+
 test("M4.3 skips untracked ingredients and variants without recipes without error", async () => {
   const untrackedId = await createIngredient("Packaging skip", "unit", false);
   const trackedVariantId = await createVariant("Untracked dish");
@@ -488,6 +586,69 @@ test("M4.3 RLS isolates stock_movements and stock_levels by tenant", async (t) =
           branchId: branchBId,
           ingredientId: ingredientBId,
           currentQty: "1.0000",
+        }),
+      ),
+      (error) =>
+        /row-level security|violates row-level security/i.test(
+          error instanceof Error
+            ? `${error.message} ${String((error as { cause?: unknown }).cause)}`
+            : String(error),
+        ),
+    );
+  });
+});
+
+test("M4.4 RLS isolates modifier_value_ingredient_deltas by tenant", async (t) => {
+  const ingredientAId = await createIngredient("Delta RLS A", "g");
+  const ingredientBId = randomUUID();
+  await adminDb.insert(ingredients).values({
+    id: ingredientBId,
+    businessId: businessBId,
+    name: "Delta RLS B",
+    category: "dry_good",
+    stockUom: "g",
+    currentCostPerUom: "1.0000",
+  });
+  const optionValueAId = await createTemplateValueForBusiness(businessAId, "A value");
+  const optionValueBId = await createTemplateValueForBusiness(businessBId, "B value");
+  await adminDb.insert(modifierValueIngredientDeltas).values([
+    {
+      businessId: businessAId,
+      modifierValueTemplateId: optionValueAId,
+      ingredientId: ingredientAId,
+      quantityDelta: "10.0000",
+      uom: "g",
+    },
+    {
+      businessId: businessBId,
+      modifierValueTemplateId: optionValueBId,
+      ingredientId: ingredientBId,
+      quantityDelta: "20.0000",
+      uom: "g",
+    },
+  ]);
+
+  await t.test("tenant A reads only its modifier deltas", async () => {
+    const rows = await databaseService.withTenant(businessAId, (tx) =>
+      tx.select().from(modifierValueIngredientDeltas),
+    );
+    assert.ok(rows.some((row) => row.ingredientId === ingredientAId));
+    assert.equal(rows.some((row) => row.ingredientId === ingredientBId), false);
+  });
+
+  await t.test("direct app-role query without tenant context reads zero modifier deltas", async () => {
+    assert.equal((await appDb.select().from(modifierValueIngredientDeltas)).length, 0);
+  });
+
+  await t.test("tenant A cannot insert a modifier delta for tenant B", async () => {
+    await assert.rejects(
+      databaseService.withTenant(businessAId, (tx) =>
+        tx.insert(modifierValueIngredientDeltas).values({
+          businessId: businessBId,
+          modifierValueTemplateId: optionValueBId,
+          ingredientId: ingredientBId,
+          quantityDelta: "1.0000",
+          uom: "g",
         }),
       ),
       (error) =>
@@ -678,7 +839,14 @@ async function adjust(ingredientId: string, quantityDelta: string, reason: strin
   });
 }
 
-function deduct(referenceId: string, lines: Array<{ variantId: string; quantity: string }>) {
+function deduct(
+  referenceId: string,
+  lines: Array<{
+    variantId: string;
+    quantity: string;
+    selectedOptionValueIds?: string[];
+  }>,
+) {
   return stockService.deductForSale({
     businessId: businessAId,
     branchId: branchAId,
@@ -687,6 +855,98 @@ function deduct(referenceId: string, lines: Array<{ variantId: string; quantity:
     createdBy: userAId,
     lines,
   });
+}
+
+async function createOptionValueWithDeltas(
+  variantId: string,
+  valueName: string,
+  deltas: Array<{
+    ingredientId: string;
+    quantityDelta: string;
+    uom: string;
+    quantityIsCooked?: boolean;
+    yieldPct?: string | null;
+  }>,
+): Promise<string> {
+  const [variant] = await adminDb
+    .select({ productId: productVariants.productId })
+    .from(productVariants)
+    .where(eq(productVariants.id, variantId))
+    .limit(1);
+  assert.ok(variant);
+  const templateValueId = await createTemplateValueForBusiness(businessAId, valueName);
+  const [option] = await adminDb
+    .insert(productOptions)
+    .values({
+      productId: variant.productId,
+      name: "Suppléments",
+      localizedNames: { fr: "Suppléments" },
+      type: "multi_select",
+      minSelect: 0,
+      maxSelect: null,
+    })
+    .returning({ id: productOptions.id });
+  assert.ok(option);
+  const [value] = await adminDb
+    .insert(optionValues)
+    .values({
+      optionId: option.id,
+      name: valueName,
+      templateValueId,
+      localizedNames: { fr: valueName },
+      priceAddition: "0.00",
+      position: 0,
+      available: true,
+    })
+    .returning({ id: optionValues.id });
+  assert.ok(value);
+  if (deltas.length > 0) {
+    await adminDb.insert(modifierValueIngredientDeltas).values(
+      deltas.map((delta, index) => ({
+        businessId: businessAId,
+        modifierValueTemplateId: templateValueId,
+        ingredientId: delta.ingredientId,
+        quantityDelta: delta.quantityDelta,
+        uom: delta.uom,
+        quantityIsCooked: delta.quantityIsCooked ?? false,
+        yieldPct: delta.yieldPct ?? null,
+        position: index,
+      })),
+    );
+  }
+  return value.id;
+}
+
+async function createTemplateValueForBusiness(
+  businessId: string,
+  valueName: string,
+): Promise<string> {
+  const [group] = await adminDb
+    .insert(modifierGroupTemplates)
+    .values({
+      businessId,
+      name: `Group ${valueName}`,
+      localizedNames: { fr: `Group ${valueName}` },
+      type: "multi_select",
+      minSelect: 0,
+      maxSelect: null,
+    })
+    .returning({ id: modifierGroupTemplates.id });
+  assert.ok(group);
+  const [value] = await adminDb
+    .insert(modifierValueTemplates)
+    .values({
+      businessId,
+      groupTemplateId: group.id,
+      name: valueName,
+      localizedNames: { fr: valueName },
+      priceAddition: "0.00",
+      position: 0,
+      available: true,
+    })
+    .returning({ id: modifierValueTemplates.id });
+  assert.ok(value);
+  return value.id;
 }
 
 async function movementsFor(referenceId: string) {

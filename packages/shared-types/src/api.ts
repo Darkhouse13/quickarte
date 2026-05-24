@@ -519,6 +519,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/menu/modifier-values/{valueTemplateId}/ingredient-deltas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["MenuCatalogController_replaceModifierValueIngredientDeltas"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/menu/tags": {
         parameters: {
             query?: never;
@@ -937,6 +953,74 @@ export interface paths {
         };
         get?: never;
         put: operations["IngredientsController_replaceTags"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingredients/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload an Excel or CSV ingredient import file and preview all rows. */
+        post: operations["IngredientImportController_uploadImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingredients/import/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download the ingredient import workbook template. */
+        get: operations["IngredientImportController_downloadTemplate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingredients/import/{jobId}/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit a reviewed ingredient import job atomically. */
+        post: operations["IngredientImportController_commitImportJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingredients/import/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fetch a stored ingredient import preview job. */
+        get: operations["IngredientImportController_getImportJob"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1778,6 +1862,34 @@ export interface components {
             groupId: string;
             reappliedProducts: number;
         };
+        ReplaceModifierValueIngredientDeltasDto: {
+            deltas: {
+                /** Format: uuid */
+                ingredientId: string;
+                quantityDelta: string;
+                uom: string;
+                /** @default false */
+                quantityIsCooked: boolean;
+                yieldPct?: string | null;
+                position?: number;
+            }[];
+        };
+        ModifierValueIngredientDelta_Output: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            modifierValueTemplateId: string;
+            /** Format: uuid */
+            ingredientId: string;
+            quantityDelta: string;
+            uom: string;
+            quantityIsCooked: boolean;
+            yieldPct: string | null;
+            position: number;
+        };
+        ModifierValueIngredientDeltasResponseDto_Output: {
+            deltas: components["schemas"]["ModifierValueIngredientDelta_Output"][];
+        };
         DietaryTag_Output: {
             /** Format: uuid */
             id: string;
@@ -2604,6 +2716,79 @@ export interface components {
         };
         IngredientTagsResponseDto_Output: {
             tags: components["schemas"]["IngredientTag_Output"][];
+        };
+        IngredientImportPreview_Output: {
+            rows: components["schemas"]["IngredientImportPreviewRow_Output"][];
+            summary: components["schemas"]["IngredientImportPreviewSummary_Output"];
+        };
+        IngredientImportPreviewRow_Output: {
+            rowNumber: number;
+            /** @enum {string} */
+            action: "create" | "update" | "skip";
+            normalized: components["schemas"]["IngredientImportNormalizedRow_Output"];
+            resolvedIngredient: {
+                id: string | null;
+                name: string;
+            } | null;
+            errors: components["schemas"]["IngredientImportIssue_Output"][];
+            warnings: components["schemas"]["IngredientImportIssue_Output"][];
+        };
+        IngredientImportNormalizedRow_Output: {
+            rowNumber: number;
+            localizedNames: {
+                [key: string]: string;
+            };
+            /** @enum {string} */
+            category: "meat" | "dairy" | "vegetable" | "spice" | "dry_good" | "beverage" | "alcohol" | "packaging";
+            stockUom: string;
+            currentCostPerUom: string | null;
+            trackedInStock: boolean;
+            storageLocation: string | null;
+            tagCodes: string[];
+        };
+        IngredientImportIssue_Output: {
+            code: string;
+            message: string;
+            field: string | null;
+        };
+        IngredientImportPreviewSummary_Output: {
+            rowCount: number;
+            createCount: number;
+            updateCount: number;
+            skipCount: number;
+            errorCount: number;
+            warningCount: number;
+            blockingErrors: boolean;
+        };
+        IngredientImportUploadResponse_Output: {
+            /** Format: uuid */
+            jobId: string;
+            /** @enum {string} */
+            status: "pending_review" | "committed" | "failed";
+            preview: components["schemas"]["IngredientImportPreview_Output"];
+        };
+        IngredientImportCommitCounts_Output: {
+            ingredientsCreated: number;
+            ingredientsUpdated: number;
+            tagsAttached: number;
+        };
+        IngredientImportCommitResponse_Output: {
+            /** Format: uuid */
+            jobId: string;
+            /** @constant */
+            status: "committed";
+            counts: components["schemas"]["IngredientImportCommitCounts_Output"];
+        };
+        IngredientImportJobResponse_Output: {
+            /** Format: uuid */
+            jobId: string;
+            /** @enum {string} */
+            status: "pending_review" | "committed" | "failed";
+            preview: components["schemas"]["IngredientImportPreview_Output"];
+            originalFilename: string;
+            /** @enum {string} */
+            fileType: "csv" | "xlsx";
+            createdAt: string;
         };
         Recipe_Output: {
             /** Format: uuid */
@@ -3864,6 +4049,31 @@ export interface operations {
             };
         };
     };
+    MenuCatalogController_replaceModifierValueIngredientDeltas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                valueTemplateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceModifierValueIngredientDeltasDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModifierValueIngredientDeltasResponseDto_Output"];
+                };
+            };
+        };
+    };
     MenuCatalogController_listTags: {
         parameters: {
             query?: never;
@@ -4685,6 +4895,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IngredientTagsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    IngredientImportController_uploadImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngredientImportUploadResponse_Output"];
+                };
+            };
+        };
+    };
+    IngredientImportController_downloadTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IngredientImportController_commitImportJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngredientImportCommitResponse_Output"];
+                };
+            };
+        };
+    };
+    IngredientImportController_getImportJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngredientImportJobResponse_Output"];
                 };
             };
         };
