@@ -1010,6 +1010,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/branches/{branchId}/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List current stock levels for a branch. */
+        get: operations["StockController_listLevels"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/stock/movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List stock ledger movements for a branch. */
+        get: operations["StockController_listMovements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/branches/{branchId}/stock/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Append a manual stock adjustment movement. */
+        post: operations["StockController_createAdjustment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2628,6 +2679,52 @@ export interface components {
                 quantityIsCooked?: boolean;
                 position?: number;
             }[];
+        };
+        StockLevel_Output: {
+            /** Format: uuid */
+            businessId: string;
+            /** Format: uuid */
+            branchId: string;
+            /** Format: uuid */
+            ingredientId: string;
+            ingredientName: string | null;
+            stockUom: string | null;
+            currentQty: string;
+            updatedAt: string;
+        };
+        StockLevelsResponseDto_Output: {
+            levels: components["schemas"]["StockLevel_Output"][];
+        };
+        StockMovement_Output: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            businessId: string;
+            /** Format: uuid */
+            branchId: string;
+            /** Format: uuid */
+            ingredientId: string;
+            quantityDelta: string;
+            /** @enum {string} */
+            movementType: "sale_deduction" | "adjustment" | "receipt" | "transfer_in" | "transfer_out" | "count_correction" | "batch_production" | "batch_consumption";
+            reason: string | null;
+            referenceType: string | null;
+            referenceId: string | null;
+            createdAt: string;
+            createdBy: string | null;
+        };
+        StockMovementsResponseDto_Output: {
+            movements: components["schemas"]["StockMovement_Output"][];
+        };
+        CreateStockAdjustmentDto: {
+            /** Format: uuid */
+            ingredientId: string;
+            quantityDelta: string;
+            reason: string;
+        };
+        StockAdjustmentResponseDto_Output: {
+            movement: components["schemas"]["StockMovement_Output"];
+            level: components["schemas"]["StockLevel_Output"];
         };
     };
     responses: never;
@@ -4743,6 +4840,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecipeResponseDto_Output"];
+                };
+            };
+        };
+    };
+    StockController_listLevels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockLevelsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    StockController_listMovements: {
+        parameters: {
+            query?: {
+                ingredientId?: string;
+            };
+            header?: never;
+            path: {
+                branchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockMovementsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    StockController_createAdjustment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateStockAdjustmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockAdjustmentResponseDto_Output"];
                 };
             };
         };

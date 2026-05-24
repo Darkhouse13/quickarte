@@ -3062,6 +3062,121 @@
           "recipes"
         ]
       }
+    },
+    "/v1/branches/{branchId}/stock": {
+      "get": {
+        "operationId": "StockController_listLevels",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockLevelsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List current stock levels for a branch.",
+        "tags": [
+          "stock"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/stock/movements": {
+      "get": {
+        "operationId": "StockController_listMovements",
+        "parameters": [
+          {
+            "name": "ingredientId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockMovementsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List stock ledger movements for a branch.",
+        "tags": [
+          "stock"
+        ]
+      }
+    },
+    "/v1/branches/{branchId}/stock/adjustments": {
+      "post": {
+        "operationId": "StockController_createAdjustment",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStockAdjustmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockAdjustmentResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Append a manual stock adjustment movement.",
+        "tags": [
+          "stock"
+        ]
+      }
     }
   },
   "info": {
@@ -10569,6 +10684,235 @@
         "required": [
           "lines"
         ]
+      },
+      "StockLevel_Output": {
+        "type": "object",
+        "properties": {
+          "businessId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "branchId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "ingredientId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "ingredientName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stockUom": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "currentQty": {
+            "type": "string",
+            "pattern": "^-?\\d+(?:\\.\\d{1,4})?$"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "businessId",
+          "branchId",
+          "ingredientId",
+          "ingredientName",
+          "stockUom",
+          "currentQty",
+          "updatedAt"
+        ],
+        "additionalProperties": false,
+        "id": "StockLevel_Output"
+      },
+      "StockLevelsResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "levels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockLevel_Output"
+            }
+          }
+        },
+        "required": [
+          "levels"
+        ],
+        "additionalProperties": false
+      },
+      "StockMovement_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "businessId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "branchId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "ingredientId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "quantityDelta": {
+            "type": "string",
+            "pattern": "^-?\\d+(?:\\.\\d{1,4})?$"
+          },
+          "movementType": {
+            "type": "string",
+            "enum": [
+              "sale_deduction",
+              "adjustment",
+              "receipt",
+              "transfer_in",
+              "transfer_out",
+              "count_correction",
+              "batch_production",
+              "batch_consumption"
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "referenceType": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "referenceId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "createdBy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "businessId",
+          "branchId",
+          "ingredientId",
+          "quantityDelta",
+          "movementType",
+          "reason",
+          "referenceType",
+          "referenceId",
+          "createdAt",
+          "createdBy"
+        ],
+        "additionalProperties": false,
+        "id": "StockMovement_Output"
+      },
+      "StockMovementsResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "movements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockMovement_Output"
+            }
+          }
+        },
+        "required": [
+          "movements"
+        ],
+        "additionalProperties": false
+      },
+      "CreateStockAdjustmentDto": {
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "quantityDelta": {
+            "type": "string",
+            "pattern": "^-?\\d+(?:\\.\\d{1,4})?$"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "ingredientId",
+          "quantityDelta",
+          "reason"
+        ]
+      },
+      "StockAdjustmentResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "movement": {
+            "$ref": "#/components/schemas/StockMovement_Output"
+          },
+          "level": {
+            "$ref": "#/components/schemas/StockLevel_Output"
+          }
+        },
+        "required": [
+          "movement",
+          "level"
+        ],
+        "additionalProperties": false
       }
     }
   }
