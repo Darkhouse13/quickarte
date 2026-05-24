@@ -944,6 +944,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/recipes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recipes for the current tenant. */
+        get: operations["RecipesController_listRecipes"];
+        put?: never;
+        /** Create a variant recipe or sub-recipe. */
+        post: operations["RecipesController_createRecipe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/recipes/by-variant/{variantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RecipesController_getRecipeByVariant"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/recipes/{recipeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RecipesController_getRecipe"];
+        put?: never;
+        post?: never;
+        delete: operations["RecipesController_deleteRecipe"];
+        options?: never;
+        head?: never;
+        patch: operations["RecipesController_updateRecipe"];
+        trace?: never;
+    };
+    "/v1/recipes/{recipeId}/lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["RecipesController_replaceLines"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2487,6 +2553,81 @@ export interface components {
         };
         IngredientTagsResponseDto_Output: {
             tags: components["schemas"]["IngredientTag_Output"][];
+        };
+        Recipe_Output: {
+            /** Format: uuid */
+            id: string;
+            variantId: string | null;
+            name: string;
+            localizedNames: {
+                [key: string]: string;
+            };
+            yieldQty: string;
+            yieldUom: string | null;
+            prepNotes: string | null;
+            photoUrl: string | null;
+            computedCost: string;
+            costIsComplete: boolean;
+            foodCostPct: string | null;
+            lines: components["schemas"]["RecipeLine_Output"][];
+        };
+        RecipeLine_Output: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            componentType: "ingredient" | "sub_recipe";
+            ingredientId: string | null;
+            subRecipeId: string | null;
+            quantity: string;
+            uom: string;
+            yieldPct: string | null;
+            quantityIsCooked: boolean;
+            position: number;
+        };
+        RecipesResponseDto_Output: {
+            recipes: components["schemas"]["Recipe_Output"][];
+        };
+        CreateRecipeDto: {
+            variantId?: string | null;
+            name: string;
+            localizedNames?: {
+                [key: string]: string;
+            };
+            yieldQty?: string;
+            yieldUom?: string | null;
+            prepNotes?: string | null;
+            photoUrl?: string | null;
+        };
+        RecipeResponseDto_Output: {
+            recipe: components["schemas"]["Recipe_Output"];
+        };
+        UpdateRecipeDto: {
+            variantId?: string | null;
+            name?: string;
+            localizedNames?: {
+                [key: string]: string;
+            };
+            yieldQty?: string;
+            yieldUom?: string | null;
+            prepNotes?: string | null;
+            photoUrl?: string | null;
+        };
+        RecipeDeleteResponseDto_Output: {
+            /** @constant */
+            deleted: true;
+        };
+        ReplaceRecipeLinesDto: {
+            lines: {
+                /** @enum {string} */
+                componentType: "ingredient" | "sub_recipe";
+                ingredientId?: string | null;
+                subRecipeId?: string | null;
+                quantity: string;
+                uom: string;
+                yieldPct?: string | null;
+                quantityIsCooked?: boolean;
+                position?: number;
+            }[];
         };
     };
     responses: never;
@@ -4447,6 +4588,161 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IngredientTagsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    RecipesController_listRecipes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipesResponseDto_Output"];
+                };
+            };
+        };
+    };
+    RecipesController_createRecipe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRecipeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeResponseDto_Output"];
+                };
+            };
+        };
+    };
+    RecipesController_getRecipeByVariant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeResponseDto_Output"];
+                };
+            };
+        };
+    };
+    RecipesController_getRecipe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recipeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeResponseDto_Output"];
+                };
+            };
+        };
+    };
+    RecipesController_deleteRecipe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recipeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeDeleteResponseDto_Output"];
+                };
+            };
+        };
+    };
+    RecipesController_updateRecipe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recipeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRecipeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeResponseDto_Output"];
+                };
+            };
+        };
+    };
+    RecipesController_replaceLines: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recipeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceRecipeLinesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeResponseDto_Output"];
                 };
             };
         };
