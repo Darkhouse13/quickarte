@@ -9,6 +9,7 @@ import { BusinessesModule } from "./businesses/businesses.module";
 import { TenantContextMiddleware } from "./common/middleware/tenant-context.middleware";
 import { validateEnv } from "./config/env";
 import { HealthModule } from "./health/health.module";
+import { IngredientsModule } from "./ingredients/ingredients.module";
 import { MenuCatalogModule } from "./menu-catalog/menu-catalog.module";
 import { OperatingHoursModule } from "./operating-hours/operating-hours.module";
 import { PaymentMethodsModule } from "./payment-methods/payment-methods.module";
@@ -77,6 +78,7 @@ import { TaxConfigModule } from "./tax-config/tax-config.module";
     TaxConfigModule,
     SyncModule,
     MenuCatalogModule,
+    IngredientsModule,
   ],
 })
 export class AppModule implements NestModule {

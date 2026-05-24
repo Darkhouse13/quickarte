@@ -2585,6 +2585,260 @@
           "menu-import"
         ]
       }
+    },
+    "/v1/units": {
+      "get": {
+        "operationId": "IngredientsController_listUnits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnitsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List global units of measure.",
+        "tags": [
+          "ingredients"
+        ]
+      }
+    },
+    "/v1/ingredients": {
+      "get": {
+        "operationId": "IngredientsController_listIngredients",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List ingredients for the current tenant.",
+        "tags": [
+          "ingredients"
+        ]
+      },
+      "post": {
+        "operationId": "IngredientsController_createIngredient",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIngredientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "ingredients"
+        ]
+      }
+    },
+    "/v1/ingredients/{ingredientId}": {
+      "get": {
+        "operationId": "IngredientsController_getIngredient",
+        "parameters": [
+          {
+            "name": "ingredientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "ingredients"
+        ]
+      },
+      "patch": {
+        "operationId": "IngredientsController_updateIngredient",
+        "parameters": [
+          {
+            "name": "ingredientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIngredientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "ingredients"
+        ]
+      },
+      "delete": {
+        "operationId": "IngredientsController_deleteIngredient",
+        "parameters": [
+          {
+            "name": "ingredientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientDeleteResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "ingredients"
+        ]
+      }
+    },
+    "/v1/ingredients/{ingredientId}/conversions": {
+      "put": {
+        "operationId": "IngredientsController_replaceConversions",
+        "parameters": [
+          {
+            "name": "ingredientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceIngredientConversionsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientConversionsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "ingredients"
+        ]
+      }
+    },
+    "/v1/ingredients/{ingredientId}/tags": {
+      "put": {
+        "operationId": "IngredientsController_replaceTags",
+        "parameters": [
+          {
+            "name": "ingredientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceIngredientTagsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientTagsResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "ingredients"
+        ]
+      }
     }
   },
   "info": {
@@ -9154,6 +9408,499 @@
           "createdAt"
         ],
         "id": "MenuImportJobResponse_Output",
+        "additionalProperties": false
+      },
+      "UnitOfMeasure_Output": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string",
+            "enum": [
+              "mass",
+              "volume",
+              "count"
+            ]
+          },
+          "factorToBase": {
+            "type": "string",
+            "pattern": "^\\d+(?:\\.\\d{1,6})?$"
+          }
+        },
+        "required": [
+          "code",
+          "dimension",
+          "factorToBase"
+        ],
+        "additionalProperties": false,
+        "id": "UnitOfMeasure_Output"
+      },
+      "UnitsResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "units": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UnitOfMeasure_Output"
+            }
+          }
+        },
+        "required": [
+          "units"
+        ],
+        "additionalProperties": false
+      },
+      "Ingredient_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "meat",
+              "dairy",
+              "vegetable",
+              "spice",
+              "dry_good",
+              "beverage",
+              "alcohol",
+              "packaging"
+            ]
+          },
+          "stockUom": {
+            "type": "string"
+          },
+          "currentCostPerUom": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+(?:\\.\\d{1,4})?$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trackedInStock": {
+            "type": "boolean"
+          },
+          "supplierId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "storageLocation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "conversions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientUnitConversion_Output"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientTag_Output"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "localizedNames",
+          "category",
+          "stockUom",
+          "currentCostPerUom",
+          "trackedInStock",
+          "supplierId",
+          "storageLocation",
+          "position",
+          "conversions",
+          "tags"
+        ],
+        "additionalProperties": false,
+        "id": "Ingredient_Output"
+      },
+      "IngredientUnitConversion_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "altUom": {
+            "type": "string",
+            "minLength": 1
+          },
+          "qtyInStockUom": {
+            "type": "string",
+            "pattern": "^(?!0+(?:\\.0+)?$)\\d+(?:\\.\\d{1,4})?$"
+          }
+        },
+        "required": [
+          "id",
+          "altUom",
+          "qtyInStockUom"
+        ],
+        "additionalProperties": false,
+        "id": "IngredientUnitConversion_Output"
+      },
+      "IngredientTag_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "dietary",
+              "allergen"
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "localizedLabels": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "isSystem": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "code",
+          "localizedLabels",
+          "isSystem"
+        ],
+        "additionalProperties": false,
+        "id": "IngredientTag_Output"
+      },
+      "IngredientsResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Ingredient_Output"
+            }
+          }
+        },
+        "required": [
+          "ingredients"
+        ],
+        "additionalProperties": false
+      },
+      "CreateIngredientDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "meat",
+              "dairy",
+              "vegetable",
+              "spice",
+              "dry_good",
+              "beverage",
+              "alcohol",
+              "packaging"
+            ]
+          },
+          "stockUom": {
+            "type": "string",
+            "minLength": 1
+          },
+          "currentCostPerUom": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+(?:\\.\\d{1,4})?$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trackedInStock": {
+            "type": "boolean"
+          },
+          "supplierId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "storageLocation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "name",
+          "stockUom"
+        ]
+      },
+      "IngredientResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "ingredient": {
+            "$ref": "#/components/schemas/Ingredient_Output"
+          }
+        },
+        "required": [
+          "ingredient"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateIngredientDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "localizedNames": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 2
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "meat",
+              "dairy",
+              "vegetable",
+              "spice",
+              "dry_good",
+              "beverage",
+              "alcohol",
+              "packaging"
+            ]
+          },
+          "stockUom": {
+            "type": "string",
+            "minLength": 1
+          },
+          "currentCostPerUom": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+(?:\\.\\d{1,4})?$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trackedInStock": {
+            "type": "boolean"
+          },
+          "supplierId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "storageLocation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      },
+      "IngredientDeleteResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "additionalProperties": false
+      },
+      "ReplaceIngredientConversionsDto": {
+        "type": "object",
+        "properties": {
+          "conversions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "altUom": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "qtyInStockUom": {
+                  "type": "string",
+                  "pattern": "^(?!0+(?:\\.0+)?$)\\d+(?:\\.\\d{1,4})?$"
+                }
+              },
+              "required": [
+                "altUom",
+                "qtyInStockUom"
+              ]
+            }
+          }
+        },
+        "required": [
+          "conversions"
+        ]
+      },
+      "IngredientConversionsResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "conversions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientUnitConversion_Output"
+            }
+          }
+        },
+        "required": [
+          "conversions"
+        ],
+        "additionalProperties": false
+      },
+      "ReplaceIngredientTagsDto": {
+        "type": "object",
+        "properties": {
+          "tagIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        },
+        "required": [
+          "tagIds"
+        ]
+      },
+      "IngredientTagsResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientTag_Output"
+            }
+          }
+        },
+        "required": [
+          "tags"
+        ],
         "additionalProperties": false
       }
     }

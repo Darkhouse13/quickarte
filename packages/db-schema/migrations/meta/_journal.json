@@ -246,6 +246,13 @@
       "when": 1779405061611,
       "tag": "0034_menu_import_jobs",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1779408600000,
+      "tag": "0035_ingredients_units",
+      "breakpoints": true
     }
   ]
 }

@@ -58,6 +58,8 @@ const STARTER_PERMISSIONS = [
   ["menu.view", "View menu", "menu"],
   ["menu.manage", "Manage menu catalog", "menu"],
   ["menu.update", "Update menu", "menu"],
+  ["ingredient.view", "View ingredient catalog", "ingredients"],
+  ["ingredient.manage", "Manage ingredient catalog", "ingredients"],
   ["manager.override", "Approve manager override actions", "staff"],
 ] as const;
 
@@ -77,6 +79,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     "order.create",
     "order.update",
     "menu.view",
+    "ingredient.view",
   ],
   Waiter: [
     "business.view",
@@ -89,6 +92,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     "order.create",
     "order.update",
     "menu.view",
+    "ingredient.view",
   ],
   Kitchen: [
     "branch.view",
@@ -98,6 +102,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     "printer.view",
     "order.view",
     "menu.view",
+    "ingredient.view",
   ],
 };
 

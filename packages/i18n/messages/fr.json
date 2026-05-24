@@ -490,6 +490,26 @@
           "online": "En ligne"
         }
       }
+    },
+    "module4": {
+      "ingredients": {
+        "title": "Ingredients",
+        "units": "Unites",
+        "name": "Nom",
+        "category": "Categorie",
+        "stockUom": "Unite de stock",
+        "currentCostPerUom": "Cout actuel par unite",
+        "trackedInStock": "Suivi en stock",
+        "supplier": "Fournisseur",
+        "storageLocation": "Emplacement",
+        "conversions": "Conversions",
+        "tags": "Tags allergenes",
+        "save": "Enregistrer",
+        "delete": "Supprimer",
+        "loadError": "Impossible de charger les ingredients",
+        "saveError": "Impossible d'enregistrer l'ingredient",
+        "saved": "Ingredient enregistre"
+      }
     }
   },
   "pos": {

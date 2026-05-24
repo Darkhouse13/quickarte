@@ -862,6 +862,88 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List global units of measure. */
+        get: operations["IngredientsController_listUnits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingredients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List ingredients for the current tenant. */
+        get: operations["IngredientsController_listIngredients"];
+        put?: never;
+        post: operations["IngredientsController_createIngredient"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingredients/{ingredientId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IngredientsController_getIngredient"];
+        put?: never;
+        post?: never;
+        delete: operations["IngredientsController_deleteIngredient"];
+        options?: never;
+        head?: never;
+        patch: operations["IngredientsController_updateIngredient"];
+        trace?: never;
+    };
+    "/v1/ingredients/{ingredientId}/conversions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["IngredientsController_replaceConversions"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingredients/{ingredientId}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["IngredientsController_replaceTags"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2308,6 +2390,103 @@ export interface components {
             /** @enum {string} */
             fileType: "csv" | "xlsx";
             createdAt: string;
+        };
+        UnitOfMeasure_Output: {
+            code: string;
+            /** @enum {string} */
+            dimension: "mass" | "volume" | "count";
+            factorToBase: string;
+        };
+        UnitsResponseDto_Output: {
+            units: components["schemas"]["UnitOfMeasure_Output"][];
+        };
+        Ingredient_Output: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            localizedNames: {
+                [key: string]: string;
+            };
+            /** @enum {string} */
+            category: "meat" | "dairy" | "vegetable" | "spice" | "dry_good" | "beverage" | "alcohol" | "packaging";
+            stockUom: string;
+            currentCostPerUom: string | null;
+            trackedInStock: boolean;
+            supplierId: string | null;
+            storageLocation: string | null;
+            position: number;
+            conversions: components["schemas"]["IngredientUnitConversion_Output"][];
+            tags: components["schemas"]["IngredientTag_Output"][];
+        };
+        IngredientUnitConversion_Output: {
+            /** Format: uuid */
+            id: string;
+            altUom: string;
+            qtyInStockUom: string;
+        };
+        IngredientTag_Output: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "dietary" | "allergen";
+            code: string;
+            localizedLabels: {
+                [key: string]: string;
+            };
+            isSystem: boolean;
+        };
+        IngredientsResponseDto_Output: {
+            ingredients: components["schemas"]["Ingredient_Output"][];
+        };
+        CreateIngredientDto: {
+            name: string;
+            localizedNames?: {
+                [key: string]: string;
+            };
+            /** @enum {string} */
+            category?: "meat" | "dairy" | "vegetable" | "spice" | "dry_good" | "beverage" | "alcohol" | "packaging";
+            stockUom: string;
+            currentCostPerUom?: string | null;
+            trackedInStock?: boolean;
+            supplierId?: string | null;
+            storageLocation?: string | null;
+            position?: number;
+        };
+        IngredientResponseDto_Output: {
+            ingredient: components["schemas"]["Ingredient_Output"];
+        };
+        UpdateIngredientDto: {
+            name?: string;
+            localizedNames?: {
+                [key: string]: string;
+            };
+            /** @enum {string} */
+            category?: "meat" | "dairy" | "vegetable" | "spice" | "dry_good" | "beverage" | "alcohol" | "packaging";
+            stockUom?: string;
+            currentCostPerUom?: string | null;
+            trackedInStock?: boolean;
+            supplierId?: string | null;
+            storageLocation?: string | null;
+            position?: number;
+        };
+        IngredientDeleteResponseDto_Output: {
+            /** @constant */
+            deleted: true;
+        };
+        ReplaceIngredientConversionsDto: {
+            conversions: {
+                altUom: string;
+                qtyInStockUom: string;
+            }[];
+        };
+        IngredientConversionsResponseDto_Output: {
+            conversions: components["schemas"]["IngredientUnitConversion_Output"][];
+        };
+        ReplaceIngredientTagsDto: {
+            tagIds: string[];
+        };
+        IngredientTagsResponseDto_Output: {
+            tags: components["schemas"]["IngredientTag_Output"][];
         };
     };
     responses: never;
@@ -4090,6 +4269,184 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MenuImportJobResponse_Output"];
+                };
+            };
+        };
+    };
+    IngredientsController_listUnits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    IngredientsController_listIngredients: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngredientsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    IngredientsController_createIngredient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateIngredientDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngredientResponseDto_Output"];
+                };
+            };
+        };
+    };
+    IngredientsController_getIngredient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ingredientId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngredientResponseDto_Output"];
+                };
+            };
+        };
+    };
+    IngredientsController_deleteIngredient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ingredientId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngredientDeleteResponseDto_Output"];
+                };
+            };
+        };
+    };
+    IngredientsController_updateIngredient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ingredientId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateIngredientDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngredientResponseDto_Output"];
+                };
+            };
+        };
+    };
+    IngredientsController_replaceConversions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ingredientId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceIngredientConversionsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngredientConversionsResponseDto_Output"];
+                };
+            };
+        };
+    };
+    IngredientsController_replaceTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ingredientId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceIngredientTagsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngredientTagsResponseDto_Output"];
                 };
             };
         };
