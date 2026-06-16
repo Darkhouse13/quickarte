@@ -12,6 +12,8 @@ export const OPTION_ERROR_MESSAGES: Record<OrderPlacementErrorCode, string> = {
   OPTION_MAX_EXCEEDED: "Trop de choix pour cette option.",
   OPTION_SINGLE_INVALID: "Un seul choix est autorisé pour cette option.",
   OPTION_VALUE_INVALID: "Ce choix n'est pas valide.",
+  OPTION_QUANTITY_NOT_ALLOWED: "La quantité n'est pas autorisée pour ce choix.",
+  OPTION_QUANTITY_ABOVE_MAX: "Quantité maximale dépassée pour ce choix.",
   PRICE_RESOLVED_NEGATIVE: "Le prix calculé est invalide.",
 };
 

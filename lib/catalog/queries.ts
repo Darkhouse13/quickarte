@@ -55,6 +55,8 @@ export type StorefrontProduct = Product & {
       priceAddition: string;
       available: boolean;
       position: number;
+      allowQuantity: boolean;
+      maxQuantity: number | null;
     }>;
   }>;
 };
@@ -107,6 +109,8 @@ export async function getMenuByBusinessId(
                   priceAddition: true,
                   available: true,
                   position: true,
+                  allowQuantity: true,
+                  maxQuantity: true,
                 },
               },
             },

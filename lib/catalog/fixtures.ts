@@ -26,6 +26,8 @@ export type MenuItemOptionValue = {
   name: string;
   priceAddition: number;
   available?: boolean;
+  allowQuantity?: boolean;
+  maxQuantity?: number | null;
 };
 
 export type MenuItemOption = {

@@ -1,0 +1,199 @@
+{
+  "_readme": "Self-contained scope brief for QUICKARTE - Client 1 delivery. If you are a fresh Claude session: read this WHOLE file before doing any work. It is the single source of truth for what we build, what we explicitly do NOT build, and why. Guiding principle: SHIP CLIENT 1 FAST WITHOUT OVER-ENGINEERING. When a decision is ambiguous, pick the simpler option and re-check 'over_engineering_guardrails'.",
+
+  "meta": {
+    "title": "Client 1 Delivery Scope - Single-Restaurant Operations System",
+    "version": "1.0",
+    "created": "2026-05-20",
+    "status": "PROPOSED - awaiting founder sign-off",
+    "repo": "Darkhouse13/quickarte",
+    "north_star": "Put a working system into one real restaurant, in weeks. One client, one location. Every item in this file serves that goal and nothing else."
+  },
+
+  "strategy": {
+    "decision": "Ship Client 1 first. Foodics parity is NOT a milestone - it is a possible long-term OUTCOME of shipping, learning, and iterating with real clients.",
+    "rejected_alternative": "The Phase 0 plan (PR #7, branch 'phase-0-foundation') scoped an 8-9 month build to 'full Foodics parity before public launch' on a new NestJS monorepo with an offline-sync POS terminal. That is over-scoped for one client and is explicitly NOT the plan.",
+    "phase_0_pr_disposition": "PR #7 stays PARKED - not merged, not built upon for Client 1. It is not bad work, it is premature. Revisit only if/when multi-tenant SaaS expansion is funded and validated by real demand. Do not build on it for this delivery.",
+    "build_vs_rebuild": "Client 1 is delivered by EXTENDING the existing Quickarte Next.js app, NOT by starting the Phase 0 stack. Quickarte already does roughly half of the desired workflow (QR menus, ordering, cloture, printing). Rebuilding that is waste."
+  },
+
+  "current_state": {
+    "existing_app": "Quickarte - a working Next.js app (App Router, TypeScript), PostgreSQL via Drizzle ORM, Better Auth for sessions, next-intl for i18n (fr / ar / darija).",
+    "already_built_DO_NOT_REBUILD": [
+      "Per-business QR menus and a public storefront",
+      "Customer ordering (dine-in / takeaway) with options and customizations",
+      "Merchant dashboard: menu / catalog / category management",
+      "Loyalty program with customer credits",
+      "Order confirmation flow + customer order-tracker link",
+      "Print jobs route + print token pages (receipt/ticket printing scaffold)",
+      "Cloture (end-of-day) CSV export with a Caisse column"
+    ],
+    "phase_0_pr": "PR #7 'Phase 0: POS Foundation' is OPEN, NOT merged, and has merge conflicts with main. It adds a pnpm/Turborepo monorepo, a NestJS API, multi-tenant RLS, and an Expo+WatermelonDB offline POS. PARKED - see strategy.phase_0_pr_disposition.",
+    "gap": "What Client 1 needs and Quickarte does NOT yet have: garcon order confirmation, a kitchen display screen, a cashier POS screen with full order lifecycle, recipe-based stock, and supplier low-stock alerts. Those are the build."
+  },
+
+  "client_1_profile": {
+    "type": "Single restaurant / cafe, one physical location.",
+    "current_caisse": "A 'WDlink' all-in-one POS terminal (low-cost touchscreen POS). Exact model, OS (Android or Windows), OS/browser version, RAM and screen size are NOT YET CONFIRMED - see open_questions. The platform decision below is deliberately chosen so this unknown does not block us.",
+    "glovo": {
+      "situation": "The restaurant also receives Glovo delivery orders.",
+      "glovo_device": "Glovo provides its own handheld terminal (a 'Swift 2 Pro'). That device belongs to Glovo and runs Glovo's software - it is NOT a target for our app. Ignore it for engineering purposes.",
+      "current_handling": "Glovo orders are logged BY HAND on paper, then entered as a 'Glovo' account with prices already marked up +30%."
+    },
+    "owner_pain_today": "End of day, the owner manually reconciles on paper: each Glovo order amount + whether each order was cash or card, then adds the TPE (card terminal) total + the cash in the caisse. Slow and error-prone."
+  },
+
+  "platform_decision": {
+    "decision": "WEB APP. Responsive, browser-based, optionally installable as a PWA. NO Electron, NO Tauri, NO native mobile app.",
+    "runs_on": [
+      "Customer phones - QR table ordering (this is already how Quickarte works)",
+      "Garcon phones - order confirmation, in a browser",
+      "Kitchen screen - KDS, in a browser, fullscreen/kiosk",
+      "Cashier POS - on the existing WDlink caisse, in a browser, fullscreen/kiosk"
+    ],
+    "why_web": [
+      "Hardware-agnostic: works whether the WDlink runs Android or Windows. The unconfirmed OS becomes a non-issue.",
+      "No install, no update step: we deploy, the client refreshes. Essential for a non-technical client and a fast iteration loop.",
+      "One codebase serves customer phones, garcon phones, the kitchen screen, and the POS."
+    ],
+    "why_not_electron": "Electron does NOT run on Android at all - if the WDlink is Android, it is dead on arrival. On Windows it works but adds packaging + auto-update infrastructure for zero benefit here.",
+    "why_not_tauri": "Lighter than Electron but still a desktop wrapper with build/sign/update overhead; mobile support is immature. It solves problems we do not have (offline, deep OS integration).",
+    "hardware_upgrade": {
+      "required_upfront": false,
+      "plan_a": "Run the web POS on the EXISTING WDlink in a browser (kiosk/fullscreen). Do not ask the client to buy anything yet.",
+      "risk": "If the WDlink is old (ancient Android WebView / outdated browser), a modern web app may render or perform poorly.",
+      "mitigation": "Confirm the WDlink's OS, version, browser, RAM and screen size EARLY (see open_questions). If it is too old, the cheap fallback is a modest Android tablet (approx 1500-2500 MAD) running the POS in a browser - NOT a full caisse replacement. Keep the WDlink for its printer/cash-drawer if it has them."
+    },
+    "printing": "Handle receipts / kitchen tickets via the browser print path or the existing Quickarte print-jobs route. Confirm whether the WDlink has a built-in thermal printer. A printing requirement must NOT push us to Electron - if direct device printing is ever truly needed, a tiny local print-helper is far cheaper than wrapping the whole app.",
+    "realtime": "For the live order flow (garcon -> kitchen -> POS), use short-interval POLLING (every 2-3s) or SSE. NOT websocket clusters, NOT a third-party realtime service. For one restaurant, 2-3s polling is invisible to humans and trivial to build."
+  },
+
+  "core_loop": [
+    { "step": 1, "actor": "Customer", "action": "Scans the QR code on their table, builds an order, submits it.", "order_status": "PENDING" },
+    { "step": 2, "actor": "Garcon", "action": "Reviews the incoming order on their phone and confirms it. ON CONFIRM: the POS auto-logs the order, and stock is decremented per recipe.", "order_status": "CONFIRMED" },
+    { "step": 3, "actor": "Kitchen (KDS)", "action": "Receives the confirmed order. Items are shown sorted by manager-set prep priority (first-to-prepare to last).", "order_status": "IN_KITCHEN" },
+    { "step": 4, "actor": "Kitchen (KDS)", "action": "Marks items / the order READY. The POS screen receives a 'ready to serve' notification.", "order_status": "READY" },
+    { "step": 5, "actor": "Garcon", "action": "Serves the order.", "order_status": "SERVED" },
+    { "step": 6, "actor": "Cashier (POS)", "action": "Takes payment and marks the order PAID with method cash or card.", "order_status": "PAID" },
+    { "step": 7, "actor": "Owner / Cashier", "action": "End of day: cloture totals cash + card (TPE) + Glovo automatically.", "order_status": "n/a" }
+  ],
+
+  "glovo_handling": {
+    "decision": "Do NOT integrate the Glovo API. A Glovo partner API is unlikely to be available to a single small merchant in Morocco, and the Swift 2 Pro is Glovo's device.",
+    "v1_solution": "Replace the paper step with a ONE-TAP 'log Glovo order' button in the POS. It creates an order with channel = 'glovo', prices already +30% (markup owner-editable), status straight to PAID via Glovo. It then feeds cloture automatically."
+  },
+
+  "modules": [
+    {
+      "name": "Order confirmation (Garcon)",
+      "in_scope": "Mobile-web view listing PENDING orders; garcon confirms (or rejects) an order. Confirmation triggers POS logging + stock decrement.",
+      "notes": "Extends Quickarte's existing ordering flow."
+    },
+    {
+      "name": "Kitchen Display Screen (KDS)",
+      "in_scope": "Fullscreen browser view of CONFIRMED orders. Items sorted by per-dish prep priority. Kitchen marks item / order READY. Manager can set and edit prep_priority per menu item.",
+      "notes": "Needs its own dedicated screen in the kitchen - see open_questions."
+    },
+    {
+      "name": "POS (Cashier)",
+      "in_scope": "Order log auto-populated at confirmation. Live status per order. 'Ready to serve' notifications from the KDS. Take payment -> mark PAID (cash / card). One-tap Glovo order logging.",
+      "notes": "Runs on the WDlink in a browser."
+    },
+    {
+      "name": "Stock",
+      "in_scope": "Ingredients with units and quantities. Recipes (bill of materials: menu item -> ingredients + qty). Auto-decrement of ingredients when an order is confirmed, recorded as append-only stock movements. Manual stock adjustment by the manager (portioning variance). Manager reports: stock movements, expected vs real stock, expected gain (revenue minus ingredient cost).",
+      "notes": "The ONLY 'ledger' in this system is the stock_movements table - a plain append-only table. Nothing more elaborate."
+    },
+    {
+      "name": "Suppliers & low-stock alerts",
+      "in_scope": "Suppliers with a WhatsApp number. Per-ingredient low-stock threshold (owner-set). When an ingredient hits its threshold, the system drafts a supplier WhatsApp message listing exactly what is needed and how much. Ingredients can be grouped by supplier so one supplier gets one combined message. ALL thresholds, numbers, groupings and the message are owner-editable.",
+      "v1_delivery": "Start with ASSISTED one-tap send: the system drafts the message and the manager taps a pre-filled wa.me link. Graduate to fully-automated sending via the WhatsApp Cloud API only once a Meta WhatsApp Business account + template approval are actually in place."
+    },
+    {
+      "name": "Cloture (end-of-day)",
+      "in_scope": "Extend Quickarte's existing cloture so it totals cash + card (TPE) + Glovo for the day, replacing the owner's paper reconciliation.",
+      "notes": "Builds on the cloture CSV feature that already exists."
+    },
+    {
+      "name": "Owner configuration",
+      "in_scope": "Everything tunable is editable by the owner in the UI: menu prices, per-dish prep priority, ingredient thresholds, supplier WhatsApp numbers, supplier grouping, recipes, and the Glovo +30% markup."
+    }
+  ],
+
+  "data_model": {
+    "principle": "Plain relational tables. Reuse and extend existing Quickarte tables before adding new ones. current_qty on ingredients is a cached read; stock_movements is the source of truth.",
+    "reuse_existing": ["businesses", "products (menu items)", "categories", "orders", "order_items", "staff / users"],
+    "extend_existing": {
+      "orders": "Add: channel (dine_in | takeaway | glovo), status (PENDING|CONFIRMED|IN_KITCHEN|READY|SERVED|PAID|CANCELLED), payment_method (cash | card | glovo), confirmed_by, and per-status timestamps.",
+      "order_items": "Add: prep_status (queued | preparing | ready) for the KDS.",
+      "products": "Add: prep_priority (integer, manager-editable)."
+    },
+    "new_tables": [
+      "suppliers (id, business_id, name, whatsapp_number, notes)",
+      "ingredients (id, business_id, name, unit, current_qty, low_stock_threshold, cost_per_unit, supplier_id)",
+      "recipe_items (id, business_id, product_id, ingredient_id, qty_per_unit) - the bill of materials",
+      "stock_movements (id, business_id, ingredient_id, delta, reason [sale|manual_adjustment|restock|waste|cancellation_reversal], order_id?, actor_user_id, note, created_at) - APPEND-ONLY"
+    ],
+    "optional": "A small restock_alerts log (which alert was sent, when, to whom) - add only if useful, not required for v1."
+  },
+
+  "out_of_scope": [
+    "Offline mode / offline-first POS",
+    "Native or desktop-wrapped apps (Electron / Tauri / React Native)",
+    "Multi-location / multi-restaurant support",
+    "Multi-tenant SaaS tooling (tenant admin, RLS rollout, super-admin)",
+    "The Phase 0 NestJS API and monorepo",
+    "Glovo API integration",
+    "Double-entry accounting / general ledger",
+    "Other delivery aggregators, CMI payment integration, DGI e-invoicing, AI features",
+    "Anything not traceable to Client 1's described workflow"
+  ],
+
+  "over_engineering_guardrails": [
+    "No offline mode. One location on wifi. If wifi fails, that is an operations issue, not a feature to build.",
+    "No native or desktop-wrapped app. Web only.",
+    "No microservices and no separate API service. Extend the one existing Next.js app.",
+    "No multi-tenant tooling. Data is already business-scoped; do not build tenant management.",
+    "Realtime = polling or SSE. No websocket cluster, no Pusher/Ably/message broker.",
+    "No event sourcing / CQRS. Plain tables. The only ledger is stock_movements: a single append-only table.",
+    "No double-entry accounting. Cloture is an arithmetic sum of cash + card + Glovo.",
+    "No Glovo API integration. One-tap manual logging.",
+    "WhatsApp alerts: assisted one-tap (wa.me) first; automated Cloud API only once Meta setup exists.",
+    "Do not merge or build on Phase 0 PR #7 for this delivery.",
+    "Prefer extending existing Quickarte features over rebuilding them.",
+    "Every feature must trace to Client 1's workflow. If it does not, it is out."
+  ],
+
+  "open_questions": [
+    { "q": "WDlink caisse: exact model, OS (Android or Windows) + version, browser/WebView version, RAM, screen size?", "blocker": true, "why": "Confirms Plan A (run the web POS on existing hardware) vs the tablet fallback." },
+    { "q": "Does the WDlink have a built-in thermal receipt printer and/or cash drawer? How are kitchen tickets printed today?", "blocker": false },
+    { "q": "Does the kitchen have a screen/tablet for the KDS, or must the client provide one?", "blocker": false },
+    { "q": "Garcon devices: their personal phones, or dedicated devices?", "blocker": false },
+    { "q": "Is wifi coverage reliable across both the dining area and the kitchen?", "blocker": true, "why": "The web-app, no-offline decision assumes reliable wifi." },
+    { "q": "Does the owner have a WhatsApp Business account?", "blocker": false, "why": "Decides assisted one-tap vs automated Cloud API for low-stock alerts." },
+    { "q": "Roughly how many Glovo orders per day? Is one-tap manual logging acceptable for v1?", "blocker": false },
+    { "q": "Are recipes / ingredient lists available for every dish, or must the client provide them?", "blocker": true, "why": "Auto stock decrement depends on recipes existing." },
+    { "q": "Does the client track per-ingredient cost? Needed for the 'expected gain' report.", "blocker": false },
+    { "q": "Confirm stock decrements on order CONFIRMED (recommended), with a reversal movement on cancellation.", "blocker": false }
+  ],
+
+  "milestones": {
+    "principle": "Iterative. Each milestone is independently shippable to the client. Durations are sized by the team; what matters is order and small slices.",
+    "list": [
+      { "id": "M1", "name": "Core order loop", "goal": "QR order -> garcon confirm -> KDS with manager-set prep priority -> mark ready -> POS auto-log -> payment (cash/card) -> PAID. Working end-to-end on real devices in the restaurant." },
+      { "id": "M2", "name": "Cloture + Glovo", "goal": "Extend cloture to total cash + card + Glovo for the day. One-tap Glovo order logging. Replaces the owner's paper reconciliation." },
+      { "id": "M3", "name": "Stock core", "goal": "Ingredients, suppliers, recipes, auto-decrement via stock_movements, manual adjustment, manager stock report (expected vs real, movements, expected gain)." },
+      { "id": "M4", "name": "Low-stock alerts", "goal": "Per-ingredient thresholds, supplier grouping, low-stock detection -> WhatsApp message (assisted one-tap first). All settings owner-editable." },
+      { "id": "M5", "name": "Pilot hardening", "goal": "Run live with Client 1; fix what real usage exposes. Stabilization, NOT new features." }
+    ]
+  },
+
+  "definition_of_done": [
+    "A customer can order from a table QR and the order flows garcon -> kitchen -> POS -> paid with no paper.",
+    "The owner's end-of-day reconciliation (cash + card + Glovo) is produced by the system, not by hand.",
+    "Stock decrements automatically from sales; the manager can correct it and see reports.",
+    "Low stock triggers a supplier WhatsApp message.",
+    "Everything configurable (prices, priorities, thresholds, suppliers, Glovo markup) is editable by the owner in the UI.",
+    "It runs on the client's existing WDlink (or the agreed cheap fallback) with no native install."
+  ]
+}

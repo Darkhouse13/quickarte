@@ -1,39 +1,16 @@
 "use server";
 
-import { and, eq, inArray, isNull } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import {
-  businesses,
-  orderItems,
-  orders,
-  printers,
-  products,
-} from "@/lib/db/schema";
+import { businesses, orderItems, orders, products } from "@/lib/db/schema";
 import { placeOrderSchema } from "./schemas";
-import { requireBusiness } from "@/lib/auth/get-business";
 import { hasEntitlement } from "@/lib/entitlements/queries";
-import { recordAccrual } from "@/lib/loyalty/service";
-import { getProgram } from "@/lib/loyalty/queries";
-import { sendOrderNotification } from "@/lib/push/send";
-import { assertRole } from "@/lib/identity/permissions";
 import { recordOrderEvent } from "@/lib/ordering/events";
-import { transitionOrder } from "@/lib/ordering/transitions";
-import {
-  markEnteredInPos,
-  markSkippedInPos,
-  revertPosStatus,
-  type PosActionResult,
-} from "@/lib/ordering/pos-reconciliation";
-import { ensureDefaultCounterPrinter } from "@/lib/printing/printers";
-import { enqueuePrintJobsForOrder } from "@/lib/printing/pipeline";
-import {
-  type OrderLifecycleStatus,
-} from "./status";
+import { getMizaneIntegration } from "@/lib/integrations/mizane/queries";
+import { postOrderToMizane } from "@/lib/integrations/mizane/order-sync";
 import { generateCustomerAccessToken } from "./customer-token";
 import {
   validateConfiguredLine,
-  type DbProductForOrder,
   type OrderPlacementErrorCode,
   type ValidatedOrderLine,
 } from "./line-validation";
@@ -67,7 +44,7 @@ type PlaceOrderPayload = {
     product_id: string;
     quantity: number;
     variant_id: string | null;
-    selected_option_value_ids: string[];
+    selected_option_values: Array<{ id: string; quantity: number }>;
     unit_price: number;
   }[];
   businessId: string;
@@ -164,6 +141,8 @@ export async function placeOrder(
               name: true,
               priceAddition: true,
               available: true,
+              allowQuantity: true,
+              maxQuantity: true,
             },
           },
         },
@@ -237,73 +216,18 @@ export async function placeOrder(
   });
   const orderId = insertedOrder.id;
 
+  // Forward to Mizane POS when linked. Non-fatal: if Mizane is down or a line
+  // can't be mapped, the order still lands in QuickArte and the customer can
+  // track it; reconciliation retries on the next status poll. Mizane owns the
+  // downstream side-effects QuickArte no longer does (kitchen routing, printing,
+  // staff notifications, loyalty accrual by phone).
   try {
-    await db.transaction(async (tx) => {
-      const existingPrinter = await tx.query.printers.findFirst({
-        where: and(
-          eq(printers.businessId, business.id),
-          isNull(printers.deletedAt),
-        ),
-        columns: { id: true },
-      });
-      if (!existingPrinter) {
-        await ensureDefaultCounterPrinter(business.id, tx);
-      }
-    });
-
-    const printResult = await enqueuePrintJobsForOrder(orderId, business.id);
-    if (!printResult.ok) {
-      console.error("[printing] auto-enqueue failed (non-fatal):", printResult.error);
+    const integration = await getMizaneIntegration(business.id);
+    if (integration) {
+      await postOrderToMizane(orderId, business.id, integration.apiKey);
     }
   } catch (err) {
-    console.error("[printing] auto-enqueue failed (non-fatal):", err);
-    try {
-      await recordOrderEvent(orderId, "order.printed", {
-        actor: { userId: null, role: "system" },
-        payload: {
-          status: "enqueue_failed",
-          error: err instanceof Error ? err.message : "Unknown print error",
-        },
-      });
-    } catch (eventErr) {
-      console.error("[printing] failed to record enqueue failure:", eventErr);
-    }
-  }
-
-  revalidatePath("/orders");
-  revalidatePath("/home");
-
-  try {
-    const [hasLoyalty, hasOrdering] = await Promise.all([
-      hasEntitlement(business.id, "loyalty"),
-      hasEntitlement(business.id, "online_ordering"),
-    ]);
-    if (hasLoyalty && hasOrdering) {
-      const program = await getProgram(business.id);
-      if (program && program.enabled) {
-        if (data.customerPhone) await recordAccrual({
-          businessId: business.id,
-          phone: data.customerPhone,
-          name: data.customerName,
-          amountSpent: total,
-          orderId,
-          source: "online_order",
-        });
-      }
-    }
-  } catch (err) {
-    console.error("[loyalty] accrual on order failed (non-fatal):", err);
-  }
-
-  // Fire-and-forget push to merchant devices. A failure here must never
-  // block the customer's order — mirrors the loyalty pattern above.
-  try {
-    const hasOrdering = await hasEntitlement(business.id, "online_ordering");
-    if (hasOrdering) {
-      await sendOrderNotification(business.id, orderId);
-    }
-  } catch (err) {
-    console.error("[push] order notification failed (non-fatal):", err);
+    console.error("[mizane] order post failed (non-fatal):", err);
   }
 
   const orderNumber = orderId.replace(/-/g, "").slice(0, 8).toUpperCase();
@@ -316,186 +240,4 @@ export async function placeOrder(
     customerUrl: `/${business.locale.split("-")[0] ?? "fr"}/o/${insertedOrder.customerAccessToken}`,
     payment: { mode: "cash" },
   };
-}
-
-export type OrderTransitionResult =
-  | { status: "success" }
-  | { status: "error"; message: string; code?: "NOT_FOUND" | "INVALID_TRANSITION" };
-
-export type TransitionResult = OrderTransitionResult;
-
-export async function transitionOrderStatus(
-  orderId: string,
-  nextStatus: OrderLifecycleStatus,
-): Promise<OrderTransitionResult> {
-  const { session, business } = await requireBusiness();
-  const role = await assertRole(session.user.id, business.id, [
-    "owner",
-    "manager",
-    "waiter",
-  ]);
-  const result = await transitionOrder(
-    orderId,
-    nextStatus,
-    { userId: session.user.id, role },
-    { businessId: business.id },
-  );
-  if (result.status === "not_found") {
-    return { status: "error", code: "NOT_FOUND", message: "Commande introuvable" };
-  }
-  if (result.status === "invalid_transition") {
-    return { status: "error", code: "INVALID_TRANSITION", message: "Transition de statut invalide" };
-  }
-  revalidatePath("/orders");
-  revalidatePath("/home");
-  return { status: "success" };
-}
-
-// Marks a ready order as served by moving it to the terminal `completed`
-// lifecycle status. The only legal source state is `ready`; `completed` is
-// accepted as an idempotent no-op so retrying the action does not create a
-// second `order.served` event. Future snack workflows may justify a direct
-// `preparing -> completed` path, but this action intentionally keeps the
-// production transition narrow until field research supports it.
-export async function markOrderServed(
-  orderId: string,
-): Promise<TransitionResult> {
-  const { session, business } = await requireBusiness();
-  const role = await assertRole(session.user.id, business.id, [
-    "owner",
-    "manager",
-    "waiter",
-    "cashier",
-  ]);
-  const result = await transitionOrder(
-    orderId,
-    "completed",
-    { userId: session.user.id, role },
-    { businessId: business.id },
-  );
-  if (result.status === "not_found") {
-    return { status: "error", code: "NOT_FOUND", message: "Commande introuvable" };
-  }
-  if (result.status === "invalid_transition") {
-    return {
-      status: "error",
-      code: "INVALID_TRANSITION",
-      message:
-        "Cette commande ne peut pas \u00eatre marqu\u00e9e comme servie depuis son \u00e9tat actuel.",
-    };
-  }
-  revalidatePath("/orders");
-  revalidatePath("/home");
-  return { status: "success" };
-}
-
-export async function cancelOrder(
-  orderId: string,
-  reason?: string,
-): Promise<OrderTransitionResult> {
-  const { session, business } = await requireBusiness();
-  const role = await assertRole(session.user.id, business.id, [
-    "owner",
-    "manager",
-    "waiter",
-  ]);
-  const order = await db.query.orders.findFirst({
-    where: and(eq(orders.id, orderId), eq(orders.businessId, business.id)),
-    columns: { id: true, status: true, notes: true },
-  });
-  if (!order) {
-    return { status: "error", message: "Commande introuvable" };
-  }
-
-  const trimmedReason = reason?.trim();
-  const notes = trimmedReason
-    ? [order.notes, `Annulation: ${trimmedReason}`].filter(Boolean).join("\n")
-    : order.notes;
-
-  const result = await transitionOrder(
-    orderId,
-    "cancelled",
-    { userId: session.user.id, role },
-    {
-      businessId: business.id,
-      notes,
-      payload: trimmedReason ? { reason: trimmedReason } : undefined,
-    },
-  );
-  if (result.status === "invalid_transition") {
-    return { status: "error", code: "INVALID_TRANSITION", message: "Transition de statut invalide" };
-  }
-  if (result.status === "not_found") {
-    return { status: "error", code: "NOT_FOUND", message: "Commande introuvable" };
-  }
-  revalidatePath("/orders");
-  revalidatePath("/home");
-  return { status: "success" };
-}
-
-export async function confirmOrder(orderId: string): Promise<void> {
-  await transitionOrderStatus(orderId, "confirmed");
-}
-
-export async function completeOrder(orderId: string): Promise<void> {
-  await transitionOrderStatus(orderId, "completed");
-}
-
-export async function markOrderEnteredInPos(
-  orderId: string,
-  input: { posReference?: string } = {},
-): Promise<PosActionResult> {
-  const { session, business } = await requireBusiness();
-  const role = await assertRole(session.user.id, business.id, [
-    "owner",
-    "manager",
-    "cashier",
-  ]);
-  const result = await markEnteredInPos(
-    orderId,
-    business.id,
-    { userId: session.user.id, role },
-    input,
-  );
-  revalidatePath("/orders");
-  revalidatePath("/cloture");
-  return result;
-}
-
-export async function markOrderPosSkipped(
-  orderId: string,
-  input: { posReference?: string; reason?: string } = {},
-): Promise<PosActionResult> {
-  const { session, business } = await requireBusiness();
-  const role = await assertRole(session.user.id, business.id, [
-    "owner",
-    "manager",
-    "cashier",
-  ]);
-  const result = await markSkippedInPos(
-    orderId,
-    business.id,
-    { userId: session.user.id, role },
-    input,
-  );
-  revalidatePath("/orders");
-  revalidatePath("/cloture");
-  return result;
-}
-
-export async function revertOrderPosStatus(
-  orderId: string,
-): Promise<PosActionResult> {
-  const { session, business } = await requireBusiness();
-  const role = await assertRole(session.user.id, business.id, [
-    "owner",
-    "manager",
-  ]);
-  const result = await revertPosStatus(orderId, business.id, {
-    userId: session.user.id,
-    role,
-  });
-  revalidatePath("/orders");
-  revalidatePath("/cloture");
-  return result;
 }

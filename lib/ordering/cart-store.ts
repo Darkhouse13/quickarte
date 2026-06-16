@@ -10,7 +10,7 @@ export type CartItem = {
   quantity: number;
   variant_id: string | null;
   variant_name: string | null;
-  selected_option_value_ids: string[];
+  selected_option_values: Array<{ id: string; quantity: number }>;
   options_json: OrderItemOptions | null;
   notes: string | null;
   unit_price: number;
@@ -119,16 +119,19 @@ export const useCartStore = create<CartState>()(
 
 /**
  * Two configured lines collapse only when variant + selections + notes all
- * match — a tacos with Kefta is a different line from one with Mixte, and a
- * note for the kitchen makes the line distinct too.
+ * match — a tacos with Kefta ×2 is a different line from one with Kefta ×1,
+ * and a note for the kitchen makes the line distinct too.
  */
 export function getCartLineKey(
   item: Pick<
     CartItem,
-    "product_id" | "variant_id" | "selected_option_value_ids" | "notes"
+    "product_id" | "variant_id" | "selected_option_values" | "notes"
   >,
 ): string {
-  const selected = [...item.selected_option_value_ids].sort().join(",");
+  const selected = [...item.selected_option_values]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((sv) => `${sv.id}:${sv.quantity}`)
+    .join(",");
   return `${item.product_id}|${item.variant_id ?? ""}|${selected}|${item.notes ?? ""}`;
 }
 
@@ -137,7 +140,9 @@ function normalizeCartItem(product: LegacyAddItem | ConfiguredAddItem): CartItem
     return {
       ...product,
       quantity: product.quantity ?? 1,
-      selected_option_value_ids: [...product.selected_option_value_ids].sort(),
+      selected_option_values: [...product.selected_option_values].sort((a, b) =>
+        a.id.localeCompare(b.id),
+      ),
       notes:
         product.notes && product.notes.trim().length > 0
           ? product.notes.trim()
@@ -151,7 +156,7 @@ function normalizeCartItem(product: LegacyAddItem | ConfiguredAddItem): CartItem
     quantity: 1,
     variant_id: null,
     variant_name: null,
-    selected_option_value_ids: [],
+    selected_option_values: [],
     options_json: null,
     notes: null,
     unit_price: product.price,

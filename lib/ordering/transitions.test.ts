@@ -110,9 +110,28 @@ test("transitionOrder is idempotent for completed -> completed and does not doub
   assert.equal(harness.events[0]?.eventType, "order.served");
 });
 
+test("transitionOrder treats a concurrent change as a no-op success without re-recording", async () => {
+  // Simulate another writer having already advanced the row: the conditional
+  // UPDATE matches no rows.
+  const harness = fakeTransitionHarness("ready", { simulateConcurrentChange: true });
+
+  const result = await transitionOrder(
+    "order-1",
+    "completed",
+    actor,
+    { businessId: "business-1", deps: harness.deps },
+  );
+
+  assert.equal(result.status, "success");
+  assert.equal(harness.events.length, 0, "must not record an event when no row changed");
+});
+
 const actor: OrderEventActor = { userId: "user-1", role: "waiter" };
 
-function fakeTransitionHarness(initialStatus: OrderLifecycleStatus) {
+function fakeTransitionHarness(
+  initialStatus: OrderLifecycleStatus,
+  options: { simulateConcurrentChange?: boolean } = {},
+) {
   const order = {
     id: "order-1",
     businessId: "business-1",
@@ -134,9 +153,16 @@ function fakeTransitionHarness(initialStatus: OrderLifecycleStatus) {
     },
     update: () => ({
       set: (values: Partial<typeof order>) => ({
-        where: () => {
-          Object.assign(order, values);
-        },
+        where: () => ({
+          returning: async () => {
+            // Mirror the conditional UPDATE: a concurrent change means the row
+            // no longer matches the WHERE, so no rows are returned and the
+            // status is left untouched.
+            if (options.simulateConcurrentChange) return [];
+            Object.assign(order, values);
+            return [{ id: order.id }];
+          },
+        }),
       }),
     }),
   };

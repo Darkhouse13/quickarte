@@ -19,7 +19,7 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.sentry.io",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://images.unsplash.com https://res.cloudinary.com",
+      "img-src 'self' data: blob: https://images.unsplash.com https://res.cloudinary.com https://mizane.xyz",
       "font-src 'self' data:",
       "connect-src 'self' https://*.sentry.io",
       "frame-ancestors 'none'",
@@ -46,6 +46,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "mizane.xyz" },
     ],
   },
 };

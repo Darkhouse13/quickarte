@@ -5,7 +5,9 @@ export type OrderLifecycleStatus =
   | "confirmed"
   | "preparing"
   | "ready"
-  | "completed"
+  | "served"
+  | "paid"
+  | "completed" // legacy terminal — use "served" → "paid" for new orders
   | "cancelled";
 
 export const ORDER_STATUS_TRANSITIONS: Record<
@@ -15,7 +17,9 @@ export const ORDER_STATUS_TRANSITIONS: Record<
   pending: ["confirmed", "preparing", "cancelled"],
   confirmed: ["preparing", "ready", "cancelled"],
   preparing: ["ready", "cancelled"],
-  ready: ["completed", "cancelled"],
+  ready: ["served", "completed", "cancelled"], // "completed" kept for legacy compat
+  served: ["paid", "cancelled"],
+  paid: [],
   completed: [],
   cancelled: [],
 };
@@ -24,13 +28,10 @@ export const PRIMARY_ORDER_ACTIONS: Partial<
   Record<OrderLifecycleStatus, { next: OrderLifecycleStatus; label: string }>
 > = {
   pending: { next: "confirmed", label: "Confirmer" },
-  confirmed: { next: "preparing", label: "Pr\u00e9parer" },
-  preparing: { next: "ready", label: "Pr\u00eat" },
+  confirmed: { next: "preparing", label: "Préparer" },
+  preparing: { next: "ready", label: "Prêt" },
 };
 
-// `ready` orders are served from the floor via the SERVIR button, which calls
-// the dedicated `markOrderServed` action \u2014 the only path to the served state.
-// Roles mirror that action's gate (kitchen marks ready, the floor marks served).
 const SERVIR_BUTTON_ROLES: ReadonlySet<StaffRole> = new Set<StaffRole>([
   "owner",
   "manager",
@@ -55,3 +56,13 @@ export function canTransitionOrderStatus(
 export function isTerminalOrderStatus(status: OrderLifecycleStatus): boolean {
   return ORDER_STATUS_TRANSITIONS[status].length === 0;
 }
+
+export const ACTIVE_POS_STATUSES: OrderLifecycleStatus[] = [
+  "confirmed",
+  "preparing",
+  "ready",
+  "served",
+];
+
+export const GARCON_PENDING_STATUSES: OrderLifecycleStatus[] = ["pending"];
+export const GARCON_READY_STATUSES: OrderLifecycleStatus[] = ["ready"];

@@ -61,6 +61,8 @@ export function buildStorefrontFixture(
             name: value.name,
             priceAddition: Number(value.priceAddition),
             available: value.available,
+            allowQuantity: value.allowQuantity,
+            maxQuantity: value.maxQuantity ?? null,
           })),
         })),
       })),

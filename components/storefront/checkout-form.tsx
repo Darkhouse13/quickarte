@@ -19,11 +19,6 @@ type Props = {
   businessName: string;
   businessSlug: string;
   locale: string;
-  loyaltyHint?: {
-    accrualType: "per_visit" | "per_euro";
-    accrualRate: number;
-    rewardDescription: string;
-  } | null;
   initialTableNumber?: number | null;
   orderingEnabled?: boolean;
   dineInEnabled?: boolean;
@@ -37,7 +32,6 @@ export function CheckoutForm({
   businessName,
   businessSlug,
   locale,
-  loyaltyHint,
   initialTableNumber,
   orderingEnabled = true,
   dineInEnabled = true,
@@ -103,7 +97,7 @@ export function CheckoutForm({
         product_id: i.product_id,
         quantity: i.quantity,
         variant_id: i.variant_id,
-        selected_option_value_ids: i.selected_option_value_ids,
+        selected_option_values: i.selected_option_values,
         unit_price: i.unit_price,
       })),
     };
@@ -234,22 +228,6 @@ export function CheckoutForm({
 
       <section className="px-6 py-6 border-b-4 border-outline">
         <SectionLabel index={3} title="Contact" />
-        {loyaltyHint ? (
-          <div className="mb-5 border-2 border-ink bg-accent/5 px-4 py-3 flex flex-col gap-1">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-accent font-bold">
-              Programme fidélité
-            </span>
-            <p className="font-sans text-[13px] text-ink/80 leading-snug">
-              Gagnez{" "}
-              <span className="font-bold">
-                {loyaltyHint.accrualType === "per_visit"
-                  ? `${formatRate(loyaltyHint.accrualRate)} tampon${loyaltyHint.accrualRate > 1 ? "s" : ""} sur cette commande`
-                  : `${formatRate(loyaltyHint.accrualRate)} point${loyaltyHint.accrualRate > 1 ? "s" : ""} par MAD dépensé`}
-              </span>
-              . Récompense&nbsp;: {loyaltyHint.rewardDescription}.
-            </p>
-          </div>
-        ) : null}
         <div className="flex flex-col gap-4">
           <div>
             <FormInput
@@ -367,10 +345,6 @@ function ConfigurationSummary({ item }: { item: CartItem }) {
       ) : null}
     </div>
   );
-}
-
-function formatRate(n: number): string {
-  return n % 1 === 0 ? n.toString() : n.toFixed(2).replace(".", ",");
 }
 
 function SectionLabel({

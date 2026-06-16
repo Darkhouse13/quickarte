@@ -90,8 +90,6 @@ export default async function CustomerOrderPage({ params }: Props) {
         postOrderMessage={data.business.postOrderMessage}
         whatsapp={whatsapp}
         shortOrderId={shortOrderId}
-        loyalty={data.loyalty}
-        customerPhone={data.order.customerPhone}
       />
       <ComplianceFooter locale={locale} />
     </main>

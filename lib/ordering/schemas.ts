@@ -28,8 +28,13 @@ export const placeOrderSchema = z
             .int()
             .positive(),
           variant_id: z.string().uuid("Variante invalide").nullable().default(null),
-          selected_option_value_ids: z
-            .array(z.string().uuid("Choix invalide"))
+          selected_option_values: z
+            .array(
+              z.object({
+                id: z.string().uuid("Choix invalide"),
+                quantity: z.number().int().min(1),
+              }),
+            )
             .default([]),
           unit_price: z
             .number({ invalid_type_error: "Prix invalide" })
