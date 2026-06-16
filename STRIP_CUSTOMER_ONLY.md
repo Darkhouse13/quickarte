@@ -59,13 +59,6 @@ Components: `storefront`, `legal`, `ui` (subset).
    `components/ui/*` still compile but look unused; merchant tables remain in `lib/db/schema`
    (schema trim deliberately deferred — migration-risky, not needed for a working customer app).
 
-## Prompt for the next session
+## Next session
 
-> Read `MIZANE_QUICKARTE_FINALIZATION.md`, `STRIP_CUSTOMER_ONLY.md`, and
-> `QUICKARTE_SANDBOX_HANDOFF.md`. The strip-down to customer-only is done and the app builds
-> (branch `client-1/m1-strip-customer-only`). Now do the "rewire" work, smallest-risk first:
-> (1) live-verify the re-homed Mizane poll against the sandbox (place an order, confirm/reject
-> it staff-side, watch `/api/orders/[token]/status` reconcile); (2) add ETag/304 + soft-delete
-> to menu sync; (3) surface Mizane's authoritative total + rejected/expired UX on the tracker;
-> (4) per-table QR → Mizane `tableId`. Keep it simple — no over-engineering. Verify with
-> `npm run typecheck`, `npm test`, and `npx next build` after each change.
+The pickup prompt for the next session lives in `NEXT_SESSION.md`.
