@@ -176,6 +176,20 @@
       "when": 1750032000000,
       "tag": "0024_mizane_order_id",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1750118400000,
+      "tag": "0025_mizane_menu_etag",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1750204800000,
+      "tag": "0026_mizane_table_id",
+      "breakpoints": true
     }
   ]
 }

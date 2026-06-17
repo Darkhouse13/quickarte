@@ -24,11 +24,28 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: "Annulée",
 };
 
-export function customerStatusLabel(status: string): string {
+// Mirrors OrderCancellation from customer-access (kept local so this module
+// stays free of server-only imports — it runs in the client tracker).
+export type CustomerCancellation = {
+  reason: string | null;
+  expired: boolean;
+};
+
+export function customerStatusLabel(
+  status: string,
+  cancellation?: CustomerCancellation | null,
+): string {
+  // An auto-expired order reads as "Expirée" — a distinct, blameless outcome
+  // from a staff cancellation.
+  if (status === "cancelled" && cancellation?.expired) return "Expirée";
   return STATUS_LABELS[status] ?? "Reçue";
 }
 
-export function customerStatusContext(status: string, type: string): string {
+export function customerStatusContext(
+  status: string,
+  type: string,
+  cancellation?: CustomerCancellation | null,
+): string {
   switch (status) {
     case "pending":
     case "confirmed":
@@ -42,6 +59,12 @@ export function customerStatusContext(status: string, type: string): string {
     case "completed":
       return "Merci.";
     case "cancelled":
+      if (cancellation?.expired) {
+        return "Cette commande a expiré. Commandez directement auprès du personnel.";
+      }
+      if (cancellation?.reason) {
+        return `Refusée : ${cancellation.reason}`;
+      }
       return "Contactez le restaurant pour en savoir plus.";
     default:
       return "Votre commande est bien arrivée.";

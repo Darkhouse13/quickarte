@@ -39,6 +39,9 @@ type PlaceOrderPayload = {
   customerPhone: string | null;
   orderType: "dine_in" | "takeaway";
   tableNumber?: number;
+  // Set by a per-table Mizane QR; tableLabel is the human label to display.
+  mizaneTableId?: string;
+  tableLabel?: string;
   notes?: string;
   items: {
     product_id: string;
@@ -186,9 +189,12 @@ export async function placeOrder(
           : "not_required",
         total: total.toFixed(2),
         notes: data.notes ?? null,
+        mizaneTableId:
+          data.orderType === "dine_in" ? data.mizaneTableId ?? null : null,
         tableNumber:
-          data.orderType === "dine_in" && data.tableNumber !== undefined
-            ? String(data.tableNumber)
+          data.orderType === "dine_in"
+            ? data.tableLabel ??
+              (data.tableNumber !== undefined ? String(data.tableNumber) : null)
             : null,
       })
       .returning({ id: orders.id });

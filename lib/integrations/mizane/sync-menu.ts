@@ -1,5 +1,13 @@
 import "server-only";
-import { and, eq, isNotNull } from "drizzle-orm";
+import {
+  and,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  notInArray,
+  type AnyColumn,
+} from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   categories,
@@ -9,7 +17,7 @@ import {
   optionValues,
 } from "@/lib/db/schema";
 import { getMizaneMenu } from "./client";
-import { touchMizaneLastSynced } from "./queries";
+import { getMizaneMenuEtag, markMizaneMenuSynced } from "./queries";
 import type {
   MizaneCategory,
   MizaneOptionGroup,
@@ -26,13 +34,34 @@ export type MizaneSyncResult = {
   variants: number;
   optionGroups: number;
   optionValues: number;
+  // Rows soft-deleted because Mizane no longer lists them.
+  softDeleted: number;
+  // True when the cached ETag matched (304) — nothing was re-fetched or written.
+  notModified: boolean;
 };
 
 export async function syncMizaneMenu(
   businessId: string,
   apiKey: string,
 ): Promise<MizaneSyncResult> {
-  const menu = await getMizaneMenu(apiKey);
+  const cachedEtag = await getMizaneMenuEtag(businessId);
+  const result = await getMizaneMenu(apiKey, cachedEtag);
+
+  // Menu unchanged since the last sync — skip all DB work, just re-stamp.
+  if (result.notModified) {
+    await markMizaneMenuSynced(businessId, result.etag);
+    return {
+      categories: 0,
+      products: 0,
+      variants: 0,
+      optionGroups: 0,
+      optionValues: 0,
+      softDeleted: 0,
+      notModified: true,
+    };
+  }
+
+  const { menu } = result;
   const now = new Date();
 
   // 1. Categories
@@ -76,7 +105,14 @@ export async function syncMizaneMenu(
     }
   }
 
-  await touchMizaneLastSynced(businessId);
+  // 5. Soft-delete entities Mizane no longer lists. Mizane has no tombstone — a
+  // removed entity simply disappears from the menu — so we reconcile by id: any
+  // mizane-linked row for this business whose id isn't in the fresh response is
+  // marked deleted. Soft (not hard) delete preserves historical order coherence
+  // and is reversible — a later sync that re-lists the id clears deletedAt.
+  const softDeleted = await softDeleteAbsent(businessId, menu, now);
+
+  await markMizaneMenuSynced(businessId, result.etag);
 
   return {
     categories: menu.categories.length,
@@ -84,7 +120,112 @@ export async function syncMizaneMenu(
     variants: menu.variants.length,
     optionGroups: menu.optionGroups.length,
     optionValues: menu.optionGroups.reduce((s, g) => s + g.values.length, 0),
+    softDeleted,
+    notModified: false,
   };
+}
+
+// ─── Soft-delete reconciliation ───────────────────────────────────────────────
+
+async function softDeleteAbsent(
+  businessId: string,
+  menu: {
+    categories: MizaneCategory[];
+    products: MizaneProduct[];
+    variants: MizaneVariant[];
+    optionGroups: MizaneOptionGroup[];
+  },
+  now: Date,
+): Promise<number> {
+  const seenCategoryIds = menu.categories.map((c) => c.id);
+  const seenProductIds = menu.products.map((p) => p.id);
+  const seenVariantIds = menu.variants.map((v) => v.id);
+  const seenGroupIds = menu.optionGroups.map((g) => g.id);
+  const seenValueIds = menu.optionGroups.flatMap((g) =>
+    g.values.map((v) => v.id),
+  );
+
+  // Subqueries that scope variant/option/value deletes to THIS business (those
+  // tables carry no business_id — only a parent chain back to products).
+  const businessProductIds = db
+    .select({ id: products.id })
+    .from(products)
+    .where(eq(products.businessId, businessId));
+  const businessOptionIds = db
+    .select({ id: productOptions.id })
+    .from(productOptions)
+    .where(inArray(productOptions.productId, businessProductIds));
+
+  // `notInArray(col, [])` is invalid SQL, and an empty seen-set means the
+  // response listed none of that entity — so omit the clause and let the scope
+  // filters delete everything mizane-linked in scope.
+  const absent = (column: AnyColumn, seenIds: string[]) =>
+    seenIds.length > 0 ? notInArray(column, seenIds) : undefined;
+
+  const counts = await Promise.all([
+    db
+      .update(categories)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(categories.businessId, businessId),
+          isNotNull(categories.mizaneId),
+          isNull(categories.deletedAt),
+          absent(categories.mizaneId, seenCategoryIds),
+        ),
+      )
+      .returning({ id: categories.id }),
+    db
+      .update(products)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(products.businessId, businessId),
+          isNotNull(products.mizaneId),
+          isNull(products.deletedAt),
+          absent(products.mizaneId, seenProductIds),
+        ),
+      )
+      .returning({ id: products.id }),
+    db
+      .update(productVariants)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(
+        and(
+          inArray(productVariants.productId, businessProductIds),
+          isNotNull(productVariants.mizaneId),
+          isNull(productVariants.deletedAt),
+          absent(productVariants.mizaneId, seenVariantIds),
+        ),
+      )
+      .returning({ id: productVariants.id }),
+    db
+      .update(productOptions)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(
+        and(
+          inArray(productOptions.productId, businessProductIds),
+          isNotNull(productOptions.mizaneId),
+          isNull(productOptions.deletedAt),
+          absent(productOptions.mizaneId, seenGroupIds),
+        ),
+      )
+      .returning({ id: productOptions.id }),
+    db
+      .update(optionValues)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(
+        and(
+          inArray(optionValues.optionId, businessOptionIds),
+          isNotNull(optionValues.mizaneId),
+          isNull(optionValues.deletedAt),
+          absent(optionValues.mizaneId, seenValueIds),
+        ),
+      )
+      .returning({ id: optionValues.id }),
+  ]);
+
+  return counts.reduce((sum, rows) => sum + rows.length, 0);
 }
 
 // ─── Per-entity upserts ───────────────────────────────────────────────────────

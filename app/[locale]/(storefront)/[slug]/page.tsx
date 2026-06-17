@@ -8,14 +8,18 @@ import {
   getMenuByBusinessId,
 } from "@/lib/catalog/queries";
 import { buildStorefrontFixture } from "@/lib/catalog/storefront-dto";
-import { parseTableNumber } from "@/lib/ordering/table";
+import { parseTableContext } from "@/lib/ordering/table";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams?: Promise<{ table?: string | string[] }>;
+  searchParams?: Promise<{
+    table?: string | string[];
+    t?: string | string[];
+    tl?: string | string[];
+  }>;
 };
 
 export async function generateMetadata({
@@ -37,7 +41,7 @@ export async function generateMetadata({
 
 export default async function StorefrontPage({ params, searchParams }: Props) {
   const { locale, slug } = await params;
-  const tableNumber = parseTableNumber((await searchParams)?.table);
+  const table = parseTableContext((await searchParams) ?? {});
   setRequestLocale(locale);
 
   const business = await getBusinessBySlug(slug);
@@ -51,7 +55,8 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
       <StorefrontMenu
         business={fixture}
         locale={locale}
-        initialTableNumber={tableNumber}
+        initialMizaneTableId={table.mizaneTableId}
+        initialTableLabel={table.label}
       />
       <ComplianceFooter locale={locale} />
     </main>

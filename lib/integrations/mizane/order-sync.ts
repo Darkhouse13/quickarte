@@ -4,11 +4,21 @@ import { db } from "@/lib/db";
 import { optionValues, orderItems, orders, productVariants } from "@/lib/db/schema";
 import { recordOrderEvent } from "@/lib/ordering/events";
 import { transitionOrder } from "@/lib/ordering/transitions";
+import {
+  isTerminalOrderStatus,
+  type OrderLifecycleStatus,
+} from "@/lib/ordering/status";
 import { normalizeOrderItemOptions } from "@/lib/ordering/order-item-options";
-import { getMizaneOrderStatus, postMizaneOrder } from "./client";
+import { MizaneError, getMizaneOrderStatus, postMizaneOrder } from "./client";
 import { shouldPollMizane } from "./poll-throttle";
 import { getMizaneIntegration } from "./queries";
+import {
+  ONLINE_ACTIVE_STATUSES,
+  mizaneTargetStatus,
+  nextStepToward,
+} from "./status-map";
 import type {
+  MizaneFulfillment,
   MizaneOrderLine,
   MizaneOrderRequest,
   MizaneOrderStatus,
@@ -52,6 +62,7 @@ export async function postOrderToMizane(
       customerPhone: true,
       notes: true,
       tableNumber: true,
+      mizaneTableId: true,
       mizaneOrderId: true,
     },
   });
@@ -161,10 +172,16 @@ export async function postOrderToMizane(
     };
   });
 
+  const tableId =
+    order.type === "dine_in" && order.mizaneTableId
+      ? order.mizaneTableId
+      : undefined;
+
   const noteParts: string[] = [];
-  // No table-id mapping yet (Phase 2); surface the dine-in table in notes so the
-  // POS operator still sees it.
-  if (order.type === "dine_in" && order.tableNumber) {
+  // When the order carries a real Mizane tableId the POS already knows the
+  // table, so the note is redundant; only surface the table label in notes for
+  // a manual/legacy table number (no tableId to send).
+  if (order.type === "dine_in" && order.tableNumber && !tableId) {
     noteParts.push(`Table ${order.tableNumber}`);
   }
   if (order.notes) noteParts.push(order.notes);
@@ -173,15 +190,39 @@ export async function postOrderToMizane(
     idempotencyKey: order.id,
     customerName: order.customerName || undefined,
     customerPhone: order.customerPhone || undefined,
+    tableId,
     notes: noteParts.length ? noteParts.join(" — ") : undefined,
     lines,
   };
 
-  const response = await postMizaneOrder(apiKey, request);
+  let response: Awaited<ReturnType<typeof postMizaneOrder>>;
+  try {
+    response = await postMizaneOrder(apiKey, request);
+  } catch (err) {
+    // A stale QR can point at a table Mizane has since removed. Rather than drop
+    // the order, fall back to a counter order (no table) — the contract's
+    // recommended recovery for `table-unknown`.
+    if (err instanceof MizaneError && err.code === "table-unknown" && tableId) {
+      console.warn(
+        `[mizane] table ${tableId} unknown for order ${order.id}; retrying as counter order.`,
+      );
+      response = await postMizaneOrder(apiKey, { ...request, tableId: undefined });
+    } else {
+      throw err;
+    }
+  }
 
+  // Mizane recomputes prices/options server-side from its live menu, so its
+  // total is authoritative — adopt it as THE order total (the customer tracker
+  // reads orders.total). With a synced catalog this equals the local total; if
+  // it diverges (stale local cache) Mizane wins, which is what the customer pays.
   await db
     .update(orders)
-    .set({ mizaneOrderId: response.orderId, updatedAt: new Date() })
+    .set({
+      mizaneOrderId: response.orderId,
+      total: response.total,
+      updatedAt: new Date(),
+    })
     .where(eq(orders.id, order.id));
 
   await recordOrderEvent(order.id, "order.mizane_posted", {
@@ -268,13 +309,15 @@ export async function syncPendingMizaneOrders(
     return { ...empty, skipped: true };
   }
 
+  // Poll every still-active order (not just pending) so downstream progress —
+  // preparing → ready → done — keeps reconciling after the initial confirm.
   const pendingRows = await db
     .select({ id: orders.id, mizaneOrderId: orders.mizaneOrderId })
     .from(orders)
     .where(
       and(
         eq(orders.businessId, businessId),
-        eq(orders.status, "pending"),
+        inArray(orders.status, ONLINE_ACTIVE_STATUSES),
         isNotNull(orders.mizaneOrderId),
       ),
     )
@@ -299,10 +342,11 @@ export async function syncPendingMizaneOrders(
         businessId,
         row.mizaneOrderId,
         status.status,
+        status.fulfillment,
         status.rejectedReason,
       );
-      if (applied === "confirmed") result.confirmed += 1;
-      else if (applied === "cancelled") result.rejected += 1;
+      if (applied === "cancelled") result.rejected += 1;
+      else if (applied) result.confirmed += 1;
     } catch (err) {
       result.errors += 1;
       console.error(
@@ -316,33 +360,28 @@ export async function syncPendingMizaneOrders(
 }
 
 /**
- * Translates a Mizane order status into a QuickArte transition and applies it.
- * Returns the QuickArte status applied, or null when Mizane is still pending /
- * reports an unrecognized status (we keep waiting).
+ * Translates a Mizane (status, fulfillment) pair into the QuickArte lifecycle
+ * target and advances the order to it. Returns the QuickArte status applied (the
+ * furthest step reached), or null when Mizane is still pending / reports nothing
+ * actionable (we keep waiting).
+ *
+ * `confirmed` + `fulfillment` carries the real order's downstream POS state:
+ *   in_progress → preparing, served → ready, paid/unpaid → completed (done),
+ *   voided/refunded → cancelled. `rejected` → cancelled. The order only ever
+ *   moves FORWARD along the online flow (never backward).
  */
 async function applyMizaneStatus(
   orderId: string,
   businessId: string,
   mizaneOrderId: string,
   status: MizaneOrderStatus,
+  fulfillment?: MizaneFulfillment,
   rejectedReason?: string,
-): Promise<"confirmed" | "cancelled" | null> {
-  if (status === "confirmed") {
-    const result = await transitionOrder(
-      orderId,
-      "confirmed",
-      { userId: null, role: "system" },
-      {
-        businessId,
-        payload: { source: "mizane", mizane_order_id: mizaneOrderId },
-      },
-    );
-    // Only report a confirm when the transition was valid (e.g. not when the
-    // order was already cancelled in QuickArte).
-    return result.status === "success" ? "confirmed" : null;
-  }
+): Promise<OrderLifecycleStatus | null> {
+  const target = mizaneTargetStatus(status, fulfillment);
+  if (!target) return null;
 
-  if (status === "rejected") {
+  if (target === "cancelled") {
     const result = await transitionOrder(
       orderId,
       "cancelled",
@@ -359,8 +398,47 @@ async function applyMizaneStatus(
     return result.status === "success" ? "cancelled" : null;
   }
 
-  // pending_confirmation or an unknown future status — leave the order pending.
-  return null;
+  return advanceOrderToward(orderId, businessId, target, mizaneOrderId);
+}
+
+/** Advance an order FORWARD along the online flow toward `target`, one valid
+ * transition at a time (Mizane can jump stages between polls, e.g. pending →
+ * ready). Never moves backward; stops at a terminal status. Returns the last
+ * status applied, or null if nothing moved. */
+async function advanceOrderToward(
+  orderId: string,
+  businessId: string,
+  target: OrderLifecycleStatus,
+  mizaneOrderId: string,
+): Promise<OrderLifecycleStatus | null> {
+  let applied: OrderLifecycleStatus | null = null;
+
+  // Bounded by the flow length; re-reads current each step so concurrent polls
+  // can't loop it.
+  for (let guard = 0; guard < ONLINE_ACTIVE_STATUSES.length + 1; guard += 1) {
+    const [row] = await db
+      .select({ status: orders.status })
+      .from(orders)
+      .where(and(eq(orders.id, orderId), eq(orders.businessId, businessId)))
+      .limit(1);
+    if (!row) return applied;
+
+    const current = row.status as OrderLifecycleStatus;
+    if (isTerminalOrderStatus(current)) return applied;
+
+    const next = nextStepToward(current, target);
+    if (!next) return applied; // already at/past the target along the flow
+
+    const result = await transitionOrder(orderId, next, { userId: null, role: "system" }, {
+      businessId,
+      payload: { source: "mizane", mizane_order_id: mizaneOrderId },
+    });
+    if (result.status !== "success") return applied;
+    applied = next;
+    if (next === target) return applied;
+  }
+
+  return applied;
 }
 
 /**

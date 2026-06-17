@@ -119,6 +119,19 @@ export type MizaneOrderStatus =
   | "rejected"
   | (string & {});
 
+// Downstream POS state of a CONFIRMED order (Mizane's additive `fulfillment`
+// field — the staff-derived order lifecycle). `(string & {})` keeps unknown
+// future values type-safe: tolerate them as "in progress" (forward-compat).
+export type MizaneFulfillment =
+  | "in_progress"
+  | "served"
+  | "paid"
+  | "unpaid"
+  | "voided"
+  | "refunded"
+  | "merged"
+  | (string & {});
+
 export type MizaneOrderResponse = {
   orderId: string;
   orderNumber: string;
@@ -134,6 +147,9 @@ export type MizaneOrderStatusResponse = {
   status: MizaneOrderStatus;
   // Present when status === "rejected". "expired" = auto-rejected at 10 min.
   rejectedReason?: string;
+  // Present only when status === "confirmed": the real order's downstream POS
+  // state (kitchen → payment). Absent on pending/rejected.
+  fulfillment?: MizaneFulfillment;
   total: string;
 };
 

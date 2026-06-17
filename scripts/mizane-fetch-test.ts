@@ -9,7 +9,13 @@ async function main() {
   console.log(JSON.stringify(tables, null, 2));
 
   console.log("\n=== GET /menu ===");
-  const menu = await getMizaneMenu(API_KEY);
+  const fetched = await getMizaneMenu(API_KEY);
+  if (fetched.notModified) {
+    console.log("304 Not Modified (unexpected without an If-None-Match)");
+    process.exit(0);
+  }
+  const menu = fetched.menu;
+  console.log(`etag: ${fetched.etag ?? "(none)"}`);
 
   console.log(`currency: ${menu.currency}`);
   console.log(`categories: ${menu.categories.length}`);

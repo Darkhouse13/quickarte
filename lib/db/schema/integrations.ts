@@ -10,6 +10,9 @@ export const mizaneIntegrations = pgTable("mizane_integrations", {
     .references(() => businesses.id, { onDelete: "cascade" }),
   // Stored plaintext for now — encrypt at app layer before moving to prod
   apiKey: text("api_key").notNull(),
+  // Strong ETag from the last successful GET /menu; replayed as If-None-Match so
+  // an unchanged menu short-circuits to 304 (no re-sync). Null until first sync.
+  menuEtag: text("menu_etag"),
   lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

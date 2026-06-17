@@ -2,19 +2,23 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { getBusinessBySlug } from "@/lib/catalog/queries";
 import { CheckoutForm } from "@/components/storefront/checkout-form";
-import { parseTableNumber } from "@/lib/ordering/table";
+import { parseTableContext } from "@/lib/ordering/table";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams?: Promise<{ table?: string | string[] }>;
+  searchParams?: Promise<{
+    table?: string | string[];
+    t?: string | string[];
+    tl?: string | string[];
+  }>;
 };
 
 export default async function CheckoutPage({ params, searchParams }: Props) {
   const { locale, slug } = await params;
-  const tableNumber = parseTableNumber((await searchParams)?.table);
+  const table = parseTableContext((await searchParams) ?? {});
   setRequestLocale(locale);
 
   const business = await getBusinessBySlug(slug);
@@ -27,7 +31,8 @@ export default async function CheckoutPage({ params, searchParams }: Props) {
         businessName={business.name}
         businessSlug={business.slug}
         locale={locale}
-        initialTableNumber={tableNumber}
+        initialMizaneTableId={table.mizaneTableId}
+        initialTableLabel={table.label}
         orderingEnabled={business.settings?.orderingEnabled !== false}
         dineInEnabled={business.settings?.dineInEnabled !== false}
         takeawayEnabled={business.settings?.takeawayEnabled !== false}

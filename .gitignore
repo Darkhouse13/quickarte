@@ -39,3 +39,6 @@ tsconfig.tsbuildinfo
 # Internal handoff docs — contain the sandbox integration key; keep local, untracked
 /MIZANE_QUICKARTE_FINALIZATION.md
 /QUICKARTE_SANDBOX_HANDOFF.md
+
+# Generated per-table QR codes (scripts/mizane-table-qr.ts)
+table-qr/

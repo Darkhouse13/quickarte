@@ -27,14 +27,20 @@ export class MizaneError extends Error {
   }
 }
 
-type MizaneFetchOptions = RequestInit & { timeoutMs?: number };
+type MizaneFetchOptions = RequestInit & {
+  timeoutMs?: number;
+  // When true, a 304 Not Modified (paired with an If-None-Match request) is
+  // returned as a normal result with data === null instead of throwing.
+  allowNotModified?: boolean;
+};
 
 async function mizaneFetch<T>(
   apiKey: string,
   path: string,
   options?: MizaneFetchOptions,
-): Promise<{ data: T; status: number }> {
-  const { timeoutMs = DEFAULT_TIMEOUT_MS, ...init } = options ?? {};
+): Promise<{ data: T | null; status: number; etag: string | null }> {
+  const { timeoutMs = DEFAULT_TIMEOUT_MS, allowNotModified, ...init } =
+    options ?? {};
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -64,9 +70,16 @@ async function mizaneFetch<T>(
     clearTimeout(timer);
   }
 
+  const etag = res.headers.get("etag");
+
+  // 304 = the menu is unchanged since the cached ETag — empty body, not an error.
+  if (allowNotModified && res.status === 304) {
+    return { data: null, status: 304, etag };
+  }
+
   // 409 = idempotent replay — identical 201 body, treat as success
   if (res.ok || res.status === 409) {
-    return { data: (await res.json()) as T, status: res.status };
+    return { data: (await res.json()) as T, status: res.status, etag };
   }
 
   const errBody = await res.json().catch(() => null) as MizaneApiError | null;
@@ -79,14 +92,31 @@ async function mizaneFetch<T>(
 
 export async function getMizaneTables(apiKey: string): Promise<MizaneTable[]> {
   const { data } = await mizaneFetch<MizaneTable[]>(apiKey, "/tables");
-  return data;
+  return data!;
 }
 
-export async function getMizaneMenu(apiKey: string): Promise<MizaneMenuResponse> {
-  const { data } = await mizaneFetch<MizaneMenuResponse>(apiKey, "/menu", {
-    timeoutMs: MENU_TIMEOUT_MS,
-  });
-  return data;
+// Result of a conditional GET /menu. `notModified` means the cached ETag still
+// matched (304) — the caller should keep its existing local menu untouched.
+export type MizaneMenuFetch =
+  | { notModified: false; menu: MizaneMenuResponse; etag: string | null }
+  | { notModified: true; etag: string | null };
+
+export async function getMizaneMenu(
+  apiKey: string,
+  etag?: string | null,
+): Promise<MizaneMenuFetch> {
+  const { data, status, etag: responseEtag } =
+    await mizaneFetch<MizaneMenuResponse>(apiKey, "/menu", {
+      timeoutMs: MENU_TIMEOUT_MS,
+      allowNotModified: true,
+      headers: etag ? { "If-None-Match": etag } : undefined,
+    });
+
+  if (status === 304) {
+    // 304 echoes the ETag; fall back to the one we sent if it doesn't.
+    return { notModified: true, etag: responseEtag ?? etag ?? null };
+  }
+  return { notModified: false, menu: data!, etag: responseEtag };
 }
 
 export async function postMizaneOrder(
@@ -97,7 +127,7 @@ export async function postMizaneOrder(
     method: "POST",
     body: JSON.stringify(req),
   });
-  return data;
+  return data!;
 }
 
 export async function getMizaneOrderStatus(
@@ -108,7 +138,7 @@ export async function getMizaneOrderStatus(
     apiKey,
     `/orders/${orderId}`,
   );
-  return data;
+  return data!;
 }
 
 export async function testMizaneConnection(

@@ -7,6 +7,7 @@ import {
   customerStatusContext,
   customerStatusLabel,
   formatElapsedSinceFr,
+  type CustomerCancellation,
   type WhatsappLink,
 } from "@/lib/ordering/customer-view";
 import { createStatusPoller } from "@/lib/ordering/customer-poll";
@@ -23,6 +24,7 @@ type Props = {
   locale: string;
   initialStatus: string;
   initialLatestEventAt: string;
+  initialCancellation: CustomerCancellation | null;
   type: string;
   businessName: string;
   businessSlug: string;
@@ -44,6 +46,7 @@ export function OrderTracker({
   locale,
   initialStatus,
   initialLatestEventAt,
+  initialCancellation,
   type,
   businessName,
   businessSlug,
@@ -57,6 +60,9 @@ export function OrderTracker({
 }: Props) {
   const [status, setStatus] = useState(initialStatus);
   const [latestEventAt, setLatestEventAt] = useState(initialLatestEventAt);
+  const [cancellation, setCancellation] = useState<CustomerCancellation | null>(
+    initialCancellation,
+  );
   const [revoked, setRevoked] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
@@ -74,12 +80,14 @@ export function OrderTracker({
             const body = (await res.json()) as {
               status: string;
               latestEventAt: string;
+              cancellation: CustomerCancellation | null;
             };
             return {
               kind: "ok" as const,
               snapshot: {
                 status: body.status,
                 latestEventAt: body.latestEventAt,
+                cancellation: body.cancellation ?? null,
               },
             };
           } catch {
@@ -89,6 +97,7 @@ export function OrderTracker({
         onSnapshot: (snapshot) => {
           setStatus(snapshot.status);
           setLatestEventAt(snapshot.latestEventAt);
+          setCancellation(snapshot.cancellation ?? null);
         },
         onRevoked: () => setRevoked(true),
       },
@@ -146,10 +155,10 @@ export function OrderTracker({
           key={status}
           className="order-status-fade block font-mono font-bold uppercase tracking-tighter leading-[0.95] text-[48px] md:text-[72px]"
         >
-          {customerStatusLabel(status)}
+          {customerStatusLabel(status, cancellation)}
         </span>
         <p className="font-sans text-[15px] md:text-[17px] text-ink/70 leading-snug mt-4 max-w-[420px]">
-          {customerStatusContext(status, type)}
+          {customerStatusContext(status, type, cancellation)}
         </p>
         <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mt-4">
           {elapsedLabel}

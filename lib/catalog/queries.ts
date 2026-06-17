@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   businesses,
@@ -68,15 +68,21 @@ export type StorefrontCategoryWithProducts = Category & {
 export async function getMenuByBusinessId(
   businessId: string,
 ): Promise<StorefrontCategoryWithProducts[]> {
+  // Mizane sync soft-deletes (sets deleted_at on) entities it no longer lists;
+  // every read of the live menu must exclude them at each level of the tree.
   const rows = await db.query.categories.findMany({
-    where: eq(categories.businessId, businessId),
+    where: and(
+      eq(categories.businessId, businessId),
+      isNull(categories.deletedAt),
+    ),
     orderBy: [asc(categories.position)],
     with: {
       products: {
-        where: eq(products.available, true),
+        where: and(eq(products.available, true), isNull(products.deletedAt)),
         orderBy: [asc(products.position)],
         with: {
           variants: {
+            where: isNull(productVariants.deletedAt),
             orderBy: [asc(productVariants.position)],
             columns: {
               id: true,
@@ -89,6 +95,7 @@ export async function getMenuByBusinessId(
             },
           },
           options: {
+            where: isNull(productOptions.deletedAt),
             orderBy: [asc(productOptions.position)],
             columns: {
               id: true,
@@ -102,6 +109,7 @@ export async function getMenuByBusinessId(
             },
             with: {
               values: {
+                where: isNull(optionValues.deletedAt),
                 orderBy: [asc(optionValues.position)],
                 columns: {
                   id: true,

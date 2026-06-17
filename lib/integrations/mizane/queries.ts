@@ -34,6 +34,33 @@ export async function touchMizaneLastSynced(businessId: string): Promise<void> {
     .where(eq(mizaneIntegrations.businessId, businessId));
 }
 
+/**
+ * Records a successful menu sync: stamps lastSyncedAt and caches the response
+ * ETag so the next sync can send If-None-Match and short-circuit on 304. Pass
+ * the etag through unchanged on a 304 (it's stable while the menu is).
+ */
+export async function markMizaneMenuSynced(
+  businessId: string,
+  menuEtag: string | null,
+): Promise<void> {
+  const now = new Date();
+  await db
+    .update(mizaneIntegrations)
+    .set({ lastSyncedAt: now, menuEtag, updatedAt: now })
+    .where(eq(mizaneIntegrations.businessId, businessId));
+}
+
+export async function getMizaneMenuEtag(
+  businessId: string,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ menuEtag: mizaneIntegrations.menuEtag })
+    .from(mizaneIntegrations)
+    .where(eq(mizaneIntegrations.businessId, businessId))
+    .limit(1);
+  return row?.menuEtag ?? null;
+}
+
 export async function deleteMizaneIntegration(businessId: string): Promise<void> {
   await db
     .delete(mizaneIntegrations)

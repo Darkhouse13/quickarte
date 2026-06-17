@@ -114,6 +114,9 @@ export const orders = pgTable("orders", {
   posReference: text("pos_reference"),
   // Mizane POS order id returned by POST /orders — drives status polling (Phase 1)
   mizaneOrderId: text("mizane_order_id"),
+  // Mizane dine-in table UUID (from GET /tables), carried by a per-table QR and
+  // sent as `tableId` on POST /orders. Null for takeaway or manual table entry.
+  mizaneTableId: uuid("mizane_table_id"),
   total: numeric("total", { precision: 10, scale: 2 }).notNull(),
   notes: text("notes"),
   tableNumber: text("table_number"),
