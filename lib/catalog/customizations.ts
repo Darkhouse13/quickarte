@@ -712,6 +712,8 @@ export async function createOptionValue(
     optionId,
     name: parsed.data.name,
     priceAddition: parsed.data.price_addition.toFixed(2),
+    allowQuantity: parsed.data.allow_quantity ?? false,
+    maxQuantity: parsed.data.max_quantity ?? null,
     position,
     available: parsed.data.available ?? true,
   });
@@ -743,6 +745,12 @@ export async function updateOptionValue(
       ...(hasOwn(parsed.data, "name") ? { name: parsed.data.name } : {}),
       ...(hasOwn(parsed.data, "price_addition")
         ? { priceAddition: parsed.data.price_addition?.toFixed(2) }
+        : {}),
+      ...(hasOwn(parsed.data, "allow_quantity")
+        ? { allowQuantity: parsed.data.allow_quantity }
+        : {}),
+      ...(hasOwn(parsed.data, "max_quantity")
+        ? { maxQuantity: parsed.data.max_quantity ?? null }
         : {}),
       ...(hasOwn(parsed.data, "available")
         ? { available: parsed.data.available }

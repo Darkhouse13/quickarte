@@ -10,7 +10,6 @@ import {
   type OrderEventActor,
   type OrderEventType,
 } from "@/lib/ordering/events";
-import { accrueCreditsForServedOrder } from "@/lib/loyalty/accrual";
 
 export type TransitionOrderResult =
   | { status: "success"; fromStatus: OrderLifecycleStatus; toStatus: OrderLifecycleStatus }
@@ -29,13 +28,11 @@ type TransactionLike = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type TransitionOrderDeps = {
   transaction: typeof db.transaction;
   recordEvent: typeof recordOrderEvent;
-  accrueCredits?: typeof accrueCreditsForServedOrder;
 };
 
 const defaultDeps: TransitionOrderDeps = {
   transaction: db.transaction.bind(db) as typeof db.transaction,
   recordEvent: recordOrderEvent,
-  accrueCredits: accrueCreditsForServedOrder,
 };
 
 export async function transitionOrder(
@@ -63,7 +60,11 @@ export async function transitionOrder(
       return { status: "invalid_transition", fromStatus, toStatus };
     }
 
-    await tx
+    // Optimistic concurrency: only advance the row if it is still in the status
+    // we read. If a concurrent writer (e.g. the Mizane poll racing a
+    // double-clicked button) already moved it, the update matches no rows and we
+    // skip the event entirely.
+    const updated = await tx
       .update(orders)
       .set({
         status: toStatus,
@@ -72,9 +73,18 @@ export async function transitionOrder(
       })
       .where(
         opts.businessId
-          ? and(eq(orders.id, orderId), eq(orders.businessId, opts.businessId))
-          : eq(orders.id, orderId),
-      );
+          ? and(
+              eq(orders.id, orderId),
+              eq(orders.businessId, opts.businessId),
+              eq(orders.status, fromStatus),
+            )
+          : and(eq(orders.id, orderId), eq(orders.status, fromStatus)),
+      )
+      .returning({ id: orders.id });
+
+    if (updated.length === 0) {
+      return { status: "success", fromStatus: toStatus, toStatus };
+    }
 
     await deps.recordEvent(orderId, eventForStatus(toStatus), {
       actor,
@@ -84,17 +94,6 @@ export async function transitionOrder(
 
     return { status: "success", fromStatus, toStatus };
   });
-  if (
-    result.status === "success" &&
-    result.toStatus === "completed" &&
-    result.fromStatus !== "completed"
-  ) {
-    try {
-      await deps.accrueCredits?.(orderId);
-    } catch (err) {
-      console.error("[loyalty] credit accrual on order.served failed (non-fatal):", err);
-    }
-  }
   return result;
 }
 
@@ -107,17 +106,13 @@ export function validateOrderTransition(
 
 function eventForStatus(status: OrderLifecycleStatus): OrderEventType {
   switch (status) {
-    case "confirmed":
-      return "order.accepted";
-    case "preparing":
-      return "order.preparing";
-    case "ready":
-      return "order.ready";
-    case "completed":
-      return "order.served";
-    case "cancelled":
-      return "order.cancelled";
-    case "pending":
-      return "order.created";
+    case "confirmed": return "order.accepted";
+    case "preparing": return "order.preparing";
+    case "ready": return "order.ready";
+    case "served":
+    case "completed": return "order.served";
+    case "paid": return "order.paid";
+    case "cancelled": return "order.cancelled";
+    case "pending": return "order.created";
   }
 }

@@ -17,8 +17,8 @@ test("serializeOrderItemOptions stores the canonical camel-case snapshot", () =>
         optionName: "Viande",
         optionType: "multi_select",
         values: [
-          { valueId: "kefta", valueName: "Kefta", priceAddition: 0 },
-          { valueId: "mixte", valueName: "Mixte", priceAddition: 0 },
+          { valueId: "kefta", valueName: "Kefta", priceAddition: 0, quantity: 1 },
+          { valueId: "mixte", valueName: "Mixte", priceAddition: 0, quantity: 1 },
         ],
       },
     ],
@@ -34,8 +34,8 @@ test("serializeOrderItemOptions stores the canonical camel-case snapshot", () =>
         optionName: "Viande",
         optionType: "multi_select",
         values: [
-          { valueId: "kefta", valueName: "Kefta", priceAddition: 0 },
-          { valueId: "mixte", valueName: "Mixte", priceAddition: 0 },
+          { valueId: "kefta", valueName: "Kefta", priceAddition: 0, quantity: 1 },
+          { valueId: "mixte", valueName: "Mixte", priceAddition: 0, quantity: 1 },
         ],
       },
     ],
@@ -57,6 +57,7 @@ test("parseOrderItemOptions extracts canonical variant and selected options", ()
             valueId: "cordon",
             valueName: "Cordon bleu",
             priceAddition: 5,
+            quantity: 1,
           },
         ],
       },
@@ -65,8 +66,8 @@ test("parseOrderItemOptions extracts canonical variant and selected options", ()
         optionName: "Sauces",
         optionType: "multi_select",
         values: [
-          { valueId: "algerienne", valueName: "Algerienne", priceAddition: 0 },
-          { valueId: "andalouse", valueName: "Andalouse", priceAddition: 0 },
+          { valueId: "algerienne", valueName: "Algerienne", priceAddition: 0, quantity: 1 },
+          { valueId: "andalouse", valueName: "Andalouse", priceAddition: 0, quantity: 1 },
         ],
       },
     ],
@@ -76,13 +77,13 @@ test("parseOrderItemOptions extracts canonical variant and selected options", ()
   assert.deepEqual(parsed.options, [
     {
       optionName: "Viande",
-      values: [{ valueName: "Cordon bleu", priceAddition: 5 }],
+      values: [{ valueName: "Cordon bleu", priceAddition: 5, quantity: 1 }],
     },
     {
       optionName: "Sauces",
       values: [
-        { valueName: "Algerienne", priceAddition: 0 },
-        { valueName: "Andalouse", priceAddition: 0 },
+        { valueName: "Algerienne", priceAddition: 0, quantity: 1 },
+        { valueName: "Andalouse", priceAddition: 0, quantity: 1 },
       ],
     },
   ]);
@@ -100,8 +101,8 @@ test("summarizeOrderItemOptions returns the shared French display lines", () => 
           optionName: "Viande",
           optionType: "multi_select",
           values: [
-            { valueId: "kefta", valueName: "Kefta", priceAddition: 0 },
-            { valueId: "mixte", valueName: "Mixte", priceAddition: 0 },
+            { valueId: "kefta", valueName: "Kefta", priceAddition: 0, quantity: 1 },
+            { valueId: "mixte", valueName: "Mixte", priceAddition: 0, quantity: 1 },
           ],
         },
         {
@@ -109,13 +110,35 @@ test("summarizeOrderItemOptions returns the shared French display lines", () => 
           optionName: "Sauces",
           optionType: "multi_select",
           values: [
-            { valueId: "algerienne", valueName: "Algerienne", priceAddition: 0 },
-            { valueId: "samourai", valueName: "Samourai", priceAddition: 0 },
+            { valueId: "algerienne", valueName: "Algerienne", priceAddition: 0, quantity: 1 },
+            { valueId: "samourai", valueName: "Samourai", priceAddition: 0, quantity: 1 },
           ],
         },
       ],
     }),
     ["  Variante : L", "  Viande : Kefta, Mixte", "  Sauces : Algerienne, Samourai"],
+  );
+});
+
+test("summarizeOrderItemOptions shows ×N label when quantity > 1", () => {
+  assert.deepEqual(
+    summarizeOrderItemOptions({
+      variantId: null,
+      variantName: null,
+      variantPriceOverride: null,
+      selections: [
+        {
+          optionId: "fromage",
+          optionName: "Fromage",
+          optionType: "multi_select",
+          values: [
+            { valueId: "cheddar", valueName: "Cheddar", priceAddition: 5, quantity: 2 },
+            { valueId: "mozzarella", valueName: "Mozzarella", priceAddition: 3, quantity: 1 },
+          ],
+        },
+      ],
+    }),
+    ["  Fromage : Cheddar ×2, Mozzarella"],
   );
 });
 
@@ -138,7 +161,7 @@ test("legacy options_json is still readable for existing orders", () => {
     options: [
       {
         optionName: "Sauces",
-        values: [{ valueName: "Samourai", priceAddition: 0 }],
+        values: [{ valueName: "Samourai", priceAddition: 0, quantity: 1 }],
       },
     ],
   });
@@ -154,7 +177,7 @@ test("snapshotting keeps the original names after later catalog renames", () => 
         optionId: "option-1",
         optionName: "Sauces",
         optionType: "multi_select",
-        values: [{ valueId: "value-1", valueName: "Samourai", priceAddition: 0 }],
+        values: [{ valueId: "value-1", valueName: "Samourai", priceAddition: 0, quantity: 1 }],
       },
     ],
   });

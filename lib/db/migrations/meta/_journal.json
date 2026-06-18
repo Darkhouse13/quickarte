@@ -148,6 +148,48 @@
       "when": 1778859682362,
       "tag": "0020_loyalty_credits",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1749772800000,
+      "tag": "0021_option_value_quantity",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1749859200000,
+      "tag": "0022_mizane_integration",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1749945600000,
+      "tag": "0023_m1_order_loop",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1750032000000,
+      "tag": "0024_mizane_order_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1750118400000,
+      "tag": "0025_mizane_menu_etag",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1750204800000,
+      "tag": "0026_mizane_table_id",
+      "breakpoints": true
     }
   ]
 }

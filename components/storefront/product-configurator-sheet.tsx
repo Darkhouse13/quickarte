@@ -18,7 +18,7 @@
  * Design: brutalist — 2px frame, no rounded corners, no shadow, flat scrim.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { X, Check } from "lucide-react";
 import type {
   MenuItem,
@@ -40,6 +40,7 @@ import {
   isValueDisabledByCap,
   optionValidationHint,
   type ConfiguratorSelection,
+  type QuantityMap,
 } from "@/lib/ordering/configurator";
 import { formatAmount } from "@/lib/utils/currency";
 import { cn } from "@/lib/utils/cn";
@@ -75,6 +76,7 @@ export function ProductConfiguratorSheet({ item, onClose, onAdd }: Props) {
     defaultVariant?.id ?? null,
   );
   const [selected, setSelected] = useState<ConfiguratorSelection>({});
+  const [optionQuantities, setOptionQuantities] = useState<QuantityMap>({});
   const [notes, setNotes] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [entered, setEntered] = useState(false);
@@ -123,16 +125,20 @@ export function ProductConfiguratorSheet({ item, onClose, onAdd }: Props) {
       (selected[option.id] ?? []).includes(value.id),
     ),
   );
+  // Pre-multiply priceAddition by option quantity so the running total reflects ×N.
+  const effectivePricedValues = selectedValues.map((value) => ({
+    priceAddition: value.priceAddition * (optionQuantities[value.id] ?? 1),
+  }));
   const unitPrice = computeConfiguratorTotal(
     selectedVariant?.priceOverride ?? null,
     item.price,
-    selectedValues,
+    effectivePricedValues,
     1,
   );
   const total = computeConfiguratorTotal(
     selectedVariant?.priceOverride ?? null,
     item.price,
-    selectedValues,
+    effectivePricedValues,
     quantity,
   );
 
@@ -144,23 +150,32 @@ export function ProductConfiguratorSheet({ item, onClose, onAdd }: Props) {
     variantOk &&
     isConfiguratorValid(options, selected, selectedVariant);
 
+  const handleQuantityChange = (valueId: string, qty: number) => {
+    setOptionQuantities((prev) => ({ ...prev, [valueId]: Math.max(1, qty) }));
+  };
+
   const toggleValue = (option: MenuItemOption, value: MenuItemOptionValue) => {
-    setSelected((prev) => {
-      const current = prev[option.id] ?? [];
-      if (option.type === "single_select") {
-        return { ...prev, [option.id]: [value.id] };
-      }
-      if (current.includes(value.id)) {
-        return {
-          ...prev,
-          [option.id]: current.filter((id) => id !== value.id),
-        };
-      }
-      if (isValueDisabledByCap(option, current, value.id, selectedVariant)) {
-        return prev;
-      }
-      return { ...prev, [option.id]: [...current, value.id] };
-    });
+    const current = selected[option.id] ?? [];
+    if (option.type === "single_select") {
+      setSelected((prev) => ({ ...prev, [option.id]: [value.id] }));
+      return;
+    }
+    if (current.includes(value.id)) {
+      setSelected((prev) => ({
+        ...prev,
+        [option.id]: current.filter((id) => id !== value.id),
+      }));
+      setOptionQuantities((prev) => {
+        const next = { ...prev };
+        delete next[value.id];
+        return next;
+      });
+      return;
+    }
+    if (isValueDisabledByCap(option, current, value.id, selectedVariant)) {
+      return;
+    }
+    setSelected((prev) => ({ ...prev, [option.id]: [...current, value.id] }));
   };
 
   const handleAdd = () => {
@@ -172,8 +187,16 @@ export function ProductConfiguratorSheet({ item, onClose, onAdd }: Props) {
       quantity,
       variant_id: snapshotVariant?.id ?? null,
       variant_name: snapshotVariant?.name ?? null,
-      selected_option_value_ids: selectedValues.map((value) => value.id),
-      options_json: buildOrderItemOptions(snapshotVariant, options, selected),
+      selected_option_values: selectedValues.map((value) => ({
+        id: value.id,
+        quantity: optionQuantities[value.id] ?? 1,
+      })),
+      options_json: buildOrderItemOptions(
+        snapshotVariant,
+        options,
+        selected,
+        optionQuantities,
+      ),
       notes: notes.trim().length > 0 ? notes.trim() : null,
       unit_price: unitPrice,
       image: item.image?.src,
@@ -286,26 +309,80 @@ export function ProductConfiguratorSheet({ item, onClose, onAdd }: Props) {
                       value.id,
                       selectedVariant,
                     );
+                    const showQtyRow =
+                      checked &&
+                      option.type === "multi_select" &&
+                      value.allowQuantity;
+                    const qty = optionQuantities[value.id] ?? 1;
+                    const isActuallyLast = index === option.values.length - 1;
                     return (
-                      <ChoiceRow
-                        key={value.id}
-                        type={
-                          option.type === "single_select"
-                            ? "radio"
-                            : "checkbox"
-                        }
-                        checked={checked}
-                        disabled={unavailable || capped}
-                        unavailable={unavailable}
-                        label={value.name}
-                        priceLabel={
-                          value.priceAddition > 0
-                            ? `+${formatAmount(value.priceAddition)}`
-                            : undefined
-                        }
-                        last={index === option.values.length - 1}
-                        onSelect={() => toggleValue(option, value)}
-                      />
+                      <React.Fragment key={value.id}>
+                        <ChoiceRow
+                          type={
+                            option.type === "single_select"
+                              ? "radio"
+                              : "checkbox"
+                          }
+                          checked={checked}
+                          disabled={unavailable || capped}
+                          unavailable={unavailable}
+                          label={value.name}
+                          priceLabel={
+                            value.priceAddition > 0
+                              ? `+${formatAmount(value.priceAddition)}`
+                              : undefined
+                          }
+                          last={isActuallyLast && !showQtyRow}
+                          onSelect={() => toggleValue(option, value)}
+                        />
+                        {showQtyRow ? (
+                          <div
+                            className={cn(
+                              "flex items-center justify-between gap-3 bg-black/[0.02] px-4 py-2",
+                              !isActuallyLast && "border-b border-outline",
+                            )}
+                          >
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-ink/50">
+                              Quantité
+                            </span>
+                            <div className="flex items-stretch border border-ink">
+                              <button
+                                type="button"
+                                aria-label="Réduire"
+                                disabled={qty <= 1}
+                                onClick={() =>
+                                  handleQuantityChange(value.id, qty - 1)
+                                }
+                                className="flex h-7 w-7 items-center justify-center font-mono font-bold hover:bg-ink hover:text-base disabled:opacity-30"
+                              >
+                                −
+                              </button>
+                              <span className="flex h-7 w-8 items-center justify-center border-x border-ink font-mono font-bold tabular-nums text-sm">
+                                {qty}
+                              </span>
+                              <button
+                                type="button"
+                                aria-label="Augmenter"
+                                disabled={
+                                  value.maxQuantity != null &&
+                                  qty >= value.maxQuantity
+                                }
+                                onClick={() =>
+                                  handleQuantityChange(
+                                    value.id,
+                                    value.maxQuantity != null
+                                      ? Math.min(value.maxQuantity, qty + 1)
+                                      : qty + 1,
+                                  )
+                                }
+                                className="flex h-7 w-7 items-center justify-center font-mono font-bold hover:bg-ink hover:text-base disabled:opacity-30"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                        ) : null}
+                      </React.Fragment>
                     );
                   })}
                 </div>

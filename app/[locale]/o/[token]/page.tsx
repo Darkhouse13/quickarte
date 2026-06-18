@@ -80,6 +80,7 @@ export default async function CustomerOrderPage({ params }: Props) {
         locale={locale}
         initialStatus={data.order.status}
         initialLatestEventAt={latestEventIso(data)}
+        initialCancellation={data.order.cancellation}
         type={data.order.type}
         businessName={data.business.name}
         businessSlug={data.business.slug}
@@ -90,8 +91,6 @@ export default async function CustomerOrderPage({ params }: Props) {
         postOrderMessage={data.business.postOrderMessage}
         whatsapp={whatsapp}
         shortOrderId={shortOrderId}
-        loyalty={data.loyalty}
-        customerPhone={data.order.customerPhone}
       />
       <ComplianceFooter locale={locale} />
     </main>

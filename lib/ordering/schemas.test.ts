@@ -12,7 +12,7 @@ const basePayload = {
       product_id: "22222222-2222-4222-8222-222222222222",
       quantity: 1,
       variant_id: null,
-      selected_option_value_ids: [],
+      selected_option_values: [],
       unit_price: 42,
     },
   ],

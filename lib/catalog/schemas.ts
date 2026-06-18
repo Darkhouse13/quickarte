@@ -137,6 +137,12 @@ function validateOptionSelectionRules(
 export const optionValueInputSchema = z.object({
   name: z.string().trim().min(1, "Le nom est requis").max(60, "Nom trop long"),
   price_addition: priceDeltaSchema,
+  allow_quantity: z.boolean().optional(),
+  max_quantity: z.coerce
+    .number({ invalid_type_error: "Quantité max invalide" })
+    .int("Quantité max invalide")
+    .positive("Quantité max invalide")
+    .nullish(),
   available: z.boolean().optional(),
   position: optionalPositionSchema,
 });

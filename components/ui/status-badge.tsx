@@ -5,6 +5,8 @@ export type OrderStatus =
   | "confirmed"
   | "preparing"
   | "ready"
+  | "served"
+  | "paid"
   | "completed"
   | "cancelled";
 
@@ -13,6 +15,8 @@ const LABELS: Record<OrderStatus, string> = {
   confirmed: "Confirmée",
   preparing: "Préparation",
   ready: "Prête",
+  served: "Servie",
+  paid: "Payée",
   completed: "Terminée",
   cancelled: "Annulée",
 };
@@ -22,6 +26,8 @@ const STYLES: Record<OrderStatus, string> = {
   confirmed: "bg-ink text-base border border-ink",
   preparing: "border border-accent text-accent",
   ready: "bg-base text-ink border border-accent",
+  served: "bg-blue-100 text-blue-800 border border-blue-200",
+  paid: "bg-outline text-ink/60 border border-outline",
   completed: "bg-outline text-ink/60 border border-outline",
   cancelled: "border border-outline text-ink/60 line-through",
 };

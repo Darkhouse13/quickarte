@@ -13,10 +13,30 @@ import { formatAmount } from "@/lib/utils/currency";
 type Props = {
   business: StorefrontFixture;
   locale: string;
-  initialTableNumber?: number | null;
+  initialMizaneTableId?: string | null;
+  initialTableLabel?: string | null;
 };
 
-export function StorefrontMenu({ business, locale, initialTableNumber }: Props) {
+// Preserves the scanned table across the menu → checkout navigation. A Mizane
+// per-table QR carries the table UUID (t) + label (tl); a legacy QR a number.
+function tableQuery(
+  mizaneTableId?: string | null,
+  label?: string | null,
+): string {
+  if (mizaneTableId) {
+    const tl = label ? `&tl=${encodeURIComponent(label)}` : "";
+    return `?t=${encodeURIComponent(mizaneTableId)}${tl}`;
+  }
+  if (label) return `?table=${encodeURIComponent(label)}`;
+  return "";
+}
+
+export function StorefrontMenu({
+  business,
+  locale,
+  initialMizaneTableId,
+  initialTableLabel,
+}: Props) {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState(
     business.sections[0]?.id ?? "",
@@ -86,9 +106,9 @@ export function StorefrontMenu({ business, locale, initialTableNumber }: Props) 
             <p className="font-mono text-xs text-ink/60 mt-2 uppercase tracking-widest">
               {business.location}
             </p>
-            {initialTableNumber ? (
+            {initialTableLabel ? (
               <p className="font-mono text-[10px] text-accent mt-2 uppercase tracking-widest">
-                Table {initialTableNumber}
+                Table {initialTableLabel}
               </p>
             ) : null}
           </div>
@@ -226,9 +246,10 @@ export function StorefrontMenu({ business, locale, initialTableNumber }: Props) 
             type="button"
             onClick={() =>
               router.push(
-                `/${locale}/${business.slug}/order${
-                  initialTableNumber ? `?table=${initialTableNumber}` : ""
-                }`,
+                `/${locale}/${business.slug}/order${tableQuery(
+                  initialMizaneTableId,
+                  initialTableLabel,
+                )}`,
               )
             }
             disabled={!visible}

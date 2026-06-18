@@ -20,43 +20,66 @@ export const optionTypeEnum = pgEnum("option_type", [
   "multi_select",
 ]);
 
-export const categories = pgTable("categories", {
-  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  businessId: uuid("business_id")
-    .notNull()
-    .references(() => businesses.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  position: integer("position").notNull().default(0),
-  visible: boolean("visible").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
-
-export const products = pgTable("products", {
-  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  businessId: uuid("business_id")
-    .notNull()
-    .references(() => businesses.id, { onDelete: "cascade" }),
-  categoryId: uuid("category_id").references(() => categories.id, {
-    onDelete: "set null",
+export const categories = pgTable(
+  "categories",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    position: integer("position").notNull().default(0),
+    visible: boolean("visible").notNull().default(true),
+    mizaneId: uuid("mizane_id"),
+    localizedNames: jsonb("localized_names").$type<Record<string, string>>(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    mizaneIdIdx: uniqueIndex("categories_mizane_id_unique_idx")
+      .on(table.mizaneId)
+      .where(sql`${table.mizaneId} IS NOT NULL`),
   }),
-  name: text("name").notNull(),
-  description: text("description"),
-  price: numeric("price", { precision: 10, scale: 2 }).notNull(),
-  image: text("image"),
-  available: boolean("available").notNull().default(true),
-  position: integer("position").notNull().default(0),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+);
+
+export const products = pgTable(
+  "products",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id").references(() => categories.id, {
+      onDelete: "set null",
+    }),
+    name: text("name").notNull(),
+    description: text("description"),
+    price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+    image: text("image"),
+    available: boolean("available").notNull().default(true),
+    position: integer("position").notNull().default(0),
+    prepPriority: integer("prep_priority").notNull().default(0),
+    mizaneId: uuid("mizane_id"),
+    localizedNames: jsonb("localized_names").$type<Record<string, string>>(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    mizaneIdIdx: uniqueIndex("products_mizane_id_unique_idx")
+      .on(table.mizaneId)
+      .where(sql`${table.mizaneId} IS NOT NULL`),
+  }),
+);
 
 export const productVariants = pgTable(
   "product_variants",
@@ -74,6 +97,9 @@ export const productVariants = pgTable(
       .$type<Record<string, number>>()
       .notNull()
       .default(sql`'{}'::jsonb`),
+    mizaneId: uuid("mizane_id"),
+    localizedNames: jsonb("localized_names").$type<Record<string, string>>(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -89,6 +115,9 @@ export const productVariants = pgTable(
     defaultVariantIdx: uniqueIndex("product_variants_one_default_idx")
       .on(table.productId)
       .where(sql`${table.isDefault} = true`),
+    mizaneIdIdx: uniqueIndex("product_variants_mizane_id_unique_idx")
+      .on(table.mizaneId)
+      .where(sql`${table.mizaneId} IS NOT NULL`),
   }),
 );
 
@@ -106,6 +135,9 @@ export const productOptions = pgTable(
     maxSelect: integer("max_select"),
     position: integer("position").notNull().default(0),
     available: boolean("available").notNull().default(true),
+    mizaneId: uuid("mizane_id"),
+    localizedNames: jsonb("localized_names").$type<Record<string, string>>(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -118,6 +150,9 @@ export const productOptions = pgTable(
       table.productId,
       table.position,
     ),
+    mizaneIdIdx: uniqueIndex("product_options_mizane_id_unique_idx")
+      .on(table.mizaneId)
+      .where(sql`${table.mizaneId} IS NOT NULL`),
   }),
 );
 
@@ -132,8 +167,13 @@ export const optionValues = pgTable(
     priceAddition: numeric("price_addition", { precision: 10, scale: 2 })
       .notNull()
       .default("0"),
+    allowQuantity: boolean("allow_quantity").notNull().default(false),
+    maxQuantity: integer("max_quantity"),
     position: integer("position").notNull().default(0),
     available: boolean("available").notNull().default(true),
+    mizaneId: uuid("mizane_id"),
+    localizedNames: jsonb("localized_names").$type<Record<string, string>>(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -146,6 +186,9 @@ export const optionValues = pgTable(
       table.optionId,
       table.position,
     ),
+    mizaneIdIdx: uniqueIndex("option_values_mizane_id_unique_idx")
+      .on(table.mizaneId)
+      .where(sql`${table.mizaneId} IS NOT NULL`),
   }),
 );
 

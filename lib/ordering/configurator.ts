@@ -14,6 +14,8 @@ import type { MenuItemOption, MenuItemVariant } from "../catalog/fixtures";
 
 export type ConfiguratorSelection = Record<string, string[]>;
 
+export type QuantityMap = Record<string, number>;
+
 type PricedValue = { priceAddition: number };
 
 /**
@@ -125,6 +127,7 @@ export function buildOrderItemOptions(
   variant: MenuItemVariant | null,
   options: readonly MenuItemOption[],
   selected: ConfiguratorSelection,
+  quantityMap?: QuantityMap,
 ): OrderItemOptions {
   return serializeOrderItemOptions({
     variantId: variant?.id ?? null,
@@ -138,6 +141,7 @@ export function buildOrderItemOptions(
           valueId: value.id,
           valueName: value.name,
           priceAddition: value.priceAddition,
+          quantity: quantityMap?.[value.id] ?? 1,
         }));
       if (values.length === 0) return [];
       return [

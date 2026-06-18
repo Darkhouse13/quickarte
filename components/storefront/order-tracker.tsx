@@ -7,10 +7,10 @@ import {
   customerStatusContext,
   customerStatusLabel,
   formatElapsedSinceFr,
+  type CustomerCancellation,
   type WhatsappLink,
 } from "@/lib/ordering/customer-view";
 import { createStatusPoller } from "@/lib/ordering/customer-poll";
-import { balanceJumpDelta } from "@/lib/loyalty/balance-jump";
 
 type TrackerItem = {
   name: string;
@@ -19,23 +19,12 @@ type TrackerItem = {
   optionLines: string[];
 };
 
-export type TrackerLoyalty = {
-  creditLabel: string;
-  balance: number;
-  accrualPerMad: number;
-  reviewReward: {
-    enabled: boolean;
-    creditsPerReview: number;
-    googlePlaceId: string;
-  } | null;
-  canClaimReview: boolean;
-};
-
 type Props = {
   token: string;
   locale: string;
   initialStatus: string;
   initialLatestEventAt: string;
+  initialCancellation: CustomerCancellation | null;
   type: string;
   businessName: string;
   businessSlug: string;
@@ -46,12 +35,6 @@ type Props = {
   postOrderMessage: string | null;
   whatsapp: WhatsappLink | null;
   shortOrderId: string;
-  // null for non-loyalty orders — the rest of the tracker still renders as
-  // before. customerPhone is server-side only (never echoed in the response);
-  // we pass the normalized phone separately so we can build /avis and
-  // /recompenses deep links without a roundtrip.
-  loyalty: TrackerLoyalty | null;
-  customerPhone: string | null;
 };
 
 const POLL_INTERVAL_MS = 10_000;
@@ -63,6 +46,7 @@ export function OrderTracker({
   locale,
   initialStatus,
   initialLatestEventAt,
+  initialCancellation,
   type,
   businessName,
   businessSlug,
@@ -73,17 +57,14 @@ export function OrderTracker({
   postOrderMessage,
   whatsapp,
   shortOrderId,
-  loyalty,
-  customerPhone,
 }: Props) {
   const [status, setStatus] = useState(initialStatus);
   const [latestEventAt, setLatestEventAt] = useState(initialLatestEventAt);
+  const [cancellation, setCancellation] = useState<CustomerCancellation | null>(
+    initialCancellation,
+  );
   const [revoked, setRevoked] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const [balance, setBalance] = useState<number | null>(
-    loyalty?.balance ?? null,
-  );
-  const [delta, setDelta] = useState<number | null>(null);
 
   useEffect(() => {
     const poller = createStatusPoller(
@@ -99,14 +80,14 @@ export function OrderTracker({
             const body = (await res.json()) as {
               status: string;
               latestEventAt: string;
-              balance: number | null;
+              cancellation: CustomerCancellation | null;
             };
             return {
               kind: "ok" as const,
               snapshot: {
                 status: body.status,
                 latestEventAt: body.latestEventAt,
-                balance: body.balance,
+                cancellation: body.cancellation ?? null,
               },
             };
           } catch {
@@ -116,13 +97,7 @@ export function OrderTracker({
         onSnapshot: (snapshot) => {
           setStatus(snapshot.status);
           setLatestEventAt(snapshot.latestEventAt);
-          if (snapshot.balance !== undefined && snapshot.balance !== null) {
-            setBalance((prev) => {
-              const jump = balanceJumpDelta(prev, snapshot.balance ?? null);
-              if (jump !== null) setDelta(jump);
-              return snapshot.balance ?? prev;
-            });
-          }
+          setCancellation(snapshot.cancellation ?? null);
         },
         onRevoked: () => setRevoked(true),
       },
@@ -153,14 +128,6 @@ export function OrderTracker({
     return () => window.clearInterval(id);
   }, []);
 
-  useEffect(() => {
-    if (delta === null) return;
-    // 2s window matches the brief — the new balance number stays, only the
-    // delta badge fades. Single-shot timeout cleaned on unmount or re-jump.
-    const id = window.setTimeout(() => setDelta(null), 2000);
-    return () => window.clearTimeout(id);
-  }, [delta]);
-
   const isCancelled = status === "cancelled";
   const elapsedLabel = useMemo(
     () => formatElapsedSinceFr(nowMs - new Date(latestEventAt).getTime()),
@@ -188,10 +155,10 @@ export function OrderTracker({
           key={status}
           className="order-status-fade block font-mono font-bold uppercase tracking-tighter leading-[0.95] text-[48px] md:text-[72px]"
         >
-          {customerStatusLabel(status)}
+          {customerStatusLabel(status, cancellation)}
         </span>
         <p className="font-sans text-[15px] md:text-[17px] text-ink/70 leading-snug mt-4 max-w-[420px]">
-          {customerStatusContext(status, type)}
+          {customerStatusContext(status, type, cancellation)}
         </p>
         <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mt-4">
           {elapsedLabel}
@@ -199,18 +166,6 @@ export function OrderTracker({
       </section>
 
       {isCancelled ? contactRegion : null}
-
-      <LoyaltyRegion
-        loyalty={loyalty}
-        balance={balance}
-        delta={delta}
-        businessName={businessName}
-        businessSlug={businessSlug}
-        locale={locale}
-        status={status}
-        customerPhone={customerPhone}
-        token={token}
-      />
 
       <DestinationBlock
         type={type}
@@ -342,120 +297,6 @@ function ReceiptBlock({
           <p className="font-sans text-[14px] text-ink leading-snug">
             {notes}
           </p>
-        </div>
-      ) : null}
-    </section>
-  );
-}
-
-function LoyaltyRegion({
-  loyalty,
-  balance,
-  delta,
-  businessName,
-  businessSlug,
-  locale,
-  status,
-  customerPhone,
-  token,
-}: {
-  loyalty: TrackerLoyalty | null;
-  balance: number | null;
-  delta: number | null;
-  businessName: string;
-  businessSlug: string;
-  locale: string;
-  status: string;
-  customerPhone: string | null;
-  token: string;
-}) {
-  if (!loyalty) return null;
-  const phoneQuery = customerPhone
-    ? `?phone=${encodeURIComponent(customerPhone)}`
-    : "";
-  const rewardsHref = `/${locale}/${businessSlug}/recompenses${phoneQuery}`;
-  const claimHref = `/${locale}/${businessSlug}/avis${
-    phoneQuery
-      ? `${phoneQuery}&from=order&order=${encodeURIComponent(token)}`
-      : `?from=order&order=${encodeURIComponent(token)}`
-  }`;
-  const currentBalance = balance ?? loyalty.balance;
-  const canSurfaceReview =
-    loyalty.reviewReward?.enabled &&
-    loyalty.canClaimReview &&
-    (status === "ready" || status === "completed");
-  const canShowBalanceLink = currentBalance > 0;
-  const earnHint =
-    currentBalance === 0 && loyalty.accrualPerMad > 0
-      ? `Gagnez des ${loyalty.creditLabel} en commandant chez ${businessName}.`
-      : null;
-
-  return (
-    <section className="px-6 md:px-10 py-8 border-b border-outline flex flex-col gap-5">
-      <div className="flex flex-col gap-2">
-        <p className="font-mono text-[10px] uppercase tracking-widest text-ink/45 font-bold">
-          Vos {loyalty.creditLabel}
-        </p>
-        <div className="flex items-baseline gap-3">
-          <span className="font-mono font-bold tabular-nums leading-none tracking-tight text-[40px] md:text-[56px]">
-            {currentBalance}
-          </span>
-          <span className="font-mono text-[12px] uppercase tracking-widest text-ink/55 font-bold">
-            {loyalty.creditLabel}
-          </span>
-          {delta !== null ? (
-            <span
-              key={delta}
-              className="loyalty-delta font-mono font-bold tabular-nums text-accent text-[24px] md:text-[28px] leading-none"
-              aria-live="polite"
-            >
-              +{delta}
-            </span>
-          ) : null}
-        </div>
-        {canShowBalanceLink ? (
-          <a
-            href={rewardsHref}
-            className="font-mono text-[11px] uppercase tracking-widest text-accent font-bold inline-flex items-center gap-2 hover:text-ink transition-colors focus:outline-none focus:ring-4 focus:ring-accent/20"
-          >
-            Voir les récompenses →
-          </a>
-        ) : earnHint ? (
-          <p className="font-sans text-[14px] text-ink/65 leading-snug">
-            {earnHint}
-          </p>
-        ) : null}
-      </div>
-
-      {canSurfaceReview ? (
-        <div className="border border-ink px-5 py-5 flex flex-col gap-4">
-          <p className="font-sans text-[15px] text-ink leading-snug">
-            Vous avez aimé ? Laissez un avis Google et gagnez{" "}
-            <span className="font-mono font-bold tabular-nums">
-              {loyalty.reviewReward!.creditsPerReview}
-            </span>{" "}
-            {loyalty.creditLabel}.
-          </p>
-          <a
-            href={claimHref}
-            className="w-full min-h-[56px] bg-ink text-base px-5 py-4 flex items-center justify-between gap-3 hover:bg-accent transition-colors focus:outline-none focus:ring-4 focus:ring-accent/20"
-          >
-            <span className="font-mono text-[13px] uppercase tracking-widest font-bold">
-              Laisser un avis et récupérer mes {loyalty.creditLabel}
-            </span>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="square"
-              strokeLinejoin="miter"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </a>
         </div>
       ) : null}
     </section>

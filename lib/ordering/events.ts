@@ -14,6 +14,8 @@ export const ORDER_EVENT_TYPES = [
   "order.pos_entered",
   "order.pos_skipped",
   "order.pos_reverted",
+  "order.paid",
+  "order.mizane_posted",
 ] as const;
 
 export type OrderEventType = (typeof ORDER_EVENT_TYPES)[number];

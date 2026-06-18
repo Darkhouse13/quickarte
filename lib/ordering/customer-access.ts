@@ -1,22 +1,7 @@
-import { and, desc, eq, gte, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import {
-  creditTransactions,
-  loyaltyMembers,
-  loyaltyPrograms,
-  orderEvents,
-  orders,
-} from "@/lib/db/schema";
+import { orderEvents, orders } from "@/lib/db/schema";
 import { summarizeOrderItemOptions } from "./order-item-options";
-
-// hasEntitlement lives behind a `server-only` import that throws when loaded
-// from a non-server context. The pure helpers in this file (used directly by
-// unit tests) don't need it, so we defer the load to the call site to keep
-// the test boot path clean.
-async function hasLoyaltyEntitlement(businessId: string): Promise<boolean> {
-  const { hasEntitlement } = await import("@/lib/entitlements/queries");
-  return hasEntitlement(businessId, "loyalty");
-}
 
 const CUSTOMER_EVENT_TYPES = [
   "order.created",
@@ -28,6 +13,14 @@ const CUSTOMER_EVENT_TYPES = [
 ] as const;
 
 type CustomerEventType = (typeof CUSTOMER_EVENT_TYPES)[number];
+
+// Why a cancelled order ended that way, derived from the order.cancelled event.
+// `expired` is the 10-minute auto-reject (Mizane rejectedReason "expired"); a
+// staff rejection carries a free-text `reason`. Null/false for a plain cancel.
+export type OrderCancellation = {
+  reason: string | null;
+  expired: boolean;
+};
 
 export type CustomerOrderResponse = {
   business: {
@@ -45,11 +38,6 @@ export type CustomerOrderResponse = {
     createdAt: Date;
     // Raw MAD amount as a decimal number. The customer page owns formatting.
     total: number;
-    // The phone we have on file for this order. We only echo it back when
-    // loyalty surfaces on the tracker so the /avis and /recompenses deep
-    // links can carry it without a roundtrip — the customer is reading
-    // their own phone, no one else's.
-    customerPhone: string | null;
     items: Array<{
       name: string;
       quantity: number;
@@ -57,36 +45,14 @@ export type CustomerOrderResponse = {
       optionLines: string[];
     }>;
     timeline: Array<{ type: CustomerEventType; at: Date }>;
+    cancellation: OrderCancellation | null;
   };
-  // null whenever the credit loop should not surface on the tracker — no
-  // entitlement, no program, or anonymous order without a phone on file.
-  loyalty: CustomerLoyaltyBlock | null;
-};
-
-export type CustomerLoyaltyBlock = {
-  creditLabel: string;
-  balance: number;
-  // `null` when the merchant has not enabled the order-reward path; the
-  // tracker copy distinguishes "earn by ordering" vs "earn nothing today".
-  accrualPerMad: number;
-  // null when review reward is off; the tracker hides the CTA in that case.
-  reviewReward: {
-    enabled: boolean;
-    creditsPerReview: number;
-    googlePlaceId: string;
-  } | null;
-  // Server-derived: false when this phone already has a google_review credit
-  // for this business inside the program's review-window. The client never
-  // sees the raw transaction history.
-  canClaimReview: boolean;
 };
 
 export type CustomerOrderStatusResponse = {
   status: string;
   latestEventAt: Date;
-  // null when loyalty is not surfaced on this order; otherwise the current
-  // member balance so the tracker can detect jumps without a full re-fetch.
-  balance: number | null;
+  cancellation: OrderCancellation | null;
 };
 
 export async function getCustomerOrderByToken(
@@ -102,7 +68,6 @@ export async function getCustomerOrderByToken(
       notes: true,
       createdAt: true,
       total: true,
-      customerPhone: true,
     },
     with: {
       business: {
@@ -112,7 +77,6 @@ export async function getCustomerOrderByToken(
             columns: {
               whatsappNumber: true,
               customerPostOrderMessage: true,
-              googlePlaceId: true,
             },
           },
         },
@@ -142,12 +106,6 @@ export async function getCustomerOrderByToken(
 
   if (!row) return null;
 
-  const loyalty = await buildCustomerLoyaltyBlock({
-    businessId: row.business.id,
-    customerPhoneNormalized: row.customerPhone,
-    googlePlaceId: row.business.settings?.googlePlaceId ?? null,
-  });
-
   return {
     business: {
       name: row.business.name,
@@ -164,9 +122,6 @@ export async function getCustomerOrderByToken(
       notes: row.notes,
       createdAt: row.createdAt,
       total: Number(row.total),
-      // Only echoed when the loyalty surfaces — we keep the order page
-      // identical for non-loyalty contexts.
-      customerPhone: loyalty ? row.customerPhone ?? null : null,
       items: row.items.map((item) => ({
         name: item.product?.name ?? "Article",
         quantity: item.quantity,
@@ -178,9 +133,38 @@ export async function getCustomerOrderByToken(
           ? [{ type: event.eventType, at: event.createdAt }]
           : [],
       ),
+      cancellation: await readOrderCancellation(row.id, row.status),
     },
-    loyalty,
   };
+}
+
+/**
+ * Reads why an order was cancelled from its latest order.cancelled event.
+ * Returns null unless the order is cancelled. The Mizane poll records a
+ * `rejected_reason` payload: the literal "expired" for the 10-minute
+ * auto-reject, otherwise a free-text staff reason.
+ */
+async function readOrderCancellation(
+  orderId: string,
+  status: string,
+): Promise<OrderCancellation | null> {
+  if (status !== "cancelled") return null;
+
+  const event = await db.query.orderEvents.findFirst({
+    where: and(
+      eq(orderEvents.orderId, orderId),
+      eq(orderEvents.eventType, "order.cancelled"),
+    ),
+    columns: { payloadJson: true },
+    orderBy: [desc(orderEvents.createdAt)],
+  });
+
+  const payload = (event?.payloadJson ?? null) as {
+    rejected_reason?: string | null;
+  } | null;
+  const rawReason = payload?.rejected_reason ?? null;
+  const expired = rawReason === "expired";
+  return { reason: expired ? null : rawReason, expired };
 }
 
 export async function getCustomerOrderStatusByToken(
@@ -192,8 +176,6 @@ export async function getCustomerOrderStatusByToken(
       id: true,
       status: true,
       createdAt: true,
-      businessId: true,
-      customerPhone: true,
     },
   });
   if (!row) return null;
@@ -207,101 +189,10 @@ export async function getCustomerOrderStatusByToken(
     orderBy: [desc(orderEvents.createdAt)],
   });
 
-  // Only join through loyalty when we already know there is a phone to look
-  // up — anonymous orders cost nothing extra on the poll.
-  const balance = row.customerPhone
-    ? await readSurfacedBalance(row.businessId, row.customerPhone)
-    : null;
-
   return {
     status: row.status,
     latestEventAt: latestEvent?.createdAt ?? row.createdAt,
-    balance,
-  };
-}
-
-async function readSurfacedBalance(
-  businessId: string,
-  customerPhoneNormalized: string,
-): Promise<number | null> {
-  if (!(await hasLoyaltyEntitlement(businessId))) return null;
-  const program = await db.query.loyaltyPrograms.findFirst({
-    where: eq(loyaltyPrograms.businessId, businessId),
-    columns: { enabled: true, loyaltyType: true },
-  });
-  if (!program?.enabled || program.loyaltyType !== "credits") return null;
-  const member = await db.query.loyaltyMembers.findFirst({
-    where: and(
-      eq(loyaltyMembers.businessId, businessId),
-      eq(loyaltyMembers.customerPhoneNormalized, customerPhoneNormalized),
-    ),
-    columns: { balance: true },
-  });
-  return member?.balance ?? 0;
-}
-
-async function buildCustomerLoyaltyBlock(input: {
-  businessId: string;
-  customerPhoneNormalized: string | null;
-  googlePlaceId: string | null;
-}): Promise<CustomerLoyaltyBlock | null> {
-  if (!input.customerPhoneNormalized) return null;
-  if (!(await hasLoyaltyEntitlement(input.businessId))) return null;
-  const program = await db.query.loyaltyPrograms.findFirst({
-    where: eq(loyaltyPrograms.businessId, input.businessId),
-  });
-  if (!program?.enabled || program.loyaltyType !== "credits") return null;
-
-  const member = await db.query.loyaltyMembers.findFirst({
-    where: and(
-      eq(loyaltyMembers.businessId, input.businessId),
-      eq(loyaltyMembers.customerPhoneNormalized, input.customerPhoneNormalized),
-    ),
-    columns: { balance: true },
-  });
-
-  const reviewRewardActive =
-    program.reviewRewardEnabled &&
-    program.creditsPerReview > 0 &&
-    !!input.googlePlaceId?.trim();
-
-  const reviewReward = reviewRewardActive
-    ? {
-        enabled: true,
-        creditsPerReview: program.creditsPerReview,
-        googlePlaceId: input.googlePlaceId!.trim(),
-      }
-    : null;
-
-  // canClaimReview reflects whether this phone is currently inside the
-  // review-window with no existing google_review grant for this business.
-  // We do not leak which review or when — the tracker only needs a boolean.
-  let canClaimReview = false;
-  if (reviewReward) {
-    const cutoff = new Date(
-      Date.now() - program.reviewMaxAgeDays * 24 * 60 * 60 * 1000,
-    );
-    const existing = await db.query.creditTransactions.findFirst({
-      where: and(
-        eq(creditTransactions.businessId, input.businessId),
-        eq(
-          creditTransactions.customerPhoneNormalized,
-          input.customerPhoneNormalized,
-        ),
-        eq(creditTransactions.source, "google_review"),
-        gte(creditTransactions.createdAt, cutoff),
-      ),
-      columns: { id: true },
-    });
-    canClaimReview = !existing;
-  }
-
-  return {
-    creditLabel: program.creditLabel,
-    balance: member?.balance ?? 0,
-    accrualPerMad: Number(program.accrualPerMad),
-    reviewReward,
-    canClaimReview,
+    cancellation: await readOrderCancellation(row.id, row.status),
   };
 }
 

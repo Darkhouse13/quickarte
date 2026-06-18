@@ -10,7 +10,10 @@ test("cart merges identical configured items by quantity", () => {
     product_name: "Tacos",
     variant_id: "variant-xl",
     variant_name: "XL",
-    selected_option_value_ids: ["sauce-2", "meat-1"],
+    selected_option_values: [
+      { id: "sauce-2", quantity: 1 },
+      { id: "meat-1", quantity: 1 },
+    ],
     options_json: null,
     notes: null,
     unit_price: 55,
@@ -19,7 +22,10 @@ test("cart merges identical configured items by quantity", () => {
   useCartStore.getState().addItem({ ...line, quantity: 1 });
   useCartStore.getState().addItem({
     ...line,
-    selected_option_value_ids: ["meat-1", "sauce-2"],
+    selected_option_values: [
+      { id: "meat-1", quantity: 1 },
+      { id: "sauce-2", quantity: 1 },
+    ],
     quantity: 2,
   });
 
@@ -28,7 +34,7 @@ test("cart merges identical configured items by quantity", () => {
   assert.equal(items[0]?.quantity, 3);
   assert.equal(
     getCartLineKey(items[0]!),
-    "product-1|variant-xl|meat-1,sauce-2|",
+    "product-1|variant-xl|meat-1:1,sauce-2:1|",
   );
 });
 
@@ -47,11 +53,11 @@ test("cart keeps same product with different configuration as distinct lines", (
 
   useCartStore.getState().addItem({
     ...base,
-    selected_option_value_ids: ["sauce-1"],
+    selected_option_values: [{ id: "sauce-1", quantity: 1 }],
   });
   useCartStore.getState().addItem({
     ...base,
-    selected_option_value_ids: ["sauce-2"],
+    selected_option_values: [{ id: "sauce-2", quantity: 1 }],
   });
 
   const items = useCartStore.getState().items;
@@ -67,7 +73,7 @@ test("cart keeps lines with different notes as distinct lines", () => {
     product_name: "Tacos",
     variant_id: null,
     variant_name: null,
-    selected_option_value_ids: ["sauce-1"],
+    selected_option_values: [{ id: "sauce-1", quantity: 1 }],
     options_json: null,
     unit_price: 55,
   };
@@ -96,7 +102,7 @@ test("legacy quick-add constructs an unconfigured cart line", () => {
   const item = useCartStore.getState().items[0];
   assert.equal(item?.product_id, "product-plain");
   assert.equal(item?.variant_id, null);
-  assert.deepEqual(item?.selected_option_value_ids, []);
+  assert.deepEqual(item?.selected_option_values, []);
   assert.equal(item?.options_json, null);
   assert.equal(item?.notes, null);
   assert.equal(item?.unit_price, 12);

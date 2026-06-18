@@ -14,6 +14,10 @@ export const placeOrderSchema = z
       .int()
       .positive()
       .optional(),
+    // Set by a per-table Mizane QR (authoritative dine-in table); paired with a
+    // display label. Either this or a manual tableNumber satisfies dine-in.
+    mizaneTableId: z.string().uuid("Table invalide").optional(),
+    tableLabel: z.string().trim().min(1).max(40).optional(),
     notes: z
       .string()
       .trim()
@@ -28,8 +32,13 @@ export const placeOrderSchema = z
             .int()
             .positive(),
           variant_id: z.string().uuid("Variante invalide").nullable().default(null),
-          selected_option_value_ids: z
-            .array(z.string().uuid("Choix invalide"))
+          selected_option_values: z
+            .array(
+              z.object({
+                id: z.string().uuid("Choix invalide"),
+                quantity: z.number().int().min(1),
+              }),
+            )
             .default([]),
           unit_price: z
             .number({ invalid_type_error: "Prix invalide" })
@@ -41,7 +50,10 @@ export const placeOrderSchema = z
     businessId: z.string().uuid(),
   })
   .refine(
-    (data) => data.orderType !== "dine_in" || data.tableNumber !== undefined,
+    (data) =>
+      data.orderType !== "dine_in" ||
+      data.tableNumber !== undefined ||
+      data.mizaneTableId !== undefined,
     {
       message: "Numéro de table requis pour sur place",
       path: ["tableNumber"],

@@ -19,12 +19,10 @@ type Props = {
   businessName: string;
   businessSlug: string;
   locale: string;
-  loyaltyHint?: {
-    accrualType: "per_visit" | "per_euro";
-    accrualRate: number;
-    rewardDescription: string;
-  } | null;
-  initialTableNumber?: number | null;
+  // Set when a per-table Mizane QR was scanned: the table is fixed (read-only)
+  // and forwarded to Mizane as tableId. Otherwise the customer types a number.
+  initialMizaneTableId?: string | null;
+  initialTableLabel?: string | null;
   orderingEnabled?: boolean;
   dineInEnabled?: boolean;
   takeawayEnabled?: boolean;
@@ -37,13 +35,14 @@ export function CheckoutForm({
   businessName,
   businessSlug,
   locale,
-  loyaltyHint,
-  initialTableNumber,
+  initialMizaneTableId,
+  initialTableLabel,
   orderingEnabled = true,
   dineInEnabled = true,
   takeawayEnabled = true,
 }: Props) {
   const router = useRouter();
+  const mizaneTableId = initialMizaneTableId ?? null;
 
   const items = useCartStore((s) => s.items);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
@@ -62,7 +61,7 @@ export function CheckoutForm({
   const defaultOrderType: OrderType = dineInEnabled ? "dine_in" : "takeaway";
   const [orderType, setOrderType] = useState<OrderType>(defaultOrderType);
   const [tableNumber, setTableNumber] = useState(
-    initialTableNumber ? String(initialTableNumber) : "",
+    !mizaneTableId && initialTableLabel ? initialTableLabel : "",
   );
   const [notes, setNotes] = useState("");
 
@@ -89,13 +88,17 @@ export function CheckoutForm({
       return;
     }
 
+    const dineIn = orderType === "dine_in";
     const payload = {
       businessId,
       customerName,
       customerPhone,
       orderType,
+      mizaneTableId: dineIn && mizaneTableId ? mizaneTableId : undefined,
+      tableLabel:
+        dineIn && mizaneTableId ? initialTableLabel ?? undefined : undefined,
       tableNumber:
-        orderType === "dine_in" && tableNumber.trim().length > 0
+        dineIn && !mizaneTableId && tableNumber.trim().length > 0
           ? Number(tableNumber)
           : undefined,
       notes: notes.trim().length > 0 ? notes : undefined,
@@ -103,7 +106,7 @@ export function CheckoutForm({
         product_id: i.product_id,
         quantity: i.quantity,
         variant_id: i.variant_id,
-        selected_option_value_ids: i.selected_option_value_ids,
+        selected_option_values: i.selected_option_values,
         unit_price: i.unit_price,
       })),
     };
@@ -216,40 +219,35 @@ export function CheckoutForm({
         )}
 
         {orderType === "dine_in" ? (
-          <div className="mt-4">
-            <FormInput
-              label="Numéro de table"
-              name="tableNumber"
-              type="number"
-              inputMode="numeric"
-              placeholder="ex: 7"
-              value={tableNumber}
-              onChange={(e) => setTableNumber(e.target.value)}
-              suffix="N°"
-            />
-            <FieldError message={fieldError("tableNumber")} />
-          </div>
+          mizaneTableId ? (
+            <div className="mt-4 border-2 border-ink px-4 py-3 flex items-center justify-between">
+              <span className="font-mono text-[11px] uppercase tracking-widest text-ink/60 font-bold">
+                Table
+              </span>
+              <span className="font-mono font-bold uppercase tracking-tight text-[15px]">
+                {initialTableLabel ?? "—"}
+              </span>
+            </div>
+          ) : (
+            <div className="mt-4">
+              <FormInput
+                label="Numéro de table"
+                name="tableNumber"
+                type="number"
+                inputMode="numeric"
+                placeholder="ex: 7"
+                value={tableNumber}
+                onChange={(e) => setTableNumber(e.target.value)}
+                suffix="N°"
+              />
+              <FieldError message={fieldError("tableNumber")} />
+            </div>
+          )
         ) : null}
       </section>
 
       <section className="px-6 py-6 border-b-4 border-outline">
         <SectionLabel index={3} title="Contact" />
-        {loyaltyHint ? (
-          <div className="mb-5 border-2 border-ink bg-accent/5 px-4 py-3 flex flex-col gap-1">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-accent font-bold">
-              Programme fidélité
-            </span>
-            <p className="font-sans text-[13px] text-ink/80 leading-snug">
-              Gagnez{" "}
-              <span className="font-bold">
-                {loyaltyHint.accrualType === "per_visit"
-                  ? `${formatRate(loyaltyHint.accrualRate)} tampon${loyaltyHint.accrualRate > 1 ? "s" : ""} sur cette commande`
-                  : `${formatRate(loyaltyHint.accrualRate)} point${loyaltyHint.accrualRate > 1 ? "s" : ""} par MAD dépensé`}
-              </span>
-              . Récompense&nbsp;: {loyaltyHint.rewardDescription}.
-            </p>
-          </div>
-        ) : null}
         <div className="flex flex-col gap-4">
           <div>
             <FormInput
@@ -367,10 +365,6 @@ function ConfigurationSummary({ item }: { item: CartItem }) {
       ) : null}
     </div>
   );
-}
-
-function formatRate(n: number): string {
-  return n % 1 === 0 ? n.toString() : n.toFixed(2).replace(".", ",");
 }
 
 function SectionLabel({

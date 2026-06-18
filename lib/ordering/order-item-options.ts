@@ -20,6 +20,7 @@ export type OrderItemOptions = {
       valueId: string;
       valueName: string;
       priceAddition: number;
+      quantity: number;
     }>;
   }>;
 };
@@ -31,6 +32,7 @@ export type OrderItemOptionsSummary = {
     values: Array<{
       valueName: string;
       priceAddition: number;
+      quantity: number;
     }>;
   }>;
 };
@@ -55,6 +57,7 @@ export function serializeOrderItemOptions(
             valueId,
             valueName,
             priceAddition: normalizeNumber(value.priceAddition),
+            quantity: normalizePositiveInt(value.quantity),
           },
         ];
       });
@@ -80,7 +83,13 @@ export function summarizeOrderItemOptions(stored: unknown): string[] {
     lines.push(`  Variante : ${parsed.variantName}`);
   }
   for (const selection of parsed.selections) {
-    const values = selection.values.map((value) => value.valueName).join(", ");
+    const values = selection.values
+      .map((value) =>
+        value.quantity > 1
+          ? `${value.valueName} ×${value.quantity}`
+          : value.valueName,
+      )
+      .join(", ");
     if (values) lines.push(`  ${selection.optionName} : ${values}`);
   }
   return lines;
@@ -98,6 +107,7 @@ export function parseOrderItemOptions(
       values: selection.values.map((value) => ({
         valueName: value.valueName,
         priceAddition: value.priceAddition,
+        quantity: value.quantity,
       })),
     })),
   };
@@ -145,6 +155,7 @@ function normalizeCanonical(raw: Record<string, unknown>): OrderItemOptions {
                         priceAddition: normalizeNumber(
                           valueRecord.priceAddition,
                         ),
+                        quantity: normalizePositiveInt(valueRecord.quantity),
                       },
                     ];
                   })
@@ -183,6 +194,7 @@ function normalizeLegacy(raw: Record<string, unknown>): OrderItemOptions {
                         priceAddition: normalizeNumber(
                           valueRecord.price_addition,
                         ),
+                        quantity: 1,
                       },
                     ];
                   })
@@ -220,4 +232,9 @@ function normalizeNullableNumber(value: unknown): number | null {
 function normalizeNumber(value: unknown): number {
   const normalized = Number(value ?? 0);
   return Number.isFinite(normalized) ? normalized : 0;
+}
+
+function normalizePositiveInt(value: unknown): number {
+  const n = Math.round(Number(value ?? 1));
+  return n >= 1 ? n : 1;
 }

@@ -12,6 +12,8 @@ export type OrderPlacementErrorCode =
   | "OPTION_MAX_EXCEEDED"
   | "OPTION_SINGLE_INVALID"
   | "OPTION_VALUE_INVALID"
+  | "OPTION_QUANTITY_NOT_ALLOWED"
+  | "OPTION_QUANTITY_ABOVE_MAX"
   | "PRICE_RESOLVED_NEGATIVE";
 
 export type DbProductForOrder = {
@@ -42,6 +44,8 @@ export type DbProductForOrder = {
       name: string;
       priceAddition: string;
       available: boolean;
+      allowQuantity: boolean;
+      maxQuantity: number | null;
     }>;
   }>;
 };
@@ -50,7 +54,7 @@ export type IncomingOrderLine = {
   product_id: string;
   quantity: number;
   variant_id: string | null;
-  selected_option_value_ids: string[];
+  selected_option_values: Array<{ id: string; quantity: number }>;
   unit_price: number;
 };
 
@@ -90,9 +94,13 @@ export function validateConfiguredLine(
   const variant = variantResult.variant;
   const snapshotVariant = variantResult.snapshotVariant;
 
-  const selectedIds = new Set(item.selected_option_value_ids);
-  if (selectedIds.size !== item.selected_option_value_ids.length) {
-    return validationError("OPTION_VALUE_INVALID", "Choix invalides");
+  // Build a map of valueId → quantity; reject duplicate IDs.
+  const selectedMap = new Map<string, number>();
+  for (const sv of item.selected_option_values) {
+    if (selectedMap.has(sv.id)) {
+      return validationError("OPTION_VALUE_INVALID", "Choix invalides");
+    }
+    selectedMap.set(sv.id, sv.quantity);
   }
 
   const allowedValueIds = new Set<string>();
@@ -109,7 +117,7 @@ export function validateConfiguredLine(
     }
 
     const selectedValues = option.values.filter((value) =>
-      selectedIds.has(value.id),
+      selectedMap.has(value.id),
     );
 
     if (selectedValues.some((value) => unavailableValueIds.has(value.id))) {
@@ -140,25 +148,40 @@ export function validateConfiguredLine(
     }
 
     if (selectedValues.length > 0) {
-      const values = selectedValues.map((value) => {
+      const snapshotValues: OrderItemOptions["selections"][number]["values"] = [];
+      for (const value of selectedValues) {
+        const qty = selectedMap.get(value.id) ?? 1;
+        if (qty > 1 && !value.allowQuantity) {
+          return validationError(
+            "OPTION_QUANTITY_NOT_ALLOWED",
+            `${option.name} ne permet pas de quantité pour ${product.name}.`,
+          );
+        }
+        if (value.allowQuantity && value.maxQuantity !== null && qty > value.maxQuantity) {
+          return validationError(
+            "OPTION_QUANTITY_ABOVE_MAX",
+            `Quantité maximale de ${value.maxQuantity} dépassée pour ${value.name}.`,
+          );
+        }
         const priceAddition = Number(value.priceAddition);
-        additions += priceAddition;
-        return {
+        additions += priceAddition * qty;
+        snapshotValues.push({
           valueId: value.id,
           valueName: value.name,
           priceAddition,
-        };
-      });
+          quantity: qty,
+        });
+      }
       selections.push({
         optionId: option.id,
         optionName: option.name,
         optionType: option.type,
-        values,
+        values: snapshotValues,
       });
     }
   }
 
-  for (const selectedId of selectedIds) {
+  for (const [selectedId] of selectedMap) {
     if (!allowedValueIds.has(selectedId)) {
       return validationError("OPTION_VALUE_INVALID", "Choix invalides");
     }

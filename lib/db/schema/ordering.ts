@@ -22,6 +22,7 @@ export const orderTypeEnum = pgEnum("order_type", [
   "dine_in",
   "takeaway",
   "delivery",
+  "glovo",
 ]);
 
 export const orderStatusEnum = pgEnum("order_status", [
@@ -29,8 +30,22 @@ export const orderStatusEnum = pgEnum("order_status", [
   "confirmed",
   "preparing",
   "ready",
-  "completed",
+  "served",
+  "paid",
+  "completed", // legacy terminal
   "cancelled",
+]);
+
+export const orderPaymentMethodEnum = pgEnum("order_payment_method", [
+  "cash",
+  "card",
+  "glovo",
+]);
+
+export const itemPrepStatusEnum = pgEnum("item_prep_status", [
+  "queued",
+  "preparing",
+  "ready",
 ]);
 
 export const paymentStatusEnum = pgEnum("payment_status", [
@@ -91,10 +106,17 @@ export const orders = pgTable("orders", {
     .default("unpaid"),
   paymentMode: paymentModeEnum("payment_mode").notNull().default("mad"),
   creditsUsed: integer("credits_used"),
+  paymentMethod: orderPaymentMethodEnum("payment_method"),
+  confirmedByUserId: uuid("confirmed_by_user_id"),
   posStatus: posStatusEnum("pos_status").notNull().default("not_required"),
   posEnteredAt: timestamp("pos_entered_at", { withTimezone: true }),
   posEnteredByUserId: uuid("pos_entered_by_user_id"),
   posReference: text("pos_reference"),
+  // Mizane POS order id returned by POST /orders — drives status polling (Phase 1)
+  mizaneOrderId: text("mizane_order_id"),
+  // Mizane dine-in table UUID (from GET /tables), carried by a per-table QR and
+  // sent as `tableId` on POST /orders. Null for takeaway or manual table entry.
+  mizaneTableId: uuid("mizane_table_id"),
   total: numeric("total", { precision: 10, scale: 2 }).notNull(),
   notes: text("notes"),
   tableNumber: text("table_number"),
@@ -117,6 +139,9 @@ export const orders = pgTable("orders", {
     table.posStatus,
     table.createdAt,
   ),
+  mizaneOrderIdIdx: index("orders_mizane_order_id_idx").on(
+    table.mizaneOrderId,
+  ),
 }));
 
 export const orderItems = pgTable("order_items", {
@@ -128,6 +153,7 @@ export const orderItems = pgTable("order_items", {
     onDelete: "set null",
   }),
   quantity: integer("quantity").notNull().default(1),
+  prepStatus: itemPrepStatusEnum("prep_status").notNull().default("queued"),
   unitPrice: numeric("unit_price", { precision: 10, scale: 2 }).notNull(),
   creditUnitPrice: integer("credit_unit_price"),
   optionsJson: jsonb("options_json"),

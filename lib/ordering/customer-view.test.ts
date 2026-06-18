@@ -37,6 +37,32 @@ test("status context is type-independent for non-ready statuses", () => {
   );
 });
 
+test("an expired cancellation reads as 'Expirée' with staff-counter guidance", () => {
+  const expired = { reason: null, expired: true };
+  assert.equal(customerStatusLabel("cancelled", expired), "Expirée");
+  assert.equal(
+    customerStatusContext("cancelled", "dine_in", expired),
+    "Cette commande a expiré. Commandez directement auprès du personnel.",
+  );
+});
+
+test("a staff rejection keeps 'Annulée' and surfaces the reason", () => {
+  const rejected = { reason: "Rupture de stock", expired: false };
+  assert.equal(customerStatusLabel("cancelled", rejected), "Annulée");
+  assert.equal(
+    customerStatusContext("cancelled", "takeaway", rejected),
+    "Refusée : Rupture de stock",
+  );
+});
+
+test("a cancel with no detail falls back to the generic contact message", () => {
+  assert.equal(customerStatusLabel("cancelled", null), "Annulée");
+  assert.equal(
+    customerStatusContext("cancelled", "dine_in", { reason: null, expired: false }),
+    "Contactez le restaurant pour en savoir plus.",
+  );
+});
+
 test("status context for ready branches on order type", () => {
   assert.equal(
     customerStatusContext("ready", "dine_in"),

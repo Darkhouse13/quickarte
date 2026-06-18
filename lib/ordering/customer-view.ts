@@ -1,5 +1,16 @@
-import { formatElapsedFr } from "@/lib/kitchen/elapsed";
-import { normalizeMoroccanPhone } from "@/lib/business/phone";
+import { normalizeMoroccanPhone } from "@/lib/utils/phone";
+
+// Inlined from the removed kitchen module — the customer tracker is the only
+// remaining caller. Formats a positive elapsed duration as "X min" / "H h MM".
+function formatElapsedFr(elapsedMs: number): string {
+  if (!Number.isFinite(elapsedMs) || elapsedMs < 0) return "< 1 min";
+  const totalMinutes = Math.floor(elapsedMs / 1000 / 60);
+  if (totalMinutes < 1) return "< 1 min";
+  if (totalMinutes < 60) return `${totalMinutes} min`;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours} h ${minutes.toString().padStart(2, "0")}`;
+}
 
 // The customer-facing page speaks in finished French words, not lifecycle
 // codes. `confirmed` is still "Reçue" to the customer — the kitchen accepting
@@ -13,11 +24,28 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: "Annulée",
 };
 
-export function customerStatusLabel(status: string): string {
+// Mirrors OrderCancellation from customer-access (kept local so this module
+// stays free of server-only imports — it runs in the client tracker).
+export type CustomerCancellation = {
+  reason: string | null;
+  expired: boolean;
+};
+
+export function customerStatusLabel(
+  status: string,
+  cancellation?: CustomerCancellation | null,
+): string {
+  // An auto-expired order reads as "Expirée" — a distinct, blameless outcome
+  // from a staff cancellation.
+  if (status === "cancelled" && cancellation?.expired) return "Expirée";
   return STATUS_LABELS[status] ?? "Reçue";
 }
 
-export function customerStatusContext(status: string, type: string): string {
+export function customerStatusContext(
+  status: string,
+  type: string,
+  cancellation?: CustomerCancellation | null,
+): string {
   switch (status) {
     case "pending":
     case "confirmed":
@@ -31,6 +59,12 @@ export function customerStatusContext(status: string, type: string): string {
     case "completed":
       return "Merci.";
     case "cancelled":
+      if (cancellation?.expired) {
+        return "Cette commande a expiré. Commandez directement auprès du personnel.";
+      }
+      if (cancellation?.reason) {
+        return `Refusée : ${cancellation.reason}`;
+      }
       return "Contactez le restaurant pour en savoir plus.";
     default:
       return "Votre commande est bien arrivée.";
@@ -63,8 +97,14 @@ export function buildWhatsappLink(
 ): WhatsappLink | null {
   if (!rawNumber || rawNumber.trim().length === 0) return null;
 
-  const normalized = normalizeMoroccanPhone(rawNumber);
-  const e164 = normalized.normalized ? normalized.value : rawNumber.trim();
+  // The utils normalizer throws on a non-Moroccan-mobile input; fall back to the
+  // raw trimmed number so a foreign/landline number still yields a wa.me link.
+  let e164: string;
+  try {
+    e164 = normalizeMoroccanPhone(rawNumber);
+  } catch {
+    e164 = rawNumber.trim();
+  }
   const digits = e164.replace(/\D/g, "");
   if (digits.length < 8) return null;
 

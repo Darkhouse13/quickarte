@@ -1,11 +1,11 @@
-import { isCustomerTerminalStatus } from "./customer-view";
+import { isCustomerTerminalStatus, type CustomerCancellation } from "./customer-view";
 
 export type CustomerStatusSnapshot = {
   status: string;
   latestEventAt: string;
-  // null when loyalty is not surfaced on this order; otherwise the current
-  // member balance so the tracker can detect jumps without a full re-fetch.
-  balance?: number | null;
+  // Present once the order is cancelled — lets the tracker tell an expired
+  // order from a staff rejection without a full page reload.
+  cancellation?: CustomerCancellation | null;
 };
 
 export type StatusFetchResult =
