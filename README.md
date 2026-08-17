@@ -77,6 +77,13 @@ All env vars are validated at boot by `lib/env.ts` (server) and `lib/env.client.
 | `NEXT_PUBLIC_ENABLE_SW_IN_DEV` | optional | `true`/`false` | Register the service worker in `next dev` |
 | `SENTRY_AUTH_TOKEN` | optional | string | Source-map upload token at build time |
 | `COOLIFY_GIT_COMMIT_SHA` | optional (set by Coolify) | string | Release label used by Sentry |
+| `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` | prod build arg | base64-encoded 16/24/32-byte key | Stable Server Action encryption key across deployments |
+| `NEXT_DEPLOYMENT_ID` | prod build arg | string | Per-deployment id used for Next.js version-skew protection |
+
+For the Docker/Coolify deployment, configure `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`
+as a persistent secret build argument and `NEXT_DEPLOYMENT_ID` as the current
+commit SHA (Coolify can populate it from `COOLIFY_GIT_COMMIT_SHA`). These values
+must be available during `next build`, not only when the container starts.
 
 ## Uptime monitoring
 

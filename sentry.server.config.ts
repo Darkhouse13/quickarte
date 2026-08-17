@@ -10,6 +10,12 @@ Sentry.init({
   ignoreErrors: [
     "ResizeObserver loop limit exceeded",
     "Non-Error promise rejection captured",
+    // Next.js emits these for stale/malformed RSC and Server Action requests.
+    // deploymentId + a stable action key prevent legitimate version skew; the
+    // remaining cases are framework-level request noise, not app failures.
+    "The router state header was sent but could not be parsed.",
+    "Failed to find Server Action",
+    "Failed to parse body as FormData.",
   ],
   beforeSend(event) {
     return stripPii(event);

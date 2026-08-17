@@ -4,6 +4,12 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
+// Coolify can briefly route requests between the old and new containers during
+// a deployment. A deployment id lets Next.js detect that version skew and use a
+// full navigation instead of sending an old RSC payload to the new build.
+const deploymentId =
+  process.env.NEXT_DEPLOYMENT_ID ?? process.env.COOLIFY_GIT_COMMIT_SHA;
+
 const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -30,6 +36,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  deploymentId,
   output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
   reactStrictMode: true,
   outputFileTracingRoot: __dirname,

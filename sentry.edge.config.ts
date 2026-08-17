@@ -10,5 +10,8 @@ Sentry.init({
   ignoreErrors: [
     "ResizeObserver loop limit exceeded",
     "Non-Error promise rejection captured",
+    "The router state header was sent but could not be parsed.",
+    "Failed to find Server Action",
+    "Failed to parse body as FormData.",
   ],
 });
