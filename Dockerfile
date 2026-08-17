@@ -58,4 +58,4 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/drizzle-orm ./node_m
 USER nextjs
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "node lib/db/migrate.js && exec node server.js"]
