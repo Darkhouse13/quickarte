@@ -8,7 +8,9 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 // a deployment. A deployment id lets Next.js detect that version skew and use a
 // full navigation instead of sending an old RSC payload to the new build.
 const deploymentId =
-  process.env.NEXT_DEPLOYMENT_ID ?? process.env.COOLIFY_GIT_COMMIT_SHA;
+  process.env.NEXT_DEPLOYMENT_ID ??
+  process.env.COOLIFY_GIT_COMMIT_SHA ??
+  process.env.SOURCE_COMMIT;
 
 const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
